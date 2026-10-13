@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.0.1
+Release: v1.0.2
 
 MIT License
 
@@ -743,7 +743,7 @@ function createCornerUnifiedTask(target, options={}){
   for(const job of jobs){const sp=specs[job.branch];metrics.fullCells+=job.count*sp.innerLen;if(!job.skip)metrics.computedCells+=job.count*(job.last-job.first+1);else metrics.skipped++}
   let index=0,finished=0,stopped=false,slots=[],resolve,reject;
   const promise=new Promise((res,rej)=>{resolve=res;reject=rej});
-  function cleanup(reuse){for(const slot of slots){const w=slot.worker;w.onmessage=null;w.onerror=null;if(reuse&&idleBranchSieveWorkers.length<branchPoolCap())idleBranchSieveWorkers.push(w);else w.terminate()}slots=[]}
+  function cleanup(reuse){for(const slot of slots){const w=slot.worker;w.onmessage=null;w.onerror=null;if(reuse&&slot.ready&&idleBranchSieveWorkers.length<branchPoolCap())idleBranchSieveWorkers.push(w);else w.terminate()}slots=[]}
   function finish(){if(stopped)return;stopped=true;metrics.wallMs=performance.now()-metrics.started;cleanup(true);console.info('[corner unified metrics]',metrics);window.__ulamCornerUnifiedMetrics=metrics;resolve(preview)}
   function fail(msg){if(stopped)return;stopped=true;cleanup(false);reject(new Error(String(msg)))}
   function markReady(job){const sp=specs[job.branch];sp.part.readyLines.fill(1,job.offset,job.offset+job.count);finished++;options.onPublish?.(preview,job);if(finished===jobs.length)finish()}
@@ -784,10 +784,10 @@ function createCornerUnifiedTask(target, options={}){
     const url=ensureBranchWorkerURL();
     for(let k=0;k<count;k++){
       const warm=idleBranchSieveWorkers.length>0;
-      const worker=warm?idleBranchSieveWorkers.pop():new Worker(url),slot={worker,job:null};slots.push(slot);
+      const worker=warm?idleBranchSieveWorkers.pop():new Worker(url),slot={worker,job:null,ready:warm};slots.push(slot);
       worker.onmessage=e=>{
         if(stopped)return;const d=e.data;
-        if(d.type==='ready'){send(slot);return}
+        if(d.type==='ready'){if(!slot.ready){slot.ready=true;send(slot)}return}
         if(d.type==='error'){fail(d.message);return}
         if(d.type!=='stripe'||!slot.job||d.outerOffset!==slot.job.offset||d.outerCount!==slot.job.count||d.lineBytes!==Math.ceil((slot.job.last-slot.job.first+1)/8)){fail('Unified corner worker response mismatch');return}
         merge(slot.job,d);send(slot);
@@ -2628,7 +2628,7 @@ function createBranchPrimeRect(target,options={}){
   const focusOuter=vertical?Math.round(camX)-target.xmin:Math.round(camY)-target.ymin,jobs=[];for(let o=0;o<outerCount;o+=stripeLines)jobs.push({outerOffset:o,outerCount:Math.min(stripeLines,outerCount-o)});
   const dist=j=>focusOuter<j.outerOffset?j.outerOffset-focusOuter:focusOuter>=j.outerOffset+j.outerCount?focusOuter-j.outerOffset-j.outerCount+1:0;jobs.sort((a,b)=>dist(a)-dist(b)||a.outerOffset-b.outerOffset);
   let jobIndex=0,doneLines=0,stopped=false,pool=[],resolve,reject;const promise=new Promise((r,j)=>{resolve=r;reject=j});
-  function cleanup(reuse=false){for(const s of pool){s.worker.onmessage=null;s.worker.onerror=null;if(reuse&&idleBranchSieveWorkers.length<branchPoolCap())idleBranchSieveWorkers.push(s.worker);else s.worker.terminate()}pool=[]}
+  function cleanup(reuse=false){for(const s of pool){s.worker.onmessage=null;s.worker.onerror=null;if(reuse&&s.ready&&idleBranchSieveWorkers.length<branchPoolCap())idleBranchSieveWorkers.push(s.worker);else s.worker.terminate()}pool=[]}
   function finish(){stopped=true;cleanup(true);resolve({...preview,readyLines:new Uint8Array(readyLines)})}
   function fail(msg){if(stopped)return;stopped=true;cleanup();reject(new Error(String(msg)))}
   function send(slot){if(jobIndex>=jobs.length){slot.active=false;return}const j=jobs[jobIndex++];slot.active=true;slot.outerOffset=j.outerOffset;
@@ -2637,8 +2637,8 @@ function createBranchPrimeRect(target,options={}){
   try{
     if(!branchSievePoolURL)branchSievePoolURL=URL.createObjectURL(new Blob(['('+branchSieveWorkerMain.toString()+')();'],{type:'text/javascript'}));
     const workers=Math.min(requested,jobs.length);for(let i=0;i<workers;i++){
-      const warm=idleBranchSieveWorkers.length>0,worker=warm?idleBranchSieveWorkers.pop():new Worker(branchSievePoolURL),slot={worker,outerOffset:-1};pool.push(slot);
-      worker.onmessage=e=>{if(stopped)return;const d=e.data;if(d.type==='ready'){send(slot);return}if(d.type==='error'){fail(d.message);return}if(d.type!=='stripe'||d.outerOffset!==slot.outerOffset||d.lineBytes!==lineBytes){fail('Branch sieve worker response error');return}output.set(new Uint8Array(d.buffer),d.outerOffset*lineBytes);readyLines.fill(1,d.outerOffset,d.outerOffset+d.outerCount);doneLines+=d.outerCount;if(options.onPublish)options.onPublish(preview,d.outerOffset,d.outerCount,d.computeMs);if(doneLines>=outerCount){finish();return}send(slot)};
+      const warm=idleBranchSieveWorkers.length>0,worker=warm?idleBranchSieveWorkers.pop():new Worker(branchSievePoolURL),slot={worker,outerOffset:-1,ready:warm};pool.push(slot);
+      worker.onmessage=e=>{if(stopped)return;const d=e.data;if(d.type==='ready'){if(!slot.ready){slot.ready=true;send(slot)}return}if(d.type==='error'){fail(d.message);return}if(d.type!=='stripe'||d.outerOffset!==slot.outerOffset||d.lineBytes!==lineBytes){fail('Branch sieve worker response error');return}output.set(new Uint8Array(d.buffer),d.outerOffset*lineBytes);readyLines.fill(1,d.outerOffset,d.outerOffset+d.outerCount);doneLines+=d.outerCount;if(options.onPublish)options.onPublish(preview,d.outerOffset,d.outerCount,d.computeMs);if(doneLines>=outerCount){finish();return}send(slot)};
       worker.onerror=e=>{e.preventDefault?.();fail(e.message||'Branch sieve worker error')};if(warm)send(slot);else worker.postMessage({type:'init',primes:basePrimes});
     }
   }catch(error){fail(error.message)}

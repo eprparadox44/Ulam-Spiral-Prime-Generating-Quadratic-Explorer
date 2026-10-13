@@ -34,7 +34,7 @@ check('160 ms corner preview throttle', 'CORNER_PREVIEW_FRAME_INTERVAL_MS=160' i
 check('fast startup at Ulam number 1', 'Startup always begins at Ulam number 1' in html)
 check('range-input spacing refinement', '#jumpInput::placeholder{font-size:.93em}' in html)
 check('diagnostic UI not embedded', all(x not in html for x in ['cornerAuditStart', 'cornerAuditHotVisit']))
-check('v1.0.1 release marker in comment', 'Release: v1.0.1' in html.split('</html>')[0])
+check('v1.0.2 release marker in comment', 'Release: v1.0.2' in html.split('</html>')[0])
 
 license_path = root / 'LICENSE'
 check('root LICENSE file is present', license_path.is_file())
@@ -65,6 +65,6 @@ expected = [f'{hashlib.sha256(a).hexdigest()}  index.html', f'{hashlib.sha256(b)
 recorded = checksum_path.read_text(encoding='utf-8').strip().splitlines()
 check('release SHA-256 checksums match both HTML files', recorded == expected)
 
-print('PASS: v1.0.1 structural / attribution / syntax checks')
+print('PASS: v1.0.2 structural / attribution / syntax checks')
 print('SHA-256:', hashlib.sha256(a).hexdigest())
 print('HTML bytes:', len(a))
