@@ -1,6 +1,6 @@
 # 울람 나선 & 소수생성 이차식 탐색기
 
-[English README](README.md) · [GitHub 게시 방법](PUBLISHING.ko.md)
+[English README](README.md)
 
 **1부터 1조(10¹²)까지** 울람 나선을 탐색하고, 소수를 많이 만들어 내는 이차식을 찾아보는 단일 HTML 웹 애플리케이션이다.
 
