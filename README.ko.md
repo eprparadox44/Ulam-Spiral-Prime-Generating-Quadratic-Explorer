@@ -42,7 +42,6 @@
 | `Ulam Spiral & Prime-Generating Quadratic Explorer.html` | 정식 파일명을 보존한 독립 배포본 |
 | `README.md` | 영문 소개 |
 | `README.ko.md` | 이 문서 |
-| `PUBLISHING.ko.md` | GitHub 업로드 및 Pages 설정 방법 |
 | `CHANGELOG.md` | 주요 변경 기록 |
 | `scripts/verify_release.py` | 두 HTML의 동일성 및 구성 검사 |
 
