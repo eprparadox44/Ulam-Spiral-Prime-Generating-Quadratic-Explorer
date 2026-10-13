@@ -61,7 +61,7 @@ The first visit to a region may require local computation. Subsequent visits can
 
 The exploration range grew from **100 million → 400 million → 900 million → … → 4.9 billion → 10 billion → 1 trillion**. Replacing whole-range precomputation with selective sieving and geometry-aware processing made the largest jump practical.
 
-## Licensee
+## License
 
 Licensed under the MIT License.
 
