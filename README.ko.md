@@ -2,6 +2,9 @@
 
 [English README](README.md)
 
+
+<img width="570" height="362" alt="image" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
+
 **1부터 1조(10¹²)까지** 울람 나선을 탐색하고, 소수를 많이 만들어 내는 이차식을 찾아보는 단일 HTML 웹 애플리케이션이다.
 
 ## 실행
