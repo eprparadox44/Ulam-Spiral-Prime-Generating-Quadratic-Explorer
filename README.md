@@ -46,7 +46,6 @@ The minimap's continuous prime-density background is an **approximate visualizat
 | `Ulam Spiral & Prime-Generating Quadratic Explorer.html` | Standalone distribution with the official filename |
 | `README.md` | English introduction |
 | `README.ko.md` | Korean introduction |
-| `PUBLISHING.ko.md` | GitHub upload and Pages configuration guide |
 | `CHANGELOG.md` | Record of major changes |
 | `scripts/verify_release.py` | Verifies that both HTML files are identical and checks the release structure |
 
