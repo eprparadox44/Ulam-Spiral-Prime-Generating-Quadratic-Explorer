@@ -61,6 +61,10 @@ The first visit to a region may require local computation. Subsequent visits can
 
 The exploration range grew from **100 million → 400 million → 900 million → … → 4.9 billion → 10 billion → 1 trillion**. Replacing whole-range precomputation with selective sieving and geometry-aware processing made the largest jump practical.
 
-## License
+## Licensee
 
-**Not yet selected.** No open-source license has been assigned as part of this packaging step. Please choose a license (for example, MIT or Apache-2.0) before describing the code as open source or inviting unrestricted reuse. Publication of the source on GitHub alone does not grant an open-source license.
+Licensed under the MIT License.
+
+Copyright (c) 2026 지너드, G.nerd (eprparadox44)
+
+See [LICENSE](LICENSE) for details.
