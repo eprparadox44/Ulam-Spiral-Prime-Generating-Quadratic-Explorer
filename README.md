@@ -1,7 +1,7 @@
 # Ulam Spiral & Prime-Generating Quadratic Explorer
 
 [한국어 README](README.ko.md)
-<img width="1141" height="724" alt="image" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
+<img width="570" height="362" alt="image" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
 
 A standalone HTML web application for exploring the **Ulam spiral from 1 to 1 trillion (10¹²)** and discovering quadratic polynomials that generate unusually many prime numbers.
 
