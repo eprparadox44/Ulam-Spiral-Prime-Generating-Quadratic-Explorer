@@ -4,7 +4,7 @@ An interactive, single-file mathematical explorer for visualizing prime numbers 
 
 **Release:** v1.1.1 · **Maximum integer:** 1,000,000,000,000 (10¹²) · **License:** MIT
 
-The application runs in a modern browser. The entire application, including its styles, scripts, and embedded WebAssembly modules, is distributed as **one self-contained HTML file** (`index.html`). No installation or web service is required.
+The application runs in a modern browser. The application is **self-contained in one HTML file**. For GitHub Pages and repository CI, exactly the same HTML bytes are stored under both `index.html` and `Ulam Spiral & Prime-Generating Quadratic Explorer.html`; a version-labeled copy is also provided for downloadable releases. No installation or web service is required.
 
 ## Features
 
@@ -34,9 +34,17 @@ For a repository using `main` as its default branch:
 
 The hosted app is then served directly from the repository's `index.html`.
 
+### Updating an existing GitHub repository
+
+Upload the **three** provided HTML files to the repository root in the **same commit**, replacing any existing `index.html` and `Ulam Spiral & Prime-Generating Quadratic Explorer.html`. Keep the existing `.github/workflows/` and `scripts/verify_release.py` files intact. All three HTML copies in this package are byte-identical. GitHub Actions checks the first two for exact byte equality.
+
+The version-labeled file is optional for Pages and CI, but useful as a Release download. For Releases, attach that file instead of a copy renamed locally after uploading.
+
 ## Project files
 
-- `index.html` — complete stand-alone application (all runtime code in one file)
+- `index.html` — GitHub Pages HTML entry point (complete stand-alone app)
+- `Ulam Spiral & Prime-Generating Quadratic Explorer.html` — official HTML entry point; **must be byte-identical to `index.html`** for the existing GitHub Actions verifier
+- `Ulam Spiral & Prime-Generating Quadratic Explorer v1.1.1.html` — same HTML content, version-labeled release attachment
 - `README.md` — project overview and usage instructions
 - `LICENSE` — MIT License
 - `RELEASE_NOTES_v1.1.1.md` — highlights of the current release
@@ -45,7 +53,7 @@ Existing GitHub Actions workflows from prior releases should be **kept** when up
 
 ## Korean overview / 한국어 안내
 
-이 프로그램은 최대 **1조**까지 소수를 사각형 또는 육각형 울람 나선에 표시하고, 소수가 밀집된 직선에서 이차식을 탐색하는 도구입니다. **사각 / 육각** 전환, 두 격자별 추천 계수, `c = −7000000 ~ +7000000` 탐색, 수열 강조 및 저장을 지원합니다. 프로그램 본체는 **`index.html` 단일 파일**입니다.
+이 프로그램은 최대 **1조**까지 소수를 사각형 또는 육각형 울람 나선에 표시하고, 소수가 밀집된 직선에서 이차식을 탐색하는 도구입니다. **사각 / 육각** 전환, 두 격자별 추천 계수, `c = −7000000 ~ +7000000` 탐색, 수열 강조 및 저장을 지원합니다. 프로그램은 HTML 단독으로 실행되며, 저장소 CI 검증을 위해 `index.html`과 버전명이 없는 정식 HTML 파일의 내용이 완전히 같아야 합니다.
 
 ## License
 

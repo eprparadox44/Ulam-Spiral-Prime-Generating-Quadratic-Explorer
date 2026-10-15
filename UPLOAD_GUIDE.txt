@@ -1,0 +1,3 @@
+# GitHub Actions verification: index.html and the official unversioned HTML file
+# must be byte-for-byte identical. Do not rename only one of them.
+# Upload the whole set to the repository root and keep existing scripts/workflows.

@@ -15,7 +15,7 @@ The **Ulam Spiral & Prime-Generating Quadratic Explorer** now provides both squa
 ### Distribution
 
 - **GitHub Pages:** commit the package's `index.html` to the repository root.
-- **Release asset:** attach `Ulam_Spiral_1T_SQUARE_HEX_INTEGRATED_v1.1.1.html` for one-file offline use.
+- **Release asset:** attach `Ulam Spiral & Prime-Generating Quadratic Explorer v1.1.1.html` for one-file offline use.
 - **Version tag:** `v1.1.1`.
 
 ### Verification note
