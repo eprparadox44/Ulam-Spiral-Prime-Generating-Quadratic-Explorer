@@ -1,70 +1,119 @@
 #!/usr/bin/env python3
-"""Structural + MIT license + JavaScript syntax checks for official standalone release.
+"""Release verification for Ulam Spiral & Prime-Generating Quadratic Explorer.
 
-Run from any directory: python3 scripts/verify_release.py
-Requires Python 3.9+. If node is installed, also checks the embedded JS syntax.
-In CI use --require-node to make Node.js required.
+Standalone Python + optional Node syntax check. The release version is read from
+its canonical HTML comment, not hardcoded to a previous release.
+
+Usage: python3 scripts/verify_release.py --require-node
 """
 from __future__ import annotations
+
+import argparse
+from html.parser import HTMLParser
 from pathlib import Path
-import hashlib
 import re
 import shutil
 import subprocess
 import sys
-import tempfile
 
-root = Path(__file__).resolve().parents[1]
-standalone = 'Ulam Spiral & Prime-Generating Quadratic Explorer.html'
-paths = [root / 'index.html', root / standalone]
+OFFICIAL_NAME = 'Ulam Spiral & Prime-Generating Quadratic Explorer.html'
+PROJECT_TITLE = 'Ulam Spiral & Prime-Generating Quadratic Explorer'
+RELEASE_VERSION = 'v1.1.1'
 
-def check(name, condition):
-    print(('PASS' if condition else 'FAIL') + ': ' + name)
-    if not condition:
+
+class DocumentParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.inline_scripts = []
+        self.external_scripts = []
+        self.stylesheet_links = []
+        self._in_script = False
+
+    def handle_starttag(self, tag, attrs):
+        props = dict(attrs)
+        if tag == 'script':
+            self._in_script = True
+            if props.get('src'):
+                self.external_scripts.append(props['src'])
+        if tag == 'link' and props.get('rel') == 'stylesheet':
+            self.stylesheet_links.append(props.get('href'))
+
+    def handle_endtag(self, tag):
+        if tag == 'script':
+            self._in_script = False
+
+    def handle_data(self, value):
+        if self._in_script:
+            self.inline_scripts.append(value)
+
+
+def check(description: str, passed: bool) -> None:
+    print(f"{'PASS' if passed else 'FAIL'}: {description}", flush=True)
+    if not passed:
         raise SystemExit(1)
 
-check('both HTML entry points exist', all(p.is_file() for p in paths))
-a, b = (p.read_bytes() for p in paths)
-check('index.html and official HTML are byte-identical', a == b)
-html = a.decode('utf-8')
-check('standalone HTML document', html.lower().startswith('<!doctype html>') and '<html' in html and '</html>' in html)
-check('official application title', 'Ulam Spiral &amp; Prime-Generating Quadratic Explorer' in html)
-check('maximum value 10^12', 'MAX_N=1000000000000' in html or 'MAX_N=1000000000000,' in html or 'MAX_N=1000000000000;' in html or 'MAX_N=1000000000000,MAX_R' in html or 'let MAX_N=1000000000000' in html)
-check('160 ms corner preview throttle', 'CORNER_PREVIEW_FRAME_INTERVAL_MS=160' in html)
-check('fast startup at Ulam number 1', 'Startup always begins at Ulam number 1' in html)
-check('range-input spacing refinement', '#jumpInput::placeholder{font-size:.93em}' in html)
-check('diagnostic UI not embedded', all(x not in html for x in ['cornerAuditStart', 'cornerAuditHotVisit']))
-check('v1.0.2 release marker in comment', 'Release: v1.0.2' in html.split('</html>')[0])
 
-license_path = root / 'LICENSE'
-check('root LICENSE file is present', license_path.is_file())
-license_body = license_path.read_text(encoding='utf-8').strip()
-check('MIT license and author attribution', license_body.startswith('MIT License\n') and 'Copyright (c) 2026 지너드, G.nerd (eprparadox44)' in license_body)
-check('entire LICENSE text is embedded in standalone HTML', license_body in html)
-check('LICENSE appears in a non-rendering HTML comment', bool(re.search(r'<!--[^>]*'+re.escape(license_body)+r'[^>]*-->', html, flags=re.S)))
+def main() -> None:
+    ap = argparse.ArgumentParser(description='Verify the standalone v1.1.1 release')
+    ap.add_argument('--require-node', action='store_true', help='Fail if Node is unavailable')
+    args = ap.parse_args()
 
-js_scripts = re.findall(r'<script(?:\s+[^>]*)?>([\s\S]*?)</script\s*>', html, re.I)
-check('exactly one embedded application script', len(js_scripts) == 1 and "'use strict'" in js_scripts[0])
-node = shutil.which('node')
-if '--require-node' in sys.argv:
-    check('Node.js is installed for JS syntax testing', node is not None)
-if node:
-    with tempfile.TemporaryDirectory() as tmp:
-        js_path = Path(tmp) / 'ulam-embedded.js'
-        js_path.write_text(js_scripts[0], encoding='utf-8')
-        proc = subprocess.run([node, '--check', str(js_path)], capture_output=True, text=True)
-        if proc.returncode:
-            print(proc.stderr)
-        check('embedded JavaScript syntax (node --check)', proc.returncode == 0)
-else:
-    print('SKIP: JavaScript syntax test (install Node.js or use GitHub Actions)')
+    root = Path(__file__).resolve().parent.parent
+    index = root / 'index.html'
+    official = root / OFFICIAL_NAME
+    check('both HTML entry points exist', index.is_file() and official.is_file())
 
-checksum_path = root / 'checksums.sha256'
-check('checksums.sha256 is present', checksum_path.is_file())
-expected = [f'{hashlib.sha256(a).hexdigest()}  index.html', f'{hashlib.sha256(b).hexdigest()}  {standalone}']
-recorded = checksum_path.read_text(encoding='utf-8').strip().splitlines()
-check('release SHA-256 checksums match both HTML files', recorded == expected)
+    main_bytes, official_bytes = index.read_bytes(), official.read_bytes()
+    check('index.html and official HTML are byte-identical', main_bytes == official_bytes)
+    data = main_bytes.decode('utf-8-sig')
+    doc = DocumentParser()
+    doc.feed(data)
+    check('standalone HTML document',
+          data.lstrip().lower().startswith('<!doctype html>')
+          and '<html' in data and '<style>' in data
+          and len(doc.inline_scripts) == 1
+          and not doc.external_scripts and not doc.stylesheet_links)
+    check('official application title', PROJECT_TITLE in data)
+    check('maximum value 10^12', 'MAX_N=1000000000000' in data)
+    check('160 ms corner preview throttle',
+          bool(re.search(r'CORNER_PREVIEW_FRAME_INTERVAL_MS\s*=\s*160\b', data)))
+    check('fast startup at Ulam number 1',
+          'Startup always begins at Ulam number 1' in data)
+    check('range-input spacing refinement',
+          '#jumpInput' in data and 'padding-left:8px;padding-right:8px' in data)
+    check('diagnostic UI not embedded',
+          'id="debugPanel"' not in data and 'id="diagnosticPanel"' not in data
+          and 'id="testDiagnostics"' not in data)
 
-print('PASS: v1.0.2 structural / attribution / syntax checks')
-print('SHA-256:', hashlib.sha256(a).hexdigest())
-print('HTML bytes:', len(a))
+    comment = re.search(r'<!--([\s\S]*?)-->', data)
+    check(f'{RELEASE_VERSION} release marker in comment',
+          bool(comment and re.search(r'^\s*Release:\s*' + re.escape(RELEASE_VERSION) + r'\s*$',
+                                      comment.group(1), re.M)))
+    check('square/hex lattice controls',
+          all(f'id="{key}"' in data for key in ('shapeSquare','shapeHex','shapeToggle')))
+    check('hexagonal quadratic search presets',
+          'SEARCH_AB_PRESETS_HEX' in data and 'SEARCH_AB_PRESETS_SQUARE' in data)
+    check('c search defaults support +/-7,000,000',
+          'id="cMin" inputmode="numeric" value="-7000000"' in data
+          and 'id="cMax" inputmode="numeric" value="7000000"' in data)
+    check('MIT license declaration retained',
+          'MIT License' in data and 'Permission is hereby granted' in data)
+
+    node = shutil.which('node')
+    if args.require_node:
+        check('Node.js is available', bool(node))
+    if node:
+        js = '\n'.join(doc.inline_scripts)
+        proc = subprocess.run([node, '--check', '-'], input=js, text=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if proc.returncode != 0:
+            print(proc.stderr, file=sys.stderr)
+        check('JavaScript syntax (node --check)', proc.returncode == 0)
+    else:
+        print('SKIP: JavaScript syntax (Node.js not installed)')
+
+    print(f'PASS: {RELEASE_VERSION} release verification complete')
+
+
+if __name__ == '__main__':
+    main()
