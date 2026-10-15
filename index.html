@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.0.2
+Release: v1.1.1
 
 MIT License
 
@@ -33,6 +33,9 @@ SOFTWARE.
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
 #app{height:100%;display:grid;grid-template-rows:auto 1fr}header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0c1220;border-bottom:1px solid #243047;flex-wrap:wrap;z-index:5}.title{font-weight:800;font-size:16px;white-space:nowrap}.pill{border:1px solid #2a3853;background:#121b2b;border-radius:12px;padding:8px 10px;font-size:13px}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.controls button{padding-left:8px;padding-right:8px}input{width:190px;background:#070d18;color:#fff;border:1px solid #34435f;padding:8px 10px;border-radius:10px;font:inherit}header input,header button{font-size:14px}#jumpInput{width:150px;padding-left:8px;padding-right:8px}#jumpInput::placeholder{font-size:.93em}#langToggle{min-width:50px;padding-left:8px;padding-right:8px}button{border:1px solid #34435f;background:#162137;color:#fff;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer}button:hover{background:#1d2b47}#stage{position:relative;min-height:0}canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:default}
+#shapeToggle{display:inline-flex;align-items:center;gap:1px;padding:2px;border:1px solid #34435f;border-radius:9px;background:#10192b;flex:0 0 auto}
+#shapeToggle button{height:29px;padding:3px 9px;border:0;border-radius:6px;background:transparent;white-space:nowrap}
+#shapeToggle button.active{background:#0d3542;color:#d8faff;box-shadow:inset 0 0 0 1px #18d7f2}#shapeToggle{width:99px;min-width:99px}#shapeToggle #shapeSquare{flex:0 0 57px}#shapeToggle #shapeHex{flex:1 1 auto}
 #zoomIndicator{position:absolute;right:14px;bottom:14px;z-index:6;pointer-events:none;opacity:0;padding:5px 9px;border-radius:9px;background:rgba(7,11,19,.78);border:1px solid rgba(80,100,135,.65);font-size:13px;font-weight:800;color:#e8eef8;transform:translateZ(0)}
 #hoverTip{position:absolute;display:none;z-index:4;pointer-events:none;padding:7px 9px;border-radius:9px;background:rgba(7,11,19,.95);border:1px solid #3a4967;color:#fff;font-size:13px;line-height:1.35;box-shadow:0 4px 18px rgba(0,0,0,.35);white-space:nowrap}#hoverTip .prime{color:#fff;font-weight:800}#hoverTip .activePrime{color:var(--cyan);font-weight:800}#hoverTip .composite{color:#cfd7e5}#hoverTip .neither{color:var(--warn)}
 #status,#sel{display:none}#hud{position:absolute;left:14px;bottom:14px;max-width:min(520px,calc(100% - 28px));background:rgba(8,13,23,.90);border:1px solid #26334a;border-radius:12px;padding:7px 9px;font-size:12px;line-height:1.4;pointer-events:auto;z-index:2}.dot{width:9px;height:9px;display:inline-block;margin-right:5px}.primeDot{background:var(--prime)}.activeDot{background:var(--cyan)}.selDot{background:var(--warn)}#activeInfo:empty{display:none}#hudBtns{display:flex;gap:6px;flex-wrap:wrap}#activeInfo:not(:empty)+#hudBtns{margin-top:6px}#hud .hudBtn{padding:5px 9px;font-size:11px;border-radius:9px}#minimapWrap{position:absolute;left:14px;bottom:80px;z-index:2;border:1px solid #26334a;border-radius:12px;overflow:hidden;background:#0a101b;display:none;box-shadow:0 14px 40px rgba(0,0,0,.28)}#minimap{position:static;inset:auto;display:block;width:100%;height:100%;image-rendering:auto;cursor:pointer}#miniZoomControls{position:absolute;right:4px;top:4px;display:flex;align-items:center;gap:2px;padding:2px 3px;border-radius:8px;background:rgba(4,8,14,.76);border:1px solid rgba(72,91,124,.62);backdrop-filter:blur(2px);z-index:3}#miniZoomControls button{width:22px;height:22px;min-width:22px;padding:0;border-radius:6px;font-size:14px;font-weight:800;line-height:20px;background:rgba(20,31,51,.92)}#miniZoomControls button:disabled{opacity:.34}#miniZoomLabel{min-width:36px;text-align:center;font-size:9.5px;font-weight:800;color:#e7effb;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -167,7 +170,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
   header #jumpInput{width:92px;min-width:92px;height:25px;padding:3px 5px}
   header #jumpBtn{width:29px;min-width:29px;height:25px;padding:3px 2px}
   header #zin,header #zout{width:22px;min-width:22px;height:25px;padding:2px}
-  header #home{width:49px;min-width:49px;height:25px;padding:3px 2px}
+  header #home{width:49px;min-width:49px;height:25px;padding:3px 2px}#shapeToggle{padding:1px;border-radius:6px;width:73px;min-width:73px}#shapeToggle #shapeSquare{flex-basis:40px}#shapeToggle button{height:22px;padding:2px 3px;font-size:9px}
   .langSeqRow{display:flex;flex:1 1 100%;width:100%;margin:0;min-width:0;align-items:center;gap:3px;flex-wrap:nowrap}
   .langSeqRow #langToggle{flex:0 0 34px;width:34px;min-width:34px;height:25px;padding:3px 2px}
   .langSeqRow .modeSwitch{display:flex;flex:1 1 auto;width:auto;min-width:0;margin:0;padding:0;border:0;justify-content:flex-end;align-items:center;gap:3px;flex-wrap:nowrap}
@@ -239,7 +242,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
   header #jumpInput{width:70px;min-width:70px}
   header #jumpBtn{width:26px;min-width:26px}
   header #zin,header #zout{width:19px;min-width:19px}
-  header #home{width:43px;min-width:43px}
+  header #home{width:43px;min-width:43px}#shapeToggle button{padding-left:3px;padding-right:3px}
   .langSeqRow{flex:0 0 auto;width:auto}
   .langSeqRow #langToggle{flex-basis:31px;width:31px;min-width:31px}
   .langSeqRow .modeSwitch .sequenceLabel{font-size:7px}
@@ -247,7 +250,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
 }
 
 </style></head>
-<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
+<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><span id="shapeToggle" role="group" aria-label="Spiral lattice"><button id="shapeSquare" class="active" type="button" aria-pressed="true">Square</button><button id="shapeHex" type="button" aria-pressed="false">Hex</button></span></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
 <div id="stage"><canvas id="cv"></canvas><div id="zoomIndicator">×1</div><div id="hoverTip"></div>
 
 <div id="cSearchPanel">
@@ -262,7 +265,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
     </div>
     <div class="cField"><label>a</label><input id="cA" inputmode="numeric" value="1" disabled></div>
     <div class="cField"><label>b</label><input id="cB" inputmode="numeric" value="-1" disabled></div>
-    <div class="cField"><label id="labelCStart">c start</label><input id="cMin" inputmode="numeric" value="1"></div>
+    <div class="cField"><label id="labelCStart">c start</label><input id="cMin" inputmode="numeric" value="-7000000"></div>
     <div class="cField"><label id="labelCEnd">c end</label><input id="cMax" inputmode="numeric" value="7000000"></div>
     <div class="cField"><label id="labelVerifyCount">Candidates to verify with sieve</label><input id="cVerifyCount" inputmode="numeric" value="64"></div>
     <div class="cField"><label id="labelPrimeLimit">Small-prime limit</label><input id="cPrimeLimit" inputmode="numeric" value="3000"></div>
@@ -307,7 +310,7 @@ const I18N={
     recommendedAB:'Recommended lattice-line a, b',useRecommended:'Use recommended pairs',
     cStart:'c start',cEnd:'c end',verifyCount:'Candidates to verify with sieve',primeLimit:'Small-prime limit',
     startSearch:'Start Search',stop:'Stop',
-    hint:'Recommended pairs group good a, b choices up to 64 for clear Ulam line patterns. Turn the check off to enter a and b freely. A Worker prefilters c with small primes, then verifies only the top candidates with the real prime sieve.',
+    hint:'Square mode: recommended lattice-line pairs have a up to 64. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −7,000,000 to +7,000,000.',
     savedEmpty:'No saved sequence yet. Save a sequence and it will appear here.',
     clearAll:'Clear All',allSlopes:'Show all slopes',allSlopesHint:'(remove the recommended-4 limit)',
     clearHighlight:'Clear Highlight',hoverHint:'Hover to inspect numbers, then click to find sequences through that point.',analysisPending:'Analyzing sequences…',analysisDeferred:'Open at Selected Point to analyze',
@@ -333,7 +336,7 @@ const I18N={
     noSearchResult:'No candidate satisfied the condition.',
     sieveRequired:'Available after the prime sieve is ready.',
     invalidSearch:'Enter integers with a > 0 and a valid c range.',
-    searchTooWide:'One c-search is limited to 7,000,000 values. Split the range and try again.',
+    searchTooWide:'c must be between −7,000,000 and +7,000,000 (both inclusive). The entire interval can be searched in one run.',
     error:'Error',workerError:'Worker error',unknownError:'unknown error',stopped:'Stopped.',
     enterRange:n=>`Enter an integer from 1 to ${n.toLocaleString()}.`,
     clearSavedConfirm:'Delete all saved sequences?',
@@ -342,7 +345,9 @@ const I18N={
     sourceSaved:n=>`saved at ${n.toLocaleString()}`,
     pointSeq:n=>`Sequences at ${n.toLocaleString()}`,
     status:(range,x,y,scale,count)=>`Range ${range} · center (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/cell · ${count.toLocaleString()} cells`,
-    presetClassic:'n²−n+c · all-odd classic',presetMonic:'n²+c · monic',presetEven:'even b · odd c preferred'
+    presetClassic:'n²−n+c · all-odd classic',presetMonic:'n²+c · monic',presetEven:'even b · odd c preferred',
+    hexPresetGroup:k=>`Hex lattice line · k=${k} (a=3k²)`,
+    hintHex:'Hex mode: lattice-line presets use a=3k² (k=1…4), with b values observed on the hex spiral. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −7,000,000 to +7,000,000.'
   },
   ko:{
     go:'이동',go1:'1로 가기',sequence:'수열',search:'탐색',
@@ -351,7 +356,7 @@ const I18N={
     recommendedAB:'격자선 추천 a, b',useRecommended:'추천 조합 사용',
     cStart:'c 시작',cEnd:'c 끝',verifyCount:'체로 최종 검증할 후보 수',primeLimit:'작은 소수 상한',
     startSearch:'탐색 시작',stop:'중지',
-    hint:'추천 조합은 선명한 울람 선형 패턴을 찾기 좋은 a, b를 64까지 묶어 둔 것이다. 체크를 끄면 a, b를 자유 입력할 수 있다. Worker가 작은 소수로 먼저 선별한 뒤 상위 후보만 실제 소수 체로 검증한다.',
+    hint:'사각 모드에서는 선명한 울람 직선 패턴의 a, b 조합을 a=64까지 추천한다. 체크를 끄면 자유 입력할 수 있다. c는 −7000000부터 +7000000까지 한 번에 탐색할 수 있다.',
     savedEmpty:'아직 저장한 수열이 없다. 수열을 저장하면 여기에 모인다.',
     clearAll:'모두 삭제',allSlopes:'모든 기울기 보기',allSlopesHint:'(추천 4개 제한 해제)',
     clearHighlight:'강조 해제',hoverHint:'마우스를 올리면 숫자를 보고, 클릭하면 그 점을 지나는 수열을 찾는다.',analysisPending:'수열 분석 중…',analysisDeferred:'선택 점 기준 수열에서 분석',
@@ -377,7 +382,7 @@ const I18N={
     noSearchResult:'조건에 맞는 후보가 없었다.',
     sieveRequired:'소수 체 생성이 끝난 뒤 사용할 수 있다.',
     invalidSearch:'a>0인 정수와 올바른 c 범위를 입력해 주세요.',
-    searchTooWide:'한 번의 c 탐색 범위는 7,000,000개 이하로 제한했다. 구간을 나누어 탐색해 주세요.',
+    searchTooWide:'c 범위는 −7000000부터 +7000000까지다. 전체 구간을 한 번에 탐색할 수 있다냥.',
     error:'오류',workerError:'Worker 오류',unknownError:'알 수 없는 오류',stopped:'중지됨.',
     enterRange:n=>`1 ~ ${n.toLocaleString()} 사이 정수를 입력해 주세요.`,
     clearSavedConfirm:'저장한 수열을 모두 삭제할까요?',
@@ -386,7 +391,9 @@ const I18N={
     sourceSaved:n=>`${n.toLocaleString()}에서 저장`,
     pointSeq:n=>`${n.toLocaleString()}에서 찾은 수열`,
     status:(range,x,y,scale,count)=>`범위 ${range} · 중심 (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/칸 · 화면 ${count.toLocaleString()}칸`,
-    presetClassic:'n²−n+c · 고전적 전항 홀수 계열',presetMonic:'n²+c · 단순 monic 계열',presetEven:'짝수 b · 홀수 c 권장'
+    presetClassic:'n²−n+c · 고전적 전항 홀수 계열',presetMonic:'n²+c · 단순 monic 계열',presetEven:'짝수 b · 홀수 c 권장',
+    hexPresetGroup:k=>`육각 격자선 · k=${k} (a=3k²)`,
+    hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −7000000부터 +7000000까지 한 번에 탐색할 수 있다.'
   }
 };
 let currentLang=(()=>{try{return localStorage.getItem('ULAM_UI_LANG')==='ko'?'ko':'en'}catch(_){return'en'}})();
@@ -404,10 +411,12 @@ function rangeNameEn(n){
   return n.toLocaleString();
 }
 function localizeSlopeLabel(label){
+  if(latticeMode==='hex'){if(label.startsWith('육각 축 '))return currentLang==='ko'?label:label.replace('육각 축 ','Hex axis ');if(label.startsWith('기울기 '))return currentLang==='ko'?'축좌표 '+label:'axial '+label.replace('기울기 ','slope ')}
   if(currentLang==='ko')return label;
   return label.replace('기울기 ','slope ').replace('(가로)','(horizontal)').replace('(세로)','(vertical)');
 }
 function slopeCompact(f){
+  if(latticeMode==='hex')return `axial Δ(${f.dx},${f.dy})`;
   if(currentLang==='ko')return localizeSlopeLabel(f.label);
   if(f.dx===0)return'm=∞ (V)';
   if(f.dy===0)return'm=0 (H)';
@@ -424,6 +433,10 @@ function displaySavedLabel(label){
   return label;
 }
 function presetNote(p){
+  if(latticeMode==='hex'){
+    const k=Math.round(Math.sqrt(p.a/3));
+    return tr('hexPresetGroup',k);
+  }
   if(p.a===1&&p.b===-1)return tr('presetClassic');
   if(p.a===1&&p.b===0)return tr('presetMonic');
   return `a=${p.a} · ${tr('presetEven')}`;
@@ -488,7 +501,7 @@ function updateUIText(){
   labelUseRecommended.textContent=tr('useRecommended');labelCStart.textContent=tr('cStart');
   labelCEnd.textContent=tr('cEnd');labelVerifyCount.textContent=tr('verifyCount');
   labelPrimeLimit.textContent=tr('primeLimit');runCSearch.textContent=tr('startSearch');
-  stopCSearch.textContent=tr('stop');cHintText.textContent=tr('hint');
+  stopCSearch.textContent=tr('stop');cHintText.textContent=tr(latticeMode==='hex'?'hintHex':'hint');
   savedTitleText.textContent=tr('savedTitle');closeSaved.textContent=tr('hide');
   clearSaved.textContent=tr('clearAll');hideFormula.textContent=tr('hide');
   allDirsText.firstChild.textContent=tr('allSlopes')+' ';allDirsHint.textContent=tr('allSlopesHint');
@@ -497,7 +510,7 @@ function updateUIText(){
   updateMiniZoomControls();
   const presetValue=cPreset.value;
   renderPresetOptions();
-  if(presetValue!==''&&Number(presetValue)<SEARCH_AB_PRESETS.length)cPreset.value=presetValue;
+  if(presetValue!==''&&Number(presetValue)<searchABPresets().length)cPreset.value=presetValue;
   if(!cSearchWorker&&!runCSearch.disabled){
     if(lastCSearchRows.length){
       const best=lastCSearchRows[0];
@@ -506,7 +519,7 @@ function updateUIText(){
   }
   selEl.innerHTML=selectionSummary();
   refreshActiveInfo();
-  updateSavedToggle();renderSavedPanel();renderFormulaPanel();
+  updateSavedToggle();renderSavedPanel();renderFormulaPanel();updateShapeUI();
   if(lastCSearchRows.length)renderCSearchResults(lastCSearchRows);
 }
 langToggle.onclick=()=>{
@@ -830,6 +843,7 @@ function cancelBranchBuild(){
   ++sieveToken;branchSieveTask.terminate();branchSieveTask=null;branchPrimePreview=null;branchBuildTarget=null;
 }
 function prepareLocalCacheForView(){
+  if(latticeMode==='hex')return;
   if(!ready||!W||!H)return;
   const branchCore=branchTargetForView(1.03,false);
   if(branchCore){
@@ -870,7 +884,11 @@ const SAVED_STATS_VERSION=2;
 let savedEntries=[];
 const RANGE_OPTIONS=[1000000000000];
 
-const SEARCH_AB_PRESETS=[
+// Square and hex presets are separate; the exact polynomial search algorithm is shared.
+// For a straight hex-grid segment of step k across an annulus, its quadratic
+// coefficient is 3*k*k. The normalized b residues below were cross-checked
+// against sampled axial/oblique hex lines (hexLineFormula / canonPoly).
+const SEARCH_AB_PRESETS_SQUARE=[
   {a:1,b:-1},
   {a:1,b:0},
   ...[4,16,36,64].flatMap(a=>{
@@ -879,28 +897,47 @@ const SEARCH_AB_PRESETS=[
     return rows;
   })
 ];
+const SEARCH_AB_PRESETS_HEX=[
+  ...[1,0,3,2].map(b=>({a:3,b})), // k=1; all-odd families first
+  ...[2,3,4].flatMap(k=>{
+    const a=3*k*k,rows=[];
+    for(let b=1;b<a;b++)if(gcd(b,k)===1)rows.push({a,b});
+    return rows;
+  })
+];
+function searchABPresets(){return latticeMode==='hex'?SEARCH_AB_PRESETS_HEX:SEARCH_AB_PRESETS_SQUARE}
 function renderPresetOptions(){
-  const keep=cPreset.value;
+  const keep=cPreset.value,presets=searchABPresets();
   cPreset.innerHTML='';
-  SEARCH_AB_PRESETS.forEach((p,i)=>{
+  presets.forEach((p,i)=>{
     const o=document.createElement('option');
     o.value=String(i);
     o.textContent=`a=${p.a}, b=${p.b}　${presetNote(p)}`;
     cPreset.appendChild(o);
   });
-  if(keep!==''&&Number(keep)<SEARCH_AB_PRESETS.length)cPreset.value=keep;
+  if(keep!==''&&Number(keep)<presets.length)cPreset.value=keep;
 }
 function initSearchABPresets(){
   renderPresetOptions();
   cPreset.value='0';
   applySearchABPreset();
 }
+function refreshSearchABForLattice(){
+  // If the two lattices happen to offer the same pair, keep it; otherwise
+  // select the new lattice's first recommended pair. Manual entries persist.
+  const prevA=Number(cA.value),prevB=Number(cB.value),presets=searchABPresets();
+  renderPresetOptions();
+  const match=presets.findIndex(p=>p.a===prevA&&p.b===prevB);
+  cPreset.value=String(match>=0?match:0);
+  applySearchABPreset();
+  cHintText.textContent=tr(latticeMode==='hex'?'hintHex':'hint');
+}
 function applySearchABPreset(){
   const use=cPresetMode.checked;
   cPreset.disabled=!use;
   cA.disabled=use;cB.disabled=use;
   if(use){
-    const p=SEARCH_AB_PRESETS[Number(cPreset.value)||0]||SEARCH_AB_PRESETS[0];
+    const presets=searchABPresets(),p=presets[Number(cPreset.value)||0]||presets[0];
     cA.value=String(p.a);cB.value=String(p.b);
   }
 }
@@ -971,7 +1008,7 @@ function miniLevelLabel(n){
   return'1B';
 }
 function miniViewport(){
-  const n=MINI_LEVELS[miniZoomIndex],r=radiusFor(n);
+  const n=MINI_LEVELS[miniZoomIndex],r=latticeMode==='hex'?hexRadiusFor(n):radiusFor(n);
   // The widest 1T overview is anchored on n=1. All closer levels follow the
   // current camera center. Since n grows as radius², each x10 level changes
   // the minimap side length by exactly about sqrt(10).
@@ -1041,6 +1078,7 @@ function formulaParamIntervalsForBand(f,lowN,highN){
   return c>=lowN&&c<=highN?[[0,0]]:[];
 }
 function forEachFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn){
+  if(latticeMode==='hex')return forEachHexFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn);
   if(!f)return 0;
   const sr=shellRangeForRect(xmin,xmax,ymin,ymax),nb=shellNumberRange(sr.lo,sr.hi),ranges=formulaParamIntervalsForBand(f,nb.low,nb.high);
   let total=0;for(const r of ranges)total+=r[1]-r[0]+1;
@@ -1049,14 +1087,15 @@ function forEachFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn){
   for(const[a,b]of ranges){
     for(let t=a;t<=b;t+=step){
       const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)continue;
-      const q=ulamCoord(n);if(q.x<xmin||q.x>xmax||q.y<ymin||q.y>ymax)continue;
+      const q=latticeCoord(n);if(q.x<xmin||q.x>xmax||q.y<ymin||q.y>ymax)continue;
       hits++;if(fn(n,q,t)===false)return hits;
     }
-    if(step>1&&(b-a)%step){const t=b,n=f.a*t*t+f.b*t+f.c;if(n>=1&&n<=MAX_N){const q=ulamCoord(n);if(q.x>=xmin&&q.x<=xmax&&q.y>=ymin&&q.y<=ymax){hits++;if(fn(n,q,t)===false)return hits}}}
+    if(step>1&&(b-a)%step){const t=b,n=f.a*t*t+f.b*t+f.c;if(n>=1&&n<=MAX_N){const q=latticeCoord(n);if(q.x>=xmin&&q.x<=xmax&&q.y>=ymin&&q.y<=ymax){hits++;if(fn(n,q,t)===false)return hits}}}
   }
   return hits;
 }
 function activePrimeIntersectsCurrentView(f){
+  if(latticeMode==='hex'){const rect=hexViewRect(1);let found=false;forEachHexFormulaTermInRect(f,rect.xmin,rect.xmax,rect.ymin,rect.ymax,16000,(n,p)=>{if(hexKnown(p.x,p.y)===true||hexKnown(p.x,p.y)===null&&isPrimeExactSingle(n)){found=true;return false}});return found}
   if(!f||!W||!H)return false;const hx=W/(2*scale),hy=H/(2*scale);let found=false;
   forEachFormulaTermInRect(f,camX-hx,camX+hx,camY-hy,camY+hy,12000,(n)=>{
     const prime=cacheHasNumber(n)?isPrime(n):isPrimeExactSingle(n);if(prime){found=true;return false}
@@ -1064,7 +1103,7 @@ function activePrimeIntersectsCurrentView(f){
   return found;
 }
 function nearestPrimeTermToCamera(f){
-  if(!f)return null;const tx=Math.round(camX),ty=Math.round(camY),target=Math.max(1,Math.min(MAX_N,ulamNumber(tx,ty))),seeds=[];
+  if(!f)return null;const tx=Math.round(camX),ty=Math.round(camY),target=Math.max(1,Math.min(MAX_N,latticeNumber(tx,ty))),seeds=[];
   if(f.a>0){const D=f.b*f.b-4*f.a*(f.c-target);if(D>=0){const root=Math.sqrt(D),den=2*f.a;seeds.push((-f.b+root)/den,(-f.b-root)/den)}}
   else if(f.a===0&&f.b!==0)seeds.push((target-f.c)/f.b);
   else seeds.push(0);
@@ -1073,7 +1112,7 @@ function nearestPrimeTermToCamera(f){
     const t=Math.round(seed)+sg*off;if(seen.has(t))continue;seen.add(t);
     const n=f.a*t*t+f.b*t+f.c;if(!Number.isSafeInteger(n)||n<2||n>MAX_N)continue;
     const prime=cacheHasNumber(n)?isPrime(n):isPrimeExactSingle(n);if(!prime)continue;
-    const q=ulamCoord(n),dx=q.x-camX,dy=q.y-camY,d=dx*dx+dy*dy;
+    const q=latticeCoord(n),dx=q.x-camX,dy=q.y-camY,d=dx*dx+dy*dy;
     if(d<bestD){bestD=d;best={n,t,x:q.x,y:q.y};if(d<4)return best}
   }
   return best;
@@ -1129,6 +1168,7 @@ function rebuildMiniFormula(){
 }
 
 function renderMinimap(){
+  if(latticeMode==='hex')return renderHexMinimap();
   if(!showMinimap||!ready){miniWrap.style.display='none';miniToggle.textContent=tr('showMinimap');return}
   resizeMinimap();rebuildMiniBackground();rebuildMiniFormula();
   const view=miniViewport();miniCtx.imageSmoothingEnabled=true;
@@ -1162,6 +1202,7 @@ function cacheEntryHasNumber(cache,n){
   return cache.readyBlocks[block]===1;
 }
 function cacheHasNumber(n){
+  if(latticeMode==='hex')return hexKnownNumber(n);
   if(cacheEntryHasNumber(localPrimeCache,n)||cacheEntryHasNumber(localPrimePreview,n))return true;
   if(branchPrimeCache||branchPrimePreview||cornerPrimeCache||cornerPrimePreview){const q=ulamCoord(n);return branchCacheHasXY(branchPrimeCache,q.x,q.y)||branchCacheHasXY(branchPrimePreview,q.x,q.y)||cornerCacheHasXY(cornerPrimeCache,q.x,q.y)||cornerCacheHasXY(cornerPrimePreview,q.x,q.y)}
   return false;
@@ -1189,6 +1230,7 @@ function primeFromCache(cache,n){
   return(cache.bits[i>>>3]&(1<<(i&7)))===0;
 }
 function isPrime(n){
+  if(latticeMode==='hex'){if(n===2)return true;if(n<2||n%2===0)return false;const p=hexCoord(n);const known=hexKnown(p.x,p.y);return known===null?isPrimeExactSingle(n):known}
   if(n===2)return true;
   if(n<2||n%2===0)return false;
   if(cacheEntryHasNumber(localPrimeCache,n))return primeFromCache(localPrimeCache,n);
@@ -1207,7 +1249,7 @@ function isPrimeExactSingle(n){
   for(const p of basePrimes){if(p*p>n)break;if(n%p===0)return false}
   return true;
 }
-function validXY(x,y){if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R)return false;const n=ulamNumber(x,y);return n>=1&&n<=MAX_N}
+function validXY(x,y){if(latticeMode==='hex')return hexRadius(x,y)<=HEX_R&&hexNumber(x,y)<=MAX_N;if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R)return false;const n=ulamNumber(x,y);return n>=1&&n<=MAX_N}
 function gcd3(a,b,c){return gcd(gcd(a,b),c)}
 function fixedDivisor(a,b,c){for(const p of [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47]){let all=true;for(let n=0;n<p;n++){let v=(a*n*n+b*n+c)%p;if(v<0)v+=p;if(v!==0){all=false;break}}if(all)return p}return 0}
 function canonPoly(a,b,c){a=Math.round(a);b=Math.round(b);c=Math.round(c);if(a!==0){const ob=b,oc=c,h=Math.round(-ob/(2*a));b=2*a*h+ob;c=a*h*h+ob*h+oc;if(b<0)b=-b;return{a,b,c}}if(b!==0){if(b<0)b=-b;const h=Math.round(-c/b);c=b*h+c}return{a,b,c}}
@@ -1344,7 +1386,7 @@ function statsFromPointFormula(f){
 function makeSavedEntry(f){
   const base=simpleFormulaCopy(f),fs=statsFromPointFormula(f)||formulaStatCache.get(`${MAX_N}|${f.a}|${f.b}|${f.c}`);
   return{id:polyKey(base),a:base.a,b:base.b,c:base.c,label:base.label||'',kind:base.kind||'saved',
-    source:selected?{n:selected.n,x:selected.x,y:selected.y}:null,savedAt:Date.now(),
+    source:selected?{n:selected.n,x:selected.x,y:selected.y,lattice:latticeMode}:null,savedAt:Date.now(),
     statsRange:fs?MAX_N:null,statsVersion:fs?SAVED_STATS_VERSION:null,stats:fs?statSnapshot(fs):null};
 }
 let savedStatsWorker=null,savedStatsKickTimer=0,savedStatsToken=0,savedStatsNodes=new Map(),savedStatsDirty=false;
@@ -1455,13 +1497,13 @@ function renderSavedPanel(){
 function activateSavedEntry(entry,doMove){
   const src=entry.source;activeFormula=simpleFormulaCopy(entry);
   if(doMove&&src){
-    if(src.n>MAX_N){alert(tr('originalOutOfRange',MAX_N));return}
+    const pos=latticeCoord(src.n);    if(src.n>MAX_N){alert(tr('originalOutOfRange',MAX_N));return}
     // REV20 instant jump: the old path synchronously ran full 1T point analysis
     // before the browser could paint the destination.  A saved formula already
     // contains everything needed to highlight it, so navigation itself is O(1).
     ++pointAnalyzeKick;cancelPointAnalysis();
-    camX=src.x;camY=src.y;scale=Math.max(scale,5.5);clamp();
-    selected={x:src.x,y:src.y,n:src.n};formulas=[];pointAnalysisPending=false;pointAnalysisDoneKey='';
+    camX=pos.x;camY=pos.y;scale=Math.max(scale,5.5);clamp();
+    selected={x:pos.x,y:pos.y,n:src.n};formulas=[];pointAnalysisPending=false;pointAnalysisDoneKey='';
     selEl.innerHTML=selectionSummary(false);
     miniBgKey='';miniFormulaKey='';
   }
@@ -1508,6 +1550,7 @@ function pointVisibilityBonus(f){
   return 9/(Math.hypot(ax,ay)+1);
 }
 function preparePointCandidates(x,y){
+  if(latticeMode==='hex')return hexPointCandidates(x,y);
   const fixed=[],rawDynamic=[],seenFixed=new Set(),seenDynamic=new Set();
   for(const d of FIXED_DIRS){const f=localFormula(x,y,d,false);if(!f)continue;const k=polyKey(f);if(seenFixed.has(k))continue;seenFixed.add(k);f.kind='fixed';fixed.push(f)}
   for(const d of DYNAMIC_DIRS){
@@ -1680,19 +1723,20 @@ function renderFormulaPanel(){
   }
 }
 function selectPoint(x,y,cacheDelay=140){
-  const n=ulamNumber(x,y);if(n<1||n>MAX_N)return;
+  const n=latticeNumber(x,y);if(n<1||n>MAX_N)return;
   ++pointAnalyzeKick;cancelPointAnalysis();
   selected={x,y,n};activeFormula=null;activeInfo.textContent='';formulas=[];pointAnalysisDoneKey='';
   cSearchOpen=false;cSearchPanel.style.display='none';savedOpen=false;formulaHidden=false;
   pointAnalysisPending=true;selEl.innerHTML=selectionSummary(cacheDelay!==0);renderFormulaPanel();sched(cacheDelay);
   deferPointAnalysis(x,y);
 }
-function clamp(){const mx=W/(2*scale),my=H/(2*scale);camX=Math.max(-MAX_R-mx*.25,Math.min(MAX_R+mx*.25,camX));camY=Math.max(-MAX_R-my*.25,Math.min(MAX_R+my*.25,camY))}
+function clamp(){if(latticeMode==='hex'){const margin=Math.max(W,H)/scale*.20;camX=Math.max(-HEX_R-margin,Math.min(HEX_R+margin,camX));camY=Math.max(-HEX_R-margin,Math.min(HEX_R+margin,camY));return}const mx=W/(2*scale),my=H/(2*scale);camX=Math.max(-MAX_R-mx*.25,Math.min(MAX_R+mx*.25,camX));camY=Math.max(-MAX_R-my*.25,Math.min(MAX_R+my*.25,camY))}
 function requestRender(){
   if(pending)return;pending=true;
   requestAnimationFrame(()=>{pending=false;render();if(primeAfterFrame){primeAfterFrame=false;queueLocalCacheEnsure(0)}});
 }
 function sched(cacheDelay=140){
+  if(latticeMode==='hex'){hexQueueEnsure(cacheDelay);requestRender();return}
   if(cacheDelay===0){prepareLocalCacheForView();clearTimeout(localCacheTimer);primeAfterFrame=true}
   else if(!primeAfterFrame)queueLocalCacheEnsure(cacheDelay);
   requestRender();
@@ -1978,7 +2022,7 @@ function startCSearch(){
         primeLimit=Math.max(101,Math.min(5000,Math.floor(Number(cPrimeLimit.value)||3000)));
   if(![a,b,lo,hi].every(Number.isSafeInteger)||a<=0||hi<lo){alert(tr('invalidSearch'));return}
   const span=hi-lo+1;
-  if(span>7000000){alert(tr('searchTooWide'));return}
+  if(lo< -7000000||hi>7000000||span>14000001){alert(tr('searchTooWide'));return}
   stopCSearchRun();
   const token=++cSearchToken;
   lastCSearchRows=[];cResults.innerHTML='';runCSearch.disabled=true;stopCSearch.disabled=false;
@@ -2022,7 +2066,328 @@ cPreset.onchange=applySearchABPreset;
 runCSearch.onclick=startCSearch;
 stopCSearch.onclick=()=>{stopCSearchRun();cSearchStatus.textContent=tr('stopped')};
 
-function render(){if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
+// ===== Hexagonal Ulam lattice (single-file module, isolated from square optimized paths) =====
+// Axial (q,r), pointy-top tiles. Ring h contains 6h cells; 1 is at the origin.
+const HEX_DQ=[0,-1,-1,0,1,1], HEX_DR=[-1,0,1,1,0,-1];
+const HEX_SQRT3=Math.sqrt(3);
+const HEX_SIEVE_B64='AGFzbQEAAAABGANgAAF/YAh/f39/f39/fgF/YAN/f38BfwMFBAAAAQIEBQFwAQEBBQQBAUBABgkBfwFBoNP3AAsHLgQGbWVtb3J5AgAKcHJpbWVzX3B0cgAACmJpdG1hcF9wdHIAAQdjb21wdXRlAAIKgAsECABBwIiAgAALCABBwMyTgAALtAkMAn8HfgJ/An4BfwJ+An8BfgF/An4CfwN+I4CAgIAAQcAAayIIJICAgIAAQX8hCQJAIAGsIgogAKwiC30iDEIAUw0AIAOsIg0gAqwiDn0iD0IAUw0AIAZBgPEESw0AIA9CAXwgDEIBfCIQfiIMQoC23AVWDQBBwMyTgABBACAMQgd8QgOIpyIJEIOAgIAAIREgBCAFSg0AIARBf2ohEgJAA0ACQCAEQQFIDQBCfiAErSITIBKtfkIDfn0hFCAIQQA2AjQgCEEANgIoIAggBDYCJCAIIAQ2AiAgCEEAIARrIhU2AjAgCCAVNgIsIAggBDYCFCAIIAQ2AhAgCEEANgIMIAggFTYCCCAIIBU2AgQgCEEANgIAIARBf2qtIhZCA34hF0IAIQ8DQCAPpyIVQQJ0IRgCQAJAAkACQCAVDgQAAQEAAQsgCEEgaiAYaigCACIZIABIDQJCACEMIBYhGiAZIAFMDQEMAgsgCEEgaiAYaigCACIZrCEMAkAgFUEGcUEERw0AIBYgCiAMfSIaIBYgGlMbIRogCyAMfSIMQgAgDEIAVRshDAwBCyAWIAwgC30iGiAWIBpTGyEaIAwgCn0iDEIAIAxCAFUbIQwLAkACQAJAIBVBf2oOBAABAQABCyAIIBhqKAIAIhsgAkgNAiAbIANMDQEMAgsgCCAYaigCACIbrCEcAkAgFUEGcUECRw0AIBogDSAcfSIdIBogHVMbIRogDCAOIBx9IhwgDCAcVRshDAwBCyAaIBwgDn0iHSAaIB1TGyEaIAwgHCANfSIcIAwgHFUbIQwLIAwgGlUNACAMIBcgD3wgE35CAnwiHXwiHCAHVQ0AIAwgByAaIB18Ih19QgAgByAdUxsgGnxVDQAgGEGAiICAAGohHiAYQaCIgIAAaiEfIB0gByAHIB1VGyEgAkAgHEICVQ0AICBCAlMNACAZrCALfSAMIBx9QgJ8IgwgHjQCAH58IBusIA59IAwgHzQCAH58IBB+fCIMQgOIpyARaiIVQQEgDKdBB3F0IBUtAAByOgAACyAgIBxCAYQiDEIDIAxCA1UbIh1TDQAgICAdfSIMQgJ/ISEgDEJ/Uw0AICFCAXwiHEKAwABWDQRBoJPvgABBACAhp0EBahCDgICAACEVAkAgBkUNAEEAIRgDQCAYQQJ0QcCIgIAAajUCACIaIBp+IgwgIFYNAQJAIB0gGnxCf3wiIiAiIBqCfSIiIAwgIiAMVhsiDCAdfSAaQgAgDEIBg1AbfEIBiCIMIBxaDQADQCAMpyAVakEBOgAAIAwgGnwiDCAcVA0ACwsgGEEBaiIYIAZHDQALCyAdIBR8IQwgGawgC30hHSAbrCAOfSEgICFCACAhQgBVG0IBfCEaQaCT74AAIRUDQAJAIBUtAAANACAdIAwgHjQCAH58ICAgDCAfNAIAfnwgEH58IhxCA4inIBFqIhhBASAcp0EHcXQgGC0AAHI6AAALIBVBAWohFSAMQgJ8IQwgGkJ/fCIaQgBSDQALCyAUIBN9IRQgD0IBfCIPQgZSDQALCyASQQFqIRIgBCAFRiEVIARBAWohBCAVRQ0ADAILC0F+IQkLIAhBwABqJICAgIAAIAkLtQEBA38CQCACRQ0AIAJBB3EhA0EAIQQCQCACQQhJDQAgAkF4cSEFQQAhBANAIAAgBGoiAiABOgAAIAJBB2ogAToAACACQQZqIAE6AAAgAkEFaiABOgAAIAJBBGogAToAACACQQNqIAE6AAAgAkECaiABOgAAIAJBAWogAToAACAFIARBCGoiBEcNAAsLIANFDQAgACAEaiECA0AgAiABOgAAIAJBAWohAiADQX9qIgMNAAsLIAALCz8BAEGACAs4AAAAAP//////////AAAAAAEAAAABAAAAAAAAAAAAAAD/////AAAAAAEAAAABAAAAAAAAAP////8AYgRuYW1lAA8OaGV4X3NpZXZlLndhc20BKgQACmdldF9wcmltZXMBCmdldF9iaXRtYXACB2NvbXB1dGUDBm1lbXNldAcSAQAPX19zdGFja19wb2ludGVyCQoBAAcucm9kYXRhAH8JcHJvZHVjZXJzAQxwcm9jZXNzZWQtYnkBBWNsYW5nXzE3LjAuMCAoaHR0cHM6Ly9naXRodWIuY29tL3N3aWZ0bGFuZy9sbHZtLXByb2plY3QuZ2l0IDEwOTk5YjZkMDM0ZmUzMThmM2Q1NmM4M2JkZGI2NTcyNTkzYThiYjApAEkPdGFyZ2V0X2ZlYXR1cmVzBCsKbXVsdGl2YWx1ZSsPbXV0YWJsZS1nbG9iYWxzKw9yZWZlcmVuY2UtdHlwZXMrCHNpZ24tZXh0';
+let latticeMode='square',HEX_R=hexRadiusFor(MAX_N);
+let hexCache=null,hexPreview=null,hexTask=null,hexGeneration=0,hexHistory=[],hexTimer=0,hexLastPaint=0;
+let hexWorkerURL=null;
+const hexToggle=document.getElementById('shapeToggle'),hexSquareBtn=document.getElementById('shapeSquare'),hexHexBtn=document.getElementById('shapeHex');
+function hexRadiusFor(n){if(n<=1)return 0;let h=Math.max(0,Math.ceil((Math.sqrt(12*n-3)-3)/6));while(3*h*(h+1)+1<n)h++;while(h>0&&3*(h-1)*h+1>=n)h--;return h}
+function hexRadius(q,r){return Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))}
+function hexNumber(q,r){
+ if(q===0&&r===0)return 1;
+ const h=hexRadius(q,r),start=3*h*(h-1)+2;
+ if(q===h&&r<=0&&r>-h)return start-r;
+ if(r===-h&&q>0&&q<=h)return start+h+(h-q);
+ if(q+r===-h&&q<=0&&q>-h)return start+2*h-q;
+ if(q===-h&&r>=0&&r<h)return start+3*h+r;
+ if(r===h&&q>=-h&&q<0)return start+4*h+(q+h);
+ return start+5*h+q;
+}
+function hexCoord(n){
+ if(n<=1)return{x:0,y:0};
+ const h=hexRadiusFor(n),start=3*h*(h-1)+2,d=n-start,side=Math.floor(d/h),t=d%h;
+ const q0=[h,h,0,-h,-h,0],r0=[0,-h,-h,0,h,h];
+ return{x:q0[side]+HEX_DQ[side]*t,y:r0[side]+HEX_DR[side]*t};
+}
+function latticeNumber(x,y){return latticeMode==='hex'?hexNumber(x,y):ulamNumber(x,y)}
+function latticeCoord(n){return latticeMode==='hex'?hexCoord(n):ulamCoord(n)}
+function hexAtPixel(px,py,s=scale,cx=camX,cy=camY){
+ const dr=(H/2-py)/(1.5*s),dq=(px-W/2)/(HEX_SQRT3*s)-dr/2;
+ return{x:cx+dq,y:cy+dr};
+}
+function hexRound(q,r){
+ let x=Math.round(q),z=Math.round(r),y=Math.round(-q-r);
+ const dx=Math.abs(x-q),dy=Math.abs(y+q+r),dz=Math.abs(z-r);
+ if(dx>dy&&dx>dz)x=-y-z;else if(dy>dz)y=-x-z;else z=-x-y;
+ return{x,y:z};
+}
+function hexPixel(q,r){return {x:W/2+HEX_SQRT3*((q-camX)+(r-camY)/2)*scale,y:H/2-1.5*(r-camY)*scale}}
+function hexViewRect(factor=1){
+ const pts=[];for(const px of [-W*(factor-1)/2,W*(factor+1)/2])for(const py of [-H*(factor-1)/2,H*(factor+1)/2])pts.push(hexAtPixel(px,py));
+ return{xmin:Math.floor(Math.min(...pts.map(p=>p.x)))-3,xmax:Math.ceil(Math.max(...pts.map(p=>p.x)))+3,
+         ymin:Math.floor(Math.min(...pts.map(p=>p.y)))-3,ymax:Math.ceil(Math.max(...pts.map(p=>p.y)))+3};
+}
+function hexRingBounds(rect){
+ const dist=(a,b)=>a>0?a:b<0?-b:0;
+ const lo=Math.max(dist(rect.xmin,rect.xmax),dist(rect.ymin,rect.ymax),dist(rect.xmin+rect.ymin,rect.xmax+rect.ymax));
+ const hi=Math.max(...[rect.xmin,rect.xmax].flatMap(q=>[rect.ymin,rect.ymax].map(r=>hexRadius(q,r))));
+ return{lo:Math.max(0,lo),hi:Math.min(HEX_R,hi)};
+}
+function hexSide(q,r){const h=hexRadius(q,r);if(h===0)return-1;if(q===h&&r<=0&&r>-h)return 0;if(r===-h&&q>0)return 1;if(q+r===-h&&q<=0&&q>-h)return 2;if(q===-h&&r>=0&&r<h)return 3;if(r===h&&q<0)return 4;return 5}
+function hexCacheContains(cache,rect){return !!cache&&cache.xmin<=rect.xmin&&cache.xmax>=rect.xmax&&cache.ymin<=rect.ymin&&cache.ymax>=rect.ymax}
+function hexCachePrime(cache,q,r){if(!cache||q<cache.xmin||q>cache.xmax||r<cache.ymin||r>cache.ymax)return null;const h=hexRadius(q,r);if(h<cache.lo||h>cache.hi||cache.done[h-cache.lo]!==1)return null;const idx=(r-cache.ymin)*cache.width+(q-cache.xmin);return (cache.bits[idx>>>3]&(1<<(idx&7)))!==0}
+function hexKnown(q,r){return hexCachePrime(hexPreview,q,r) ?? hexCachePrime(hexCache,q,r)}
+function hexKnownNumber(n){const p=hexCoord(n);return hexKnown(p.x,p.y)!==null}
+function hexIsPrime(n,q,r){if(n===2)return true;if(n<2||n%2===0)return false;const cached=hexKnown(q,r);return cached===null?false:cached}
+function hexSetReady(cache,h0,h1,result){for(let i=0;i<cache.bits.length;i++)cache.bits[i]|=result[i];cache.done.fill(1,h0-cache.lo,h1-cache.lo+1)}
+function hexCancelBuild(){++hexGeneration;clearTimeout(hexTimer);hexTimer=0;if(hexTask){hexTask.stop();hexTask=null}hexPreview=null}
+function hexWorkerMain(){
+ let primes=new Uint32Array(0),wasm=null;
+ function byteDecode(s){const b=atob(s),out=new Uint8Array(b.length);for(let i=0;i<b.length;i++)out[i]=b.charCodeAt(i);return out}
+ function jsCompute(d){
+   const {xmin,xmax,ymin,ymax,h0,h1,maxN}=d,width=xmax-xmin+1;
+   const result=new Uint8Array(Math.ceil(width*(ymax-ymin+1)/8));
+   const dq=[0,-1,-1,0,1,1],dr=[-1,0,1,1,0,-1];
+   for(let h=h0;h<=h1;h++){
+     if(!h)continue;
+     const q0=[h,h,0,-h,-h,0],r0=[0,-h,-h,0,h,h],start=3*h*(h-1)+2;
+     for(let s=0;s<6;s++){
+       let a=0,b=h-1;if(dq[s]===0){if(q0[s]<xmin||q0[s]>xmax)continue}else if(dq[s]>0){a=Math.max(a,xmin-q0[s]);b=Math.min(b,xmax-q0[s])}else{a=Math.max(a,q0[s]-xmax);b=Math.min(b,q0[s]-xmin)}
+       if(dr[s]===0){if(r0[s]<ymin||r0[s]>ymax)continue}else if(dr[s]>0){a=Math.max(a,ymin-r0[s]);b=Math.min(b,ymax-r0[s])}else{a=Math.max(a,r0[s]-ymax);b=Math.min(b,r0[s]-ymin)}
+       if(a>b)continue;
+       const first=start+s*h+a,last=Math.min(maxN,start+s*h+b);if(first>last)continue;
+       const plot=n=>{const t=a+n-first,q=q0[s]+dq[s]*t,r=r0[s]+dr[s]*t,idx=(r-ymin)*width+(q-xmin);result[idx>>>3]|=1<<(idx&7)};
+       if(first<=2&&last>=2)plot(2);
+       let firstOdd=Math.max(3,first%2===0?first+1:first);const cnt=firstOdd<=last?Math.floor((last-firstOdd)/2)+1:0;
+       if(!cnt)continue;const comp=new Uint8Array(cnt);
+       for(const p of primes){if(p*p>last)break;let n=Math.max(p*p,Math.ceil(firstOdd/p)*p);if(n%2===0)n+=p;for(let i=(n-firstOdd)/2;i<cnt;i+=p)comp[i]=1}
+       for(let i=0;i<cnt;i++)if(!comp[i])plot(firstOdd+2*i);
+     }
+   }
+   return result;
+ }
+ self.onmessage=async e=>{
+   const d=e.data;
+   try{
+     if(d.type==='init'){
+       primes=d.primes;
+       try{
+         const mod=await WebAssembly.instantiate(byteDecode(HEX_SIEVE_B64),{});wasm=mod.instance.exports;
+         new Uint32Array(wasm.memory.buffer,wasm.primes_ptr(),primes.length).set(primes);
+         const sample={xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100};
+         const count=wasm.compute(sample.xmin,sample.xmax,sample.ymin,sample.ymax,sample.h0,sample.h1,primes.length,100n);
+         const expected=jsCompute(sample),actual=new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),count);
+         if(count!==expected.length||actual.some((v,i)=>v!==expected[i]))throw Error('Hex WASM/JS verification mismatch');
+       }catch(ex){wasm=null}
+       self.postMessage({type:'ready',wasm:!!wasm});return;
+     }
+     if(d.type==='job'){
+       let result;
+       if(wasm){
+         const bytes=wasm.compute(d.xmin,d.xmax,d.ymin,d.ymax,d.h0,d.h1,primes.length,BigInt(d.maxN));
+         if(bytes<0)throw new Error('Hex WASM grid size / run limit ('+bytes+')');
+         result=new Uint8Array(bytes);result.set(new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),bytes));
+       }else result=jsCompute(d);
+       self.postMessage({type:'chunk',h0:d.h0,h1:d.h1,bits:result.buffer},[result.buffer]);
+     }
+   }catch(error){self.postMessage({type:'error',message:String(error?.message||error)})}
+ };
+}
+function hexWorkerSource(){return `const HEX_SIEVE_B64=${JSON.stringify(HEX_SIEVE_B64)};\n(${hexWorkerMain.toString()})();`}
+function startHexBuild(target){
+ hexCancelBuild();
+ const old=hexCache;if(old&&old.done.every(v=>v===1)){hexHistory.unshift(old);if(hexHistory.length>4)hexHistory.pop()}
+ const width=target.xmax-target.xmin+1,height=target.ymax-target.ymin+1,count=width*height;
+ if(count>12000000){console.warn('[hex] viewport larger than 12M cells');return}
+ const bounds=hexRingBounds(target),cache={...target,...bounds,width,height,bits:new Uint8Array(Math.ceil(count/8)),done:new Uint8Array(bounds.hi-bounds.lo+1)};
+ hexPreview=cache;
+ if(cache.lo===0){const idx=(-cache.ymin)*width-cache.xmin;if(idx>=0&&idx<count)cache.done[0]=1}
+ const t0=performance.now(),token=hexGeneration,workerCount=Math.max(1,Math.min(mobilePrimeDevice()?2:6,Math.max(1,(navigator.hardwareConcurrency||4)-1)));
+ const jobs=[];
+ // Work toward the currently visible center first, while retaining exact ring ownership.
+ const stripe=24;for(let h=Math.max(1,bounds.lo);h<=bounds.hi;h+=stripe)jobs.push({h0:h,h1:Math.min(bounds.hi,h+stripe-1)});
+ const focus=hexRadius(Math.round(camX),Math.round(camY));jobs.sort((a,b)=>Math.abs((a.h0+a.h1)/2-focus)-Math.abs((b.h0+b.h1)/2-focus));
+ const workers=[],poolCount=Math.min(workerCount,jobs.length);let next=0,completed=0,wasmCount=0,stopped=false;
+ const cleanup=()=>{for(const w of workers)w.terminate();workers.length=0};
+ function done(){if(stopped)return;stopped=true;cleanup();if(token!==hexGeneration)return;hexCache=cache;hexPreview=null;hexTask=null;hexHistory.unshift(cache);hexHistory=hexHistory.filter((c,i)=>i===0||c!==cache).slice(0,4);console.info(`[hex sieve] ${Math.round(performance.now()-t0)} ms · ${jobs.length} stripes · ${poolCount} Workers (${wasmCount} WASM)`);requestRender()}
+ function send(w){if(stopped||token!==hexGeneration)return;if(next>=jobs.length)return;w.postMessage({type:'job',...target,...jobs[next++],maxN:MAX_N})}
+ function fail(err){console.error('[hex sieve]',err);if(stopped)return;stopped=true;cleanup();if(token===hexGeneration){hexTask=null;hexPreview=null;requestRender()}}
+ hexTask={stop(){if(stopped)return;stopped=true;cleanup()}};
+ if(!jobs.length){done();return}
+ try{
+   if(!hexWorkerURL)hexWorkerURL=URL.createObjectURL(new Blob([hexWorkerSource()],{type:'text/javascript'}));
+   for(let k=0;k<poolCount;k++){
+     const w=new Worker(hexWorkerURL);workers.push(w);
+     w.onmessage=e=>{
+       if(stopped||token!==hexGeneration)return;const d=e.data;
+       if(d.type==='ready'){if(d.wasm)wasmCount++;send(w);return}
+       if(d.type==='error'){fail(d.message);return}
+       if(d.type!=='chunk'||!(d.bits instanceof ArrayBuffer)){fail('Invalid hex worker response');return}
+       const bits=new Uint8Array(d.bits);if(bits.length!==cache.bits.length){fail('Invalid hex result bitmap length');return}
+       hexSetReady(cache,d.h0,d.h1,bits);completed++;
+       const now=performance.now();if(now-hexLastPaint>110){hexLastPaint=now;requestRender()}
+       if(completed===jobs.length)done();else send(w);
+     };
+     w.onerror=e=>{e.preventDefault?.();fail(e.message||'Hex worker error')};
+     w.postMessage({type:'init',primes:basePrimes});
+   }
+ }catch(e){fail(e)}
+}
+function hexEnsureCache(){
+ if(latticeMode!=='hex'||!ready||!W||!H)return;
+ const core=hexViewRect(1.015);
+ if(hexCacheContains(hexPreview,core)||hexCacheContains(hexCache,core))return;
+ const hist=hexHistory.find(c=>hexCacheContains(c,core)&&c.done.every(v=>v===1));
+ if(hist){hexCache=hist;requestRender();return}
+ const desired=hexViewRect(1.18);startHexBuild(desired);
+}
+function hexQueueEnsure(delay=120){clearTimeout(hexTimer);hexTimer=setTimeout(()=>{hexTimer=0;hexEnsureCache()},delay)}
+function hexDrawPoly(path,x,y,r){path.moveTo(x,y-r);for(let i=1;i<6;i++){const a=i*Math.PI/3-Math.PI/2;path.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}path.closePath()}
+function renderHex(){
+ if(!W||!H)return;
+ ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);
+ if(!ready){renderHexMinimap();return}
+ const rect=hexViewRect(1),primePath=new Path2D(),selectedPath=new Path2D();
+ const tile=scale>=8,point=Math.max(1,Math.min(5,scale*.67)),showGrid=scale>=15;
+ if(showGrid){const gridPath=new Path2D();for(let r=rect.ymin;r<=rect.ymax;r++)for(let q=rect.xmin;q<=rect.xmax;q++){
+   if(hexRadius(q,r)>HEX_R||hexNumber(q,r)>MAX_N)continue;
+   const p=hexPixel(q,r);if(p.x<-scale*2||p.x>W+scale*2||p.y<-scale*2||p.y>H+scale*2)continue;
+   hexDrawPoly(gridPath,p.x,p.y,scale*.96);
+ }ctx.strokeStyle='rgba(75,94,126,.24)';ctx.lineWidth=.65;ctx.stroke(gridPath)}
+ for(let r=rect.ymin;r<=rect.ymax;r++)for(let q=rect.xmin;q<=rect.xmax;q++){
+   const h=hexRadius(q,r);if(h>HEX_R)continue;
+   const n=hexNumber(q,r);if(n<2||n>MAX_N||!hexIsPrime(n,q,r))continue;
+   const p=hexPixel(q,r);if(p.x<-scale*2||p.x>W+scale*2||p.y<-scale*2||p.y>H+scale*2)continue;
+   if(tile)hexDrawPoly(primePath,p.x,p.y,scale*.93);
+   else primePath.rect(p.x-point/2,p.y-point/2,point,point);
+ }
+ ctx.fillStyle='#f5f7fb';ctx.fill(primePath);
+ if(activeFormula){
+   const formulaPath=new Path2D(),highlight=new Path2D(),dimSize=Math.max(1,Math.min(2,scale*.32));
+   forEachHexFormulaTermInRect(activeFormula,rect.xmin,rect.xmax,rect.ymin,rect.ymax,40000,(n,p)=>{
+     const v=hexPixel(p.x,p.y);
+     if(v.x<-scale*2||v.x>W+scale*2||v.y<-scale*2||v.y>H+scale*2)return;
+     formulaPath.rect(v.x-dimSize/2,v.y-dimSize/2,dimSize,dimSize);
+     if(hexIsPrime(n,p.x,p.y)){
+       if(tile)hexDrawPoly(highlight,v.x,v.y,scale*.96);else highlight.rect(v.x-point/2,v.y-point/2,Math.max(3,point),Math.max(3,point));
+     }
+   });
+   ctx.fillStyle='rgba(24,215,242,.30)';ctx.fill(formulaPath);ctx.fillStyle='#18d7f2';ctx.fill(highlight);
+ }
+ if(selected){const p=hexPixel(selected.x,selected.y);if(p.x>-40&&p.x<W+40&&p.y>-40&&p.y<H+40){hexDrawPoly(selectedPath,p.x,p.y,Math.max(7,scale*1.09));ctx.lineWidth=Math.max(2,Math.min(4,scale*.16));ctx.strokeStyle='#ffb454';ctx.stroke(selectedPath)}}
+ renderHexMinimap();
+}
+function hexUpdateHover(clientX,clientY){
+ if(!ready){hoverTip.style.display='none';return}
+ const rect=cv.getBoundingClientRect(),px=clientX-rect.left,py=clientY-rect.top;
+ if(px<0||py<0||px>W||py>H){hoverTip.style.display='none';return}
+ const p=hexRound(...(()=>{const a=hexAtPixel(px,py);return[a.x,a.y]})());
+ if(hexRadius(p.x,p.y)>HEX_R){hoverTip.style.display='none';return}
+ const n=hexNumber(p.x,p.y);if(n>MAX_N){hoverTip.style.display='none';return}
+ const prime=hexKnown(p.x,p.y);const ok=prime===null?isPrimeExactSingle(n):prime;
+ const cls=n===1?'neither':ok?'prime':'composite',label=n===1?tr('neither'):ok?tr('prime'):tr('composite');
+ hoverTip.innerHTML=`<b>${n.toLocaleString()}</b> · <span class="${cls}">${label}</span><br><span style="color:#9eabc0">(${p.x.toLocaleString()}, ${p.y.toLocaleString()})</span>`;
+ hoverTip.style.display='block';const tw=hoverTip.offsetWidth,th=hoverTip.offsetHeight;
+ let left=px+14,top=py+14;if(left+tw+12>W)left=px-tw-14;if(top+th+12>H)top=py-th-14;
+ hoverTip.style.left=Math.max(6,left)+'px';hoverTip.style.top=Math.max(6,top)+'px';
+}
+function forEachHexFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn){
+ if(!f)return 0;
+ const rings=hexRingBounds({xmin,xmax,ymin,ymax});
+ const low=rings.lo<=0?1:3*(rings.lo-1)*rings.lo+2;
+ const high=Math.min(MAX_N,3*rings.hi*(rings.hi+1)+1);
+ const ranges=formulaParamIntervalsForBand(f,low,high);
+ let total=0;for(const[a,b]of ranges)total+=b-a+1;
+ const step=maxSamples&&total>maxSamples?Math.ceil(total/maxSamples):1;
+ let count=0;
+ for(const[a,b]of ranges)for(let t=a;t<=b;t+=step){
+   const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)continue;
+   const p=hexCoord(n);if(p.x<xmin||p.x>xmax||p.y<ymin||p.y>ymax)continue;
+   count++;if(fn(n,p,t)===false)return count;
+ }
+ return count;
+}
+function hexMinimapXY(q,r,v){
+ const dq=q-v.cx,dr=r-v.cy,s=miniSide/(2*v.r);
+ return{px:miniSide/2+(dq+dr/2)*s,py:miniSide/2-(HEX_SQRT3*dr/2)*s};
+}
+function hexFromMinimap(mx,my,v){
+ const dr=(miniSide/2-my)*2/(HEX_SQRT3*(miniSide/(2*v.r)));
+ const dq=(mx-miniSide/2)/(miniSide/(2*v.r))-dr/2;
+ return{x:v.cx+dq,y:v.cy+dr};
+}
+function renderHexMinimap(){
+ if(!showMinimap||!ready){miniWrap.style.display='none';return}
+ resizeMinimap();const v=miniViewport(),key=`hex-mini-bg:${miniSide}:${v.r}:${v.cx}:${v.cy}`;
+ if(miniBgKey!==key||!miniBgCanvas){
+   const size=96,c=document.createElement('canvas');c.width=size;c.height=size;
+   const g=c.getContext('2d'),img=g.createImageData(size,size),data=img.data;
+   const edge=1/Math.log(MAX_N),center=1/Math.log(3);
+   for(let py=0;py<size;py++)for(let px=0;px<size;px++){
+     const x=px*miniSide/size,y=py*miniSide/size,p=hexFromMinimap(x,y,v),h=hexRadius(p.x,p.y),n=Math.min(MAX_N,Math.max(3,3*h*(h+1)+1));
+     const j=(py*size+px)*4;if(h>HEX_R){data[j]=7;data[j+1]=11;data[j+2]=19;data[j+3]=255;continue}
+     const d=1/Math.log(n),norm=Math.max(0,Math.min(1,(d-edge)/(center-edge))),shade=Math.round(35+220*Math.pow(norm,.48));
+     data[j]=data[j+1]=data[j+2]=shade;data[j+3]=255;
+   }
+   g.putImageData(img,0,0);miniBgCanvas=c;miniBgKey=key;
+ }
+ miniCtx.clearRect(0,0,miniSide,miniSide);miniCtx.drawImage(miniBgCanvas,0,0,miniSide,miniSide);
+ if(activeFormula){
+   const formulaKey=`hex-f:${key}:${activeFormula.a}:${activeFormula.b}:${activeFormula.c}`;
+   if(miniFormulaKey!==formulaKey||!miniFormulaCanvas){
+     const c=document.createElement('canvas');c.width=miniSide;c.height=miniSide;
+     const fctx=c.getContext('2d'),r=v.r,rect={xmin:Math.floor(v.cx-r*2),xmax:Math.ceil(v.cx+r*2),ymin:Math.floor(v.cy-r*2),ymax:Math.ceil(v.cy+r*2)};
+     fctx.fillStyle='#18d7f2';
+     forEachHexFormulaTermInRect(activeFormula,rect.xmin,rect.xmax,rect.ymin,rect.ymax,mobilePrimeDevice()?7500:20000,(n,p)=>{
+       const a=hexMinimapXY(p.x,p.y,v);if(a.px>=0&&a.px<miniSide&&a.py>=0&&a.py<miniSide)fctx.fillRect(a.px-1,a.py-1,2,2);
+     });
+     miniFormulaCanvas=c;miniFormulaKey=formulaKey;
+   }
+   miniCtx.drawImage(miniFormulaCanvas,0,0);
+ }
+ const a=hexViewRect(1),corners=[[a.xmin,a.ymin],[a.xmax,a.ymin],[a.xmax,a.ymax],[a.xmin,a.ymax]];
+ miniCtx.beginPath();for(let i=0;i<corners.length;i++){const p=hexMinimapXY(corners[i][0],corners[i][1],v);if(i)miniCtx.lineTo(p.px,p.py);else miniCtx.moveTo(p.px,p.py)}miniCtx.closePath();miniCtx.strokeStyle='#ff4d4f';miniCtx.lineWidth=1.5;miniCtx.stroke();
+ const origin=hexMinimapXY(0,0,v);if(origin.px>=0&&origin.px<miniSide&&origin.py>=0&&origin.py<miniSide){miniCtx.fillStyle='#fff';miniCtx.fillRect(origin.px-1,origin.py-1,3,3)}
+ miniCtx.font='600 10px system-ui';miniCtx.textAlign='left';miniCtx.textBaseline='bottom';miniCtx.fillStyle='rgba(220,230,244,.80)';miniCtx.fillText(`${miniLevelLabel(v.n)} · ~1/ln(n)`,7,miniSide-5);
+}
+function hexLineFormula(q,r,dir){
+ const side=hexSide(q,r);if(side<0)return null;
+ const member=t=>{const x=q+dir.dx*t,y=r+dir.dy*t;return hexRadius(x,y)<=HEX_R&&hexNumber(x,y)<=MAX_N&&hexSide(x,y)===side};
+ function endpoint(sign){let good=0,bad=1;while(member(sign*bad)){good=bad;bad*=2;if(bad>2*HEX_R+10)break}while(bad-good>1){const m=Math.floor((bad+good)/2);if(member(sign*m))good=m;else bad=m}return sign*good}
+ const lo=endpoint(-1),hi=endpoint(1),span=hi-lo+1;if(span<3)return null;
+ const s=Math.max(lo,Math.min(0,hi-2));
+ const f0=hexNumber(q+dir.dx*s,r+dir.dy*s),f1=hexNumber(q+dir.dx*(s+1),r+dir.dy*(s+1)),f2=hexNumber(q+dir.dx*(s+2),r+dir.dy*(s+2));
+ const second=f2-2*f1+f0;if(second%2!==0)return null;
+ const a=second/2,b=f1-f0-a*(2*s+1),c=f0-a*s*s-b*s,can=canonPoly(a,b,c);
+ if(can.a<=0||gcd3(can.a,can.b,can.c)>1||fixedDivisor(can.a,can.b,can.c))return null;
+ for(const t of [lo,hi,0])if(a*t*t+b*t+c!==hexNumber(q+dir.dx*t,r+dir.dy*t))return null;
+ return{label:dir.label,dx:dir.dx,dy:dir.dy,...can,localSpan:span};
+}
+function hexPointCandidates(q,r){
+ const fixedDirs=[{label:'육각 축 A',dx:1,dy:0},{label:'육각 축 B',dx:0,dy:1},{label:'육각 축 C',dx:1,dy:-1}];
+ const fixed=[],pool=[],seen=new Set();
+ for(const dir of fixedDirs){const f=hexLineFormula(q,r,dir);if(!f)continue;const key=polyKey(f);if(seen.has(key))continue;seen.add(key);fixed.push({...f,kind:'fixed'})}
+ const dirs=[];for(const d of [...DYNAMIC_DIRS,...[{dx:1,dy:1,label:'육각 대각 +1'}]]){
+   if(d.dx===0||d.dy===0||d.dx===-d.dy)continue;
+   dirs.push(d);
+ }
+ for(const dir of dirs){const f=hexLineFormula(q,r,dir);if(!f)continue;const key=polyKey(f);if(seen.has(key))continue;seen.add(key);
+   f.quickScore=quickFormulaScore(f.a,f.b,f.c);if(f.quickScore<=-1e50)continue;f.kind='dynamic';pool.push(f)}
+ pool.sort((a,b)=>(b.quickScore+pointVisibilityBonus(b)*.12)-(a.quickScore+pointVisibilityBonus(a)*.12));
+ return{fixed,pool:showAllDirections?pool:pool.slice(0,18)};
+}
+function switchLattice(next){
+ if(next===latticeMode)return;
+ const oldN=selected?.n||Math.max(1,Math.min(MAX_N,latticeNumber(Math.round(camX),Math.round(camY))));
+ const oldSavedSelected=selected?.n||null;
+ if(next==='hex'){
+   // Square background jobs never publish into the hex cache.
+   if(branchSieveTask)cancelBranchBuild();if(cornerSieveTask)cancelCornerBuild();
+   if(sieveWorker){++sieveToken;sieveWorker.terminate();sieveWorker=null;localPrimePreview=null;localBuildTarget=null}
+ }else hexCancelBuild();
+ stopSavedStatsBackfill();++pointAnalyzeKick;cancelPointAnalysis(false);
+ latticeMode=next;
+ const target=latticeCoord(oldN);camX=target.x;camY=target.y;
+ if(oldSavedSelected)selected={x:target.x,y:target.y,n:oldN};
+ formulas=[];pointAnalysisDoneKey='';pointAnalysisPending=false;
+ miniBgKey='';miniFormulaKey='';miniBgCanvas=null;miniFormulaCanvas=null;
+ clamp();updateShapeUI();refreshSearchABForLattice();renderSavedPanel();renderFormulaPanel();resizeMinimap();sched(0);
+ if(selected&&!formulaHidden&&!savedOpen&&!cSearchOpen){pointAnalysisPending=true;renderFormulaPanel();deferPointAnalysis(selected.x,selected.y)}
+ try{localStorage.setItem('ULAM_LATTICE_MODE',next)}catch(_){ }
+}
+function updateShapeUI(){
+ hexSquareBtn.textContent=currentLang==='ko'?'사각':'Square';hexHexBtn.textContent=currentLang==='ko'?'육각':'Hex';
+ hexSquareBtn.classList.toggle('active',latticeMode==='square');hexHexBtn.classList.toggle('active',latticeMode==='hex');
+ hexSquareBtn.setAttribute('aria-pressed',latticeMode==='square');hexHexBtn.setAttribute('aria-pressed',latticeMode==='hex');
+}
+hexSquareBtn.onclick=()=>switchLattice('square');hexHexBtn.onclick=()=>switchLattice('hex');
+// End of hex module.
+
+function render(){if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
 const hasVisiblePrimeData=visiblePrimeDataReady(xmin,xmax,ymin,ymax);
 if(hasVisiblePrimeData){
 const columnMajor=Math.abs(camX)>Math.abs(camY);
@@ -2100,7 +2465,7 @@ function drawCredit(){
 }
 
 function numberClass(n){if(n===1)return{label:tr('neither'),cls:'neither'};const p=cacheHasNumber(n)?isPrime(n):isPrimeExactSingle(n);if(p){if(activeFormula&&inSequence(n,activeFormula))return{label:tr('activePrime'),cls:'activePrime'};return{label:tr('prime'),cls:'prime'}}return{label:tr('composite'),cls:'composite'}}
-function updateHover(clientX,clientY){if(!ready){hoverTip.style.display='none';return}const r=cv.getBoundingClientRect(),mx=clientX-r.left,my=clientY-r.top;if(mx<0||my<0||mx>r.width||my>r.height){hoverTip.style.display='none';return}const x=Math.round(camX+(mx-W/2)/scale),y=Math.round(camY-(my-H/2)/scale);if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R){hoverTip.style.display='none';return}const n=ulamNumber(x,y);if(n<1||n>MAX_N){hoverTip.style.display='none';return}const c=numberClass(n);hoverTip.innerHTML=`<b>${n.toLocaleString()}</b> · <span class="${c.cls}">${c.label}</span><br><span style="color:#9eabc0">(${x.toLocaleString()}, ${y.toLocaleString()})</span>`;hoverTip.style.display='block';const tw=hoverTip.offsetWidth,th=hoverTip.offsetHeight,pad=12;let left=mx+14,top=my+14;if(left+tw+pad>W)left=mx-tw-14;if(top+th+pad>H)top=my-th-14;hoverTip.style.left=Math.max(6,left)+'px';hoverTip.style.top=Math.max(6,top)+'px'}
+function updateHover(clientX,clientY){if(latticeMode==='hex')return hexUpdateHover(clientX,clientY);if(!ready){hoverTip.style.display='none';return}const r=cv.getBoundingClientRect(),mx=clientX-r.left,my=clientY-r.top;if(mx<0||my<0||mx>r.width||my>r.height){hoverTip.style.display='none';return}const x=Math.round(camX+(mx-W/2)/scale),y=Math.round(camY-(my-H/2)/scale);if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R){hoverTip.style.display='none';return}const n=ulamNumber(x,y);if(n<1||n>MAX_N){hoverTip.style.display='none';return}const c=numberClass(n);hoverTip.innerHTML=`<b>${n.toLocaleString()}</b> · <span class="${c.cls}">${c.label}</span><br><span style="color:#9eabc0">(${x.toLocaleString()}, ${y.toLocaleString()})</span>`;hoverTip.style.display='block';const tw=hoverTip.offsetWidth,th=hoverTip.offsetHeight,pad=12;let left=mx+14,top=my+14;if(left+tw+pad>W)left=mx-tw-14;if(top+th+pad>H)top=my-th-14;hoverTip.style.left=Math.max(6,left)+'px';hoverTip.style.top=Math.max(6,top)+'px'}
 function formatZoomFactor(){
   const z=scale/START_SCALE;
   let s=z>=10?z.toFixed(1):z.toFixed(2);
@@ -2114,6 +2479,12 @@ function showZoomIndicator(){
   zoomFadeTimer=setTimeout(()=>{zoomIndicator.style.transition='opacity 1.6s ease-out';zoomIndicator.style.opacity='0'},400);
 }
 function zoomAt(mx,my,f,showIndicator=true){
+  if(latticeMode==='hex'){
+    const anchor=hexAtPixel(mx,my),ns=Math.max(MIN_SCALE,Math.min(MAX_SCALE,scale*f));
+    const dr=(H/2-my)/(1.5*ns),dq=(mx-W/2)/(HEX_SQRT3*ns)-dr/2;
+    camX=anchor.x-dq;camY=anchor.y-dr;scale=ns;clamp();
+    if(showIndicator)showZoomIndicator();sched();return;
+  }
   const wx=camX+(mx-W/2)/scale,wy=camY-(my-H/2)/scale;
   const ns=Math.max(MIN_SCALE,Math.min(MAX_SCALE,scale*f));
   camX=wx-(mx-W/2)/ns;camY=wy+(my-H/2)/ns;scale=ns;clamp();
@@ -2135,7 +2506,7 @@ function beginPinch(){
   const [p1,p2]=Array.from(activePointers.values()).slice(0,2);
   const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,dist=Math.hypot(p2.x-p1.x,p2.y-p1.y);
   if(dist<1)return;
-  pinchState={dist,scale,wx:camX+(mx-W/2)/scale,wy:camY-(my-H/2)/scale};
+  pinchState={dist,scale,...(latticeMode==='hex'?(()=>{const c=hexAtPixel(mx,my);return{wx:c.x,wy:c.y}})():{wx:camX+(mx-W/2)/scale,wy:camY-(my-H/2)/scale})};
   gestureWasPinch=true;drag=false;moved=true;hoverTip.style.display='none';
 }
 cv.addEventListener('pointerdown',e=>{
@@ -2152,13 +2523,20 @@ cv.addEventListener('pointermove',e=>{
     const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,dist=Math.hypot(p2.x-p1.x,p2.y-p1.y);
     if(pinchState&&dist>0){
       const ns=Math.max(MIN_SCALE,Math.min(MAX_SCALE,pinchState.scale*dist/pinchState.dist));
-      camX=pinchState.wx-(mx-W/2)/ns;camY=pinchState.wy+(my-H/2)/ns;scale=ns;clamp();showZoomIndicator();sched();
+      if(latticeMode==='hex'){
+        const dr=(H/2-my)/(1.5*ns),dq=(mx-W/2)/(HEX_SQRT3*ns)-dr/2;
+        camX=pinchState.wx-dq;camY=pinchState.wy-dr;
+      }else{camX=pinchState.wx-(mx-W/2)/ns;camY=pinchState.wy+(my-H/2)/ns}
+      scale=ns;clamp();showZoomIndicator();sched();
     }
     return;
   }
   if(drag&&activePointers.size===1){
     const dx=p.x-lx,dy=p.y-ly;if(Math.abs(dx)+Math.abs(dy)>2)moved=true;
-    camX-=dx/scale;camY+=dy/scale;lx=p.x;ly=p.y;clamp();sched();
+    if(latticeMode==='hex'){
+      const dr=dy/(1.5*scale);camX-=dx/(HEX_SQRT3*scale)+dr/2;camY+=dr;
+    }else{camX-=dx/scale;camY+=dy/scale}
+    lx=p.x;ly=p.y;clamp();sched();
   }
   if(e.pointerType==='mouse'&&!drag&&activePointers.size===0)updateHover(e.clientX,e.clientY);
 });
@@ -2172,8 +2550,8 @@ function finishPointer(e,cancelled=false){
   }
   pinchState=null;drag=false;
   if(!cancelled&&wasSingle&&!moved&&!gestureWasPinch&&ready){
-    const x=Math.round(camX+(p.x-W/2)/scale),y=Math.round(camY-(p.y-H/2)/scale);
-    if(validXY(x,y))selectPoint(x,y);
+    const pick=latticeMode==='hex'?(()=>{const h=hexAtPixel(p.x,p.y);return hexRound(h.x,h.y)})():{x:Math.round(camX+(p.x-W/2)/scale),y:Math.round(camY-(p.y-H/2)/scale)};
+    if(validXY(pick.x,pick.y))selectPoint(pick.x,pick.y);
   }
   if(e.pointerType==='mouse')updateHover(e.clientX,e.clientY);
   if(moved||gestureWasPinch)sched(0);
@@ -2190,9 +2568,11 @@ function setMiniZoomIndex(next){
 }
 miniZoomIn.onclick=e=>{e.stopPropagation();setMiniZoomIndex(miniZoomIndex+1)};
 miniZoomOut.onclick=e=>{e.stopPropagation();setMiniZoomIndex(miniZoomIndex-1)};
-miniCv.addEventListener('click',e=>{if(!showMinimap||!ready||!miniSide)return;const r=miniCv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,v=miniViewport();camX=v.cx+((mx/r.width)*2-1)*v.r;camY=v.cy+(1-(my/r.height)*2)*v.r;clamp();sched(0)});
+miniCv.addEventListener('click',e=>{if(!showMinimap||!ready||!miniSide)return;const r=miniCv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,v=miniViewport();if(latticeMode==='hex'){
+  const p=hexFromMinimap(mx/r.width*miniSide,my/r.height*miniSide,v);camX=p.x;camY=p.y;
+}else{camX=v.cx+((mx/r.width)*2-1)*v.r;camY=v.cy+(1-(my/r.height)*2)*v.r}clamp();sched(0)});
 
-function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=ulamCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready)selectPoint(c.x,c.y,0);else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
+function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready)selectPoint(c.x,c.y,0);else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
 function updateRangeUI(){document.title='Ulam Spiral';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
@@ -2299,8 +2679,9 @@ function branchAnyReadyInRect(cache,r){
   let a,b;if(cache.branch==='right'||cache.branch==='left'){a=Math.max(r.xmin,cache.xmin)-cache.xmin;b=Math.min(r.xmax,cache.xmax)-cache.xmin}else{a=Math.max(r.ymin,cache.ymin)-cache.ymin;b=Math.min(r.ymax,cache.ymax)-cache.ymin}
   for(let i=a;i<=b;i++)if(cache.readyLines[i]===1)return true;return false;
 }
-function cacheHasNumberAtXY(n,x,y){return cacheEntryHasNumber(localPrimeCache,n)||cacheEntryHasNumber(localPrimePreview,n)||branchCacheHasXY(branchPrimeCache,x,y)||branchCacheHasXY(branchPrimePreview,x,y)||cornerCacheHasXY(cornerPrimeCache,x,y)||cornerCacheHasXY(cornerPrimePreview,x,y)}
+function cacheHasNumberAtXY(n,x,y){if(latticeMode==='hex')return hexKnown(x,y)!==null;return cacheEntryHasNumber(localPrimeCache,n)||cacheEntryHasNumber(localPrimePreview,n)||branchCacheHasXY(branchPrimeCache,x,y)||branchCacheHasXY(branchPrimePreview,x,y)||cornerCacheHasXY(cornerPrimeCache,x,y)||cornerCacheHasXY(cornerPrimePreview,x,y)}
 function isPrimeAtXY(n,x,y){
+  if(latticeMode==='hex')return hexIsPrime(n,x,y);
   if(n===2)return true;if(n<2||n%2===0)return false;
   if(cacheEntryHasNumber(localPrimeCache,n))return primeFromCache(localPrimeCache,n);
   if(cacheEntryHasNumber(localPrimePreview,n))return primeFromCache(localPrimePreview,n);
@@ -2790,6 +3171,7 @@ function localSieveSettings(blocking=false,workBytes=0){
   return{workers,segmentBytes};
 }
 function queueLocalCacheEnsure(delay=140){
+  if(latticeMode==='hex')return;
   if(!ready||!W||!H)return;clearTimeout(localCacheTimer);localCacheTimer=setTimeout(ensureLocalPrimeCache,delay);
 }
 function startLocalCacheBuild(target,covered){
@@ -2823,6 +3205,7 @@ function startLocalCacheBuild(target,covered){
   }).catch(error=>{if(token!==sieveToken||error.name==='AbortError')return;localPrimePreview=null;sieveWorker=null;localBuildTarget=null;localCacheBlocking=false;console.error('[local prime cache]',error);requestRender()});
 }
 function ensureLocalPrimeCache(){
+  if(latticeMode==='hex')return;
   if(!ready||!W||!H)return;
   if(ensureBranchPrimeCache())return;
   if(ensureCornerPrimeCache())return;
@@ -3064,8 +3447,8 @@ async function preloadStartupAccelerator(){
 async function setRange(target){
   if(sieveWorker){++sieveToken;sieveWorker.terminate();sieveWorker=null}localBuildTarget=null;
   stopSavedStatsBackfill();++startupAccelToken;if(branchSieveTask){branchSieveTask.terminate();branchSieveTask=null}if(cornerSieveTask){cornerSieveTask.terminate();cornerSieveTask=null}resetLocalSievePool();resetBranchSievePool();resetPointAnalyzeWorkerPool();recentPrimeCaches=[];recentBranchPrimeCaches=[];recentCornerPrimeCaches=[];branchPrimeCache=null;branchPrimePreview=null;branchBuildTarget=null;cornerPrimeCache=null;cornerPrimePreview=null;cornerBuildTarget=null;branchAdaptiveModes=null;MAX_N=target;MAX_R=radiusFor(target);updateRangeUI();formulaStatCache.clear();localPrimeCache={low:0,high:0,firstOdd:1,oddCount:0,bits:null,rLo:0,rHi:-1,bytes:0};localPrimePreview=null;
-  ready=false;initBasePrimeData();initQuickFormulaRows();clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);
+  ready=false;initBasePrimeData();initQuickFormulaRows();HEX_R=hexRadiusFor(MAX_N);hexCancelBuild();hexCache=null;hexHistory=[];clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);
 }
-initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
+initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();try{if(localStorage.getItem('ULAM_LATTICE_MODE')==='hex')latticeMode='hex'}catch(_){}updateShapeUI();refreshSearchABForLattice();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
 })();
 </script></body></html>
