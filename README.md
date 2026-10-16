@@ -1,217 +1,112 @@
 # Ulam Spiral & Prime-Generating Quadratic Explorer
 
-[**한국어 README / Korean Documentation**](README.ko.md)
+[**한국어 README**](README.ko.md)
 
-<img width="570" height="362" alt="Ulam Spiral & Prime-Generating Quadratic Explorer screenshot" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
+<img width="570" height="362" alt="Ulam Spiral & Prime-Generating Quadratic Explorer — square spiral and polynomial analysis" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
 
-**Explore prime numbers up to 1 trillion (10¹²) on square and hexagonal spirals, discover prime-generating quadratic polynomials, and compare how frequently different sequences produce primes.**
+Explore prime-number patterns on **square and hexagonal spirals**, investigate prime-rich lines, and discover quadratic polynomials that produce unusually many primes — all within the integer range **1 to 1 trillion (10¹²)**.
 
-A standalone, interactive mathematical explorer for number theory enthusiasts, curious programmers, educators, and anyone fascinated by patterns in prime numbers.
+This is a self-contained, interactive mathematical explorer for anyone interested in prime numbers, number theory, or discovering patterns through experimentation.
 
-The goal is not simply to display large numbers of primes, but to provide a way to **discover, investigate, compare, and experiment with mathematical patterns**.
+## Try the explorer
 
-## Try It
+- **[Launch the online explorer](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/)**
+- **[Download the standalone HTML](Ulam%20Spiral%20%26%20Prime-Generating%20Quadratic%20Explorer.html)** and open it in a modern browser.
 
-- **[Launch the interactive explorer](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/)** — Run directly in your browser.
-- **Standalone HTML:** Download [`Ulam Spiral & Prime-Generating Quadratic Explorer.html`](Ulam%20Spiral%20%26%20Prime-Generating%20Quadratic%20Explorer.html) and open it in a modern browser.
-- No installation, account, or backend service is required.
+No installation or separate server is required. **Current release: v1.1.1 · License: MIT.**
 
-**Current release:** v1.1.1  
-**Maximum supported integer:** 1,000,000,000,000 (10¹²)  
-**License:** MIT
+## Mathematical questions to explore
 
-## What Can You Explore?
+- Why do certain lines in prime spirals contain unusually many primes?
+- Which quadratic polynomials correspond to those lines?
+- How does the prime distribution change between square and hexagonal arrangements?
+- Can you find a polynomial with a higher observed prime rate than the famous `n² − n + 41` over a chosen interval?
+- How do changes to the coefficients `a`, `b`, and `c` affect prime-generation rates?
+- How different are the results when considering all sequence terms versus only odd-valued terms?
 
-Some questions worth investigating:
+## Main features
 
-- Why do certain diagonals and other lines in an Ulam spiral contain unusually many prime numbers?
-- Which quadratic polynomials describe these prime-rich patterns?
-- Can a polynomial outperform the famous `n² − n + 41` over a chosen finite interval?
-- How does changing `a`, `b`, or `c` in `P(n) = an² + bn + c` affect prime-generation rates?
-- How different are the prime-generation rates of all terms and odd-valued terms?
-- What patterns emerge when integers are arranged on a hexagonal spiral instead of a square spiral?
-- Can interesting polynomial sequences be discovered far from the center of the spiral?
+### Square and hexagonal prime spirals
 
-The explorer allows these questions to be investigated experimentally rather than only discussed theoretically.
+Choose between the traditional **square Ulam spiral** and a **hexagonal integer spiral**. Both display the same positive integers in different geometric arrangements.
 
-## Main Features
-
-### 1. Square and Hexagonal Prime Spirals
-
-Explore positive integers arranged in two different geometric patterns.
-
-- **Square spiral:** The traditional Ulam spiral, with its characteristic prime-rich diagonals.
-- **Hexagonal spiral:** An alternative six-direction arrangement for investigating different spatial patterns.
 - Switch between **Square** and **Hex** modes.
-- Navigate to the same integer in either layout and compare its surroundings.
-- Pan, zoom, and inspect individual integers and their primality.
+- Jump to a particular integer, pan, and zoom.
+- Select a point to inspect its number and primality.
+- Compare prime-rich patterns across the two layouts.
+- Highlight a chosen polynomial sequence on the spiral.
 
-The two modes offer different geometric perspectives on the same natural numbers.
+### Discover quadratic polynomials from visible patterns
 
-### 2. Discover Quadratic Polynomials from Prime Patterns
+Prime-rich lines can suggest arithmetic patterns. Select a point to investigate lattice directions and their associated quadratic expressions.
 
-One of the most interesting properties of the square Ulam spiral is that numbers along many lattice lines can be represented by quadratic polynomials.
+- Examine lines and suggested sequences through a selected point.
+- Explore supported integer and rational directions where available.
+- Review prime counts and sequence statistics.
+- Highlight a selected sequence directly on the spiral.
+- Explore coefficient suggestions appropriate to the current spiral mode.
 
-The explorer lets you select points and investigate polynomial sequences associated with lines through the selected position.
+You can start with an interesting line on the screen, then inspect the polynomial behind it — or start with a polynomial and look for its geometric pattern.
 
-Features include:
+### Compare observed prime-generation rates
 
-- Analysis of prime-rich lines passing through selected positions
-- Quadratic expressions corresponding to lattice directions
-- Suggested sequences and coefficients adapted to the active spiral mode
-- Multiple supported slopes and directions
-- Visual highlighting of selected polynomial sequences
-- Comparison of prime-generation statistics
+Investigate expressions of the form:
 
-Instead of entering an arbitrary formula first, you can **begin with a visible pattern and discover the mathematics behind it**.
+**`P(n) = an² + bn + c`**
 
-### 3. Compare Prime-Generation Rates
+The explorer distinguishes between statistics for **all evaluated terms** and for **odd-valued terms**, making it easier to see the effect of even outputs on the observed prime rate.
 
-Different quadratic polynomials can produce very different proportions of prime numbers over the same finite range.
+For mathematical context, the Prime Number Theorem gives a rough prime density near a large positive integer `x` of `1 / ln(x)`, or approximately `2 / ln(x)` among odd integers. Quadratic sequences have additional divisibility structure, so these are **reference approximations, not exact probabilities for a particular polynomial**.
 
-For a polynomial
+The displayed sequence statistics are calculated over finite ranges. A high observed prime rate does not imply that a polynomial always produces primes or produces infinitely many primes.
 
-`P(n) = an² + bn + c`
+### Search for prime-generating quadratic polynomials
 
-the explorer provides statistics for evaluating how often its terms are prime.
+Explore different combinations of `a`, `b`, and `c` in `P(n) = an² + bn + c`.
 
-Two particularly useful measures are:
+- Use suggested `(a, b)` combinations adapted to the current **Square / Hex** mode, or enter your own values.
+- Specify a search interval for the constant term `c`.
+- Screen candidates using small primes and examine promising results with primality checks.
+- Compare and rank prime-rich candidate sequences.
+- Highlight or save interesting results for later exploration.
 
-- **Overall prime rate:** The fraction of evaluated terms that are prime.
-- **Odd-term prime rate:** The fraction of odd-valued terms that are prime.
+**In v1.1.1, the supported `c` range is `−7,000,000 ≤ c ≤ +7,000,000`, inclusive — up to 14,000,001 candidate values in one search.** Search time depends on the coefficients, interval, and device.
 
-These measures help distinguish the effect of even-valued outputs from other arithmetic properties of a sequence.
+### Save and revisit sequences
 
-For example, a polynomial may have a relatively low overall prime rate simply because many of its terms are even. Comparing the odd-term rate can reveal a different picture.
+Save interesting quadratic expressions in the browser's local storage, revisit their positions, and compare their statistics. Saved sequences stay in the current browser profile and are **not automatically synchronized across devices**.
 
-You can examine and compare the observed performance of different polynomials, including variations of famous prime-generating expressions.
+### Explore integers up to one trillion
 
-**Mathematical context:** The Prime Number Theorem gives an approximate prime density near a sufficiently large integer `x` of
+Navigate integers from **1 through 1,000,000,000,000** without precomputing every prime in that range. The application calculates the regions needed for the current view, reuses cached results when possible, and uses Web Workers and embedded WebAssembly for supported calculations.
 
-`1 / ln(x)`
+An adjustable minimap and English/Korean interface are provided. The interface is primarily designed for desktop use, with mobile layouts also supported.
 
-and an approximate density among odd integers of
+## Getting started
 
-`2 / ln(x)`.
+1. Open the **[online explorer](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/)** or the standalone HTML file.
+2. Choose **Square** or **Hex**.
+3. Enter an integer up to `10¹²`, or pan and zoom to inspect a region.
+4. Select a point to investigate its associated lines, quadratic expressions, and prime rates.
+5. Use **Search** to explore polynomial coefficients; save your favorite sequences for later.
 
-These are useful general benchmarks, but quadratic sequences are not random samples of integers. Their divisibility properties, coefficients, and evaluation intervals can substantially affect their observed prime rates.
+## Notes and limitations
 
-The application's prime-generation statistics are **empirical results over finite ranges**, not proofs of theoretical prime-generating probabilities.
+- The first visit to a distant region may require computation; previously calculated data may be reused or cleared depending on memory availability.
+- The minimap's smooth prime-density background is a **heuristic approximation**, not a complete enumeration of primes in that region.
+- Statistics and search results concern **finite intervals**. They are tools for mathematical exploration, not proofs of conjectures about primes.
+- Performance depends on the browser, CPU, available memory, viewport size, and the selected operation.
 
-### 4. Search for Prime-Generating Quadratic Polynomials
+## Project history
 
-Explore polynomial families of the form
+The supported range developed from **100 million → 400 million → 900 million → … → 4.9 billion → 10 billion → 1 trillion**. The focus gradually shifted from calculating ever larger complete sieves to efficiently exploring only the regions of interest.
 
-`P(n) = an² + bn + c`
-
-by searching different coefficient combinations.
-
-The search system supports:
-
-- Suggested `(a, b)` combinations appropriate to the selected spiral mode
-- Manually chosen coefficients
-- Large-range searches over the constant term `c`
-- Small-prime prefiltering of candidate polynomials
-- Further primality verification of promising candidates
-- Ranking and comparison of prime-rich sequences
-- Selection and visual highlighting of interesting results
-
-**Version 1.1.1 expands the supported constant-term range to:**
-
-`−7,000,000 ≤ c ≤ +7,000,000`
-
-Both endpoints are included, allowing **up to 14,000,001 candidate values of `c` in a single search**.
-
-This makes it possible to investigate large families of quadratic expressions, compare nearby coefficient choices, and look for unexpectedly prime-rich sequences.
-
-A high observed prime rate does not mean a polynomial will always produce primes. That uncertainty is part of what makes these searches interesting.
-
-### 5. Save and Revisit Interesting Sequences
-
-Found a particularly interesting polynomial?
-
-Save it for later investigation.
-
-- Preserve selected quadratic sequences
-- Revisit saved results
-- Jump to the associated location in the spiral
-- Highlight saved polynomial patterns
-- Organize and remove saved entries
-
-Sequences are stored locally in the browser, so they are available during later visits using the same browser and storage profile.
-
-### 6. Explore Integers up to 1 Trillion
-
-The explorer supports navigation over the integer range from **1 to 10¹²**.
-
-- Jump directly to a chosen integer
-- Explore nearby prime distributions
-- Pan and zoom through large regions
-- Use the minimap to understand the current position and scale
-- Switch between English and Korean
-
-To support such large positions, the application computes the regions needed for exploration rather than storing the primality of every integer up to 1 trillion.
-
-Web Workers, embedded WebAssembly, and caching help maintain interactive performance.
-
-The interface is primarily designed for desktop use, with mobile layouts also supported.
-
-## How to Use
-
-1. Open the [online explorer](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/) or the standalone HTML file.
-2. Choose **Square** or **Hex** to select the spiral geometry.
-3. Enter an integer up to 10¹², or navigate by panning and zooming.
-4. Click an interesting point to inspect its associated polynomial sequences.
-5. Compare the prime-generation rates of different lines and expressions.
-6. Open **Sequence Search** to explore combinations of `a`, `b`, and `c`.
-7. Save promising sequences and return to them later.
-
-There is no need to begin with a specific mathematical hypothesis. Sometimes an unusual visual pattern is enough to suggest a new experiment.
-
-## Mathematical Notes and Limitations
-
-This application is intended for **experimental mathematical exploration**, not automated theorem proving.
-
-A few distinctions are important:
-
-- A high prime-generation rate over a finite interval does not establish that a polynomial produces infinitely many primes.
-- Comparisons depend on the evaluation range and the magnitudes of the resulting integers.
-- General prime-density estimates should not be interpreted as exact theoretical probabilities for a particular quadratic polynomial.
-- Visual patterns in a spiral may suggest mathematical structure, but they do not by themselves establish a proof.
-- The minimap's continuous prime-density background is a heuristic approximation, not an exhaustive primality calculation of every displayed region.
-
-The first visit to a distant region may require additional computation. Previously computed data may be cached and reused, depending on available memory.
-
-## Development History
-
-**100 million → 400 million → 900 million → … → 4.9 billion → 10 billion → 1 trillion.**
-
-The project began as an attempt to explore increasingly large ranges of prime numbers through direct sieving.
-
-As the supported range expanded, the implementation evolved toward computing only the relevant parts of the spiral.
-
-The exploration tools also developed beyond simple prime visualization, adding quadratic polynomial analysis, coefficient searches, prime-rate comparisons, and saved sequences.
-
-Version 1.1.1 further expands the mathematical visualization with **square and hexagonal spiral modes** and extends the available coefficient-search range.
-
-The long-term purpose remains the same: to provide an interactive tool for discovering interesting patterns in the distribution of prime numbers.
-
-## Browser Support
-
-A recent version of Chrome, Edge, Whale, Firefox, or another modern browser is recommended.
-
-Performance depends on the CPU, available memory, browser, viewport size, and selected operation.
-
-The application is distributed as a self-contained HTML file and requires no separate backend.
-
-Saved sequences use browser local storage and are not automatically synchronized between devices.
+The project also grew from a prime visualization into a tool for **discovering quadratic expressions, comparing observed prime rates, and searching for interesting sequences**. Square and hexagonal spiral modes now provide two ways to investigate the same integers.
 
 ## License
 
-This project is distributed under the **MIT License**.
+Distributed under the **MIT License**.
 
 Copyright (c) 2026 지너드, G.nerd (eprparadox44)
 
-Use, modification, redistribution, and commercial use are permitted under the MIT License, provided that the required copyright and license notices are preserved.
-
-See the [LICENSE](LICENSE) file for details.
+Use, modification, redistribution, and commercial use are permitted subject to the conditions of the [LICENSE](LICENSE) file, including preservation of the required copyright and license notices.
