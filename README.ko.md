@@ -1,170 +1,217 @@
-# 울람 나선 & 소수생성 이차식 탐색기
+# Ulam Spiral & Prime-Generating Quadratic Explorer
 
-[English README](README.md)
+[**한국어 README / Korean Documentation**](README.ko.md)
 
-<img width="570" height="362" alt="image" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
+<img width="570" height="362" alt="Ulam Spiral & Prime-Generating Quadratic Explorer screenshot" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
 
-**1부터 1조(10¹²)까지** 울람 나선을 탐색하고, 소수를 많이 만들어 내는 이차식을 찾아보는 단일 HTML 웹 애플리케이션.
+**Explore prime numbers up to 1 trillion (10¹²) on square and hexagonal spirals, discover prime-generating quadratic polynomials, and compare how frequently different sequences produce primes.**
 
-단순히 소수의 위치를 표시하는 것에서 그치지 않고, **울람 나선에 나타나는 규칙적인 소수 배열을 이차식으로 분석하고, 서로 다른 수식의 소수생성 비율을 비교하며, 새로운 수열을 직접 탐색하는 것**을 목적으로 제작했다.
+A standalone, interactive mathematical explorer for number theory enthusiasts, curious programmers, educators, and anyone fascinated by patterns in prime numbers.
 
-예를 들어 다음과 같은 의문을 실험해 볼 수 있다.
+The goal is not simply to display large numbers of primes, but to provide a way to **discover, investigate, compare, and experiment with mathematical patterns**.
 
-- 울람 나선에서 유난히 소수가 많이 나타나는 직선은 어떤 이차식에 대응할까?
-- 유명한 `n² − n + 41`보다 높은 소수생성 비율을 보이는 이차식을 찾을 수 있을까?
-- 계수 `a`, `b`, `c`를 바꾸면 소수생성 비율은 어떻게 달라질까?
-- 전체 자연수 중 소수의 비율과 홀수에 한정한 소수의 비율은 얼마나 다를까?
-- 서로 다른 기울기의 격자선에서 소수가 많이 나타나는 패턴을 비교할 수 있을까?
+## Try It
 
-수학적인 호기심으로 이런 질문을 직접 확인해 보고 싶은 사람을 위한 탐색기다.
+- **[Launch the interactive explorer](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/)** — Run directly in your browser.
+- **Standalone HTML:** Download [`Ulam Spiral & Prime-Generating Quadratic Explorer.html`](Ulam%20Spiral%20%26%20Prime-Generating%20Quadratic%20Explorer.html) and open it in a modern browser.
+- No installation, account, or backend service is required.
 
-## 실행
+**Current release:** v1.1.1  
+**Maximum supported integer:** 1,000,000,000,000 (10¹²)  
+**License:** MIT
 
-- **웹 실행:** [울람 나선 & 소수생성 이차식 탐색기](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/)에서 바로 실행할 수 있다.
-- **독립 실행:** [`Ulam Spiral & Prime-Generating Quadratic Explorer.html`](Ulam%20Spiral%20%26%20Prime-Generating%20Quadratic%20Explorer.html)을 내려받아 브라우저에서 열면 된다.
-- 설치나 별도의 백엔드 서버가 필요하지 않다.
+## What Can You Explore?
 
-## 주요 기능
+Some questions worth investigating:
 
-### 1. 울람 나선에서 이차식 발견하기
+- Why do certain diagonals and other lines in an Ulam spiral contain unusually many prime numbers?
+- Which quadratic polynomials describe these prime-rich patterns?
+- Can a polynomial outperform the famous `n² − n + 41` over a chosen finite interval?
+- How does changing `a`, `b`, or `c` in `P(n) = an² + bn + c` affect prime-generation rates?
+- How different are the prime-generation rates of all terms and odd-valued terms?
+- What patterns emerge when integers are arranged on a hexagonal spiral instead of a square spiral?
+- Can interesting polynomial sequences be discovered far from the center of the spiral?
 
-울람 나선은 자연수를 정사각형 나선 형태로 배치한 것이다. 이 배열에서 소수들이 직선이나 대각선 방향으로 유난히 밀집하는 패턴을 관찰할 수 있다.
+The explorer allows these questions to be investigated experimentally rather than only discussed theoretically.
 
-화면의 점을 클릭하면 그 점을 통과하는 여러 격자선을 분석해 각각에 대응하는 이차식을 표시한다.
+## Main Features
 
-- 가로, 세로, 기울기 ±1의 기본 방향 분석
-- 여러 정수 및 유리 기울기의 격자선 분석
-- 소수생성 비율이 높은 수식의 추천 및 순위 표시
-- 선택한 이차식에 해당하는 소수 배열을 울람 나선 위에 강조 표시
-- 수식의 소수 개수, 전체 소수율, 홀수 소수율 및 해당 선분 길이 확인
+### 1. Square and Hexagonal Prime Spirals
 
-기본적으로 추천 수식을 간추려 보여주며, **모든 기울기 표시** 옵션으로 더 많은 후보를 살펴볼 수 있다.
+Explore positive integers arranged in two different geometric patterns.
 
-### 2. 소수생성 비율 비교하기
+- **Square spiral:** The traditional Ulam spiral, with its characteristic prime-rich diagonals.
+- **Hexagonal spiral:** An alternative six-direction arrangement for investigating different spatial patterns.
+- Switch between **Square** and **Hex** modes.
+- Navigate to the same integer in either layout and compare its surroundings.
+- Pan, zoom, and inspect individual integers and their primality.
 
-서로 다른 이차식 `f(n) = an² + bn + c`가 얼마나 자주 소수를 만드는지 비교할 수 있다.
+The two modes offer different geometric perspectives on the same natural numbers.
 
-프로그램에서는 다음 두 가지 소수율을 구분한다.
+### 2. Discover Quadratic Polynomials from Prime Patterns
 
-- **전체 소수율:** 계산 범위에 포함되는 수열 항 중 소수인 항의 비율
-- **홀수 소수율:** 홀수인 항만 대상으로 계산한 소수의 비율
+One of the most interesting properties of the square Ulam spiral is that numbers along many lattice lines can be represented by quadratic polynomials.
 
-예를 들어 어떤 수식의 전체 소수율이 20%이고 홀수 소수율이 40%라면, 소수가 적게 나타나는 원인이 단순히 짝수 항이 많이 포함되기 때문인지 살펴볼 수 있다.
+The explorer lets you select points and investigate polynomial sequences associated with lines through the selected position.
 
-또한 서로 다른 이차식의 결과를 비교하여 특정 계수 조합이 상대적으로 높은 소수생성 비율을 보이는지 확인할 수 있다.
+Features include:
 
-**수학적 참고:** 충분히 큰 자연수 `x` 부근에서 소수의 대략적인 밀도는 소수정리에 의해 `1 / ln(x)`로 근사된다. 홀수만 대상으로 한다면 대략 `2 / ln(x)`를 참고할 수 있다. 다만 이차수열에는 홀짝성, 특정 소수로 나누어떨어지는 구조, 계수의 영향 등이 있으므로 이러한 단순 근사를 그대로 적용할 수는 없다.
+- Analysis of prime-rich lines passing through selected positions
+- Quadratic expressions corresponding to lattice directions
+- Suggested sequences and coefficients adapted to the active spiral mode
+- Multiple supported slopes and directions
+- Visual highlighting of selected polynomial sequences
+- Comparison of prime-generation statistics
 
-프로그램에 표시되는 소수율은 이러한 이론적 확률의 계산값이 아니라 **실제 해당 수열에서 소수로 판정된 항의 비율**이다. 이론적 기대값과 비교할 때는 수열 값의 크기와 계산 범위도 고려해야 한다.
+Instead of entering an arbitrary formula first, you can **begin with a visible pattern and discover the mathematics behind it**.
 
-### 3. 새로운 소수생성 이차식 직접 찾기
+### 3. Compare Prime-Generation Rates
 
-수열 탐색 기능에서는
+Different quadratic polynomials can produce very different proportions of prime numbers over the same finite range.
 
-`f(n) = an² + bn + c`
+For a polynomial
 
-형태의 이차식을 직접 탐색할 수 있다.
+`P(n) = an² + bn + c`
 
-- 울람 나선에서 특징적인 직선 패턴을 만드는 추천 `a`, `b` 조합 제공
-- 추천 조합을 해제하고 `a`, `b`를 직접 설정 가능
-- `c`의 시작값과 끝값을 지정하여 대량 탐색
-- 작은 소수를 이용한 후보 선별
-- 유망한 후보를 실제 소수 판정으로 검증
-- 홀수 소수율을 중심으로 결과 정렬
-- 결과별 전체 소수율, 홀수 소수율 및 작은 소수 선별 점수 표시
-- 마음에 드는 결과를 울람 나선에 강조하거나 저장 가능
+the explorer provides statistics for evaluating how often its terms are prime.
 
-**한 번에 탐색할 수 있는 `c` 값의 범위는 최대 700만 개**이다. 더 넓은 범위는 나누어 탐색하면 된다.
+Two particularly useful measures are:
 
-소수생성 비율이 높은 이차식을 직접 발견하거나, 유명한 소수생성 다항식의 계수를 변형해 보는 실험 등에 활용할 수 있다.
+- **Overall prime rate:** The fraction of evaluated terms that are prime.
+- **Odd-term prime rate:** The fraction of odd-valued terms that are prime.
 
-### 4. 수열 저장 및 재탐색
+These measures help distinguish the effect of even-valued outputs from other arithmetic properties of a sequence.
 
-관심이 가는 수열은 브라우저 로컬 저장소에 저장할 수 있다.
+For example, a polynomial may have a relatively low overall prime rate simply because many of its terms are even. Comparing the odd-term rate can reveal a different picture.
 
-- 발견한 수식과 소수생성 통계를 저장
-- 저장한 수열을 다시 선택하거나 울람 나선의 해당 위치로 이동
-- 여러 수열을 보관하고 소수율 비교
-- 수열 순서 변경 및 개별 삭제
+You can examine and compare the observed performance of different polynomials, including variations of famous prime-generating expressions.
 
-저장된 수열은 브라우저에 유지되지만 기기 간 자동으로 동기화되지는 않는다.
+**Mathematical context:** The Prime Number Theorem gives an approximate prime density near a sufficiently large integer `x` of
 
-### 5. 최대 1조까지 울람 나선 탐색
+`1 / ln(x)`
 
-숫자 직접 입력, 화면 이동, 확대 및 축소를 통해 1부터 1조까지 탐색할 수 있다.
+and an approximate density among odd integers of
 
-- 화면에 나타나는 소수의 분포 시각화
-- 특정 숫자로 즉시 이동
-- 선택한 수열의 소수 배열 강조
-- 범위 조절이 가능한 미니맵
-- 이전에 계산한 구역의 캐시 재활용
-- 영어와 한국어 전환
+`2 / ln(x)`.
 
-모바일 환경도 고려했지만, 기본적으로는 PC 사용을 중심으로 제작했다.
+These are useful general benchmarks, but quadratic sequences are not random samples of integers. Their divisibility properties, coefficients, and evaluation intervals can substantially affect their observed prime rates.
 
-## 1조까지 계산
+The application's prime-generation statistics are **empirical results over finite ranges**, not proofs of theoretical prime-generating probabilities.
 
-1조 이하의 모든 소수를 미리 계산하여 메모리에 저장하는 방식은 사용하지 않는다. 현재 화면에 필요한 부분만 계산하며, 울람 나선의 가지에서 숫자가 짧은 연속 구간으로 대응한다는 기하학적 특징을 이용한다.
+### 4. Search for Prime-Generating Quadratic Polynomials
 
-WebAssembly와 Web Worker를 활용하여 계산을 병렬 처리하고, 지원되는 경로에는 JavaScript 대체 처리도 포함되어 있다. 원거리 모서리에서는 통합 스케줄러로 계산 영역을 분배하고 결과를 캐시에 저장한다.
+Explore polynomial families of the form
 
-화면 갱신도 계산 진행 상황에 맞추어 조절한다.
+`P(n) = an² + bn + c`
 
-이러한 최적화는 1조라는 큰 범위에서도 소수 배열을 살펴보고 이차식을 분석하는 작업이 실용적인 속도로 이루어지도록 하기 위한 것이다.
+by searching different coefficient combinations.
 
-## 사용 방법
+The search system supports:
 
-1. HTML 파일 또는 GitHub Pages 주소로 실행한다.
-2. 이동 입력칸에 1조 이하의 자연수를 입력하거나 화면을 이동한다.
-3. 관심 있는 점을 클릭해 해당 위치를 지나는 이차식과 소수율을 살펴본다.
-4. 기울기별 수식을 비교하고 원하는 수열을 선택하면 나선 위에서 해당 패턴이 강조된다.
-5. **탐색(Search)** 메뉴에서 `a`, `b`, `c`를 지정하고 소수생성 비율이 높은 새로운 이차식을 찾는다.
-6. 마음에 드는 수열은 **저장(Saved)** 메뉴에 보관하고 다시 불러온다.
+- Suggested `(a, b)` combinations appropriate to the selected spiral mode
+- Manually chosen coefficients
+- Large-range searches over the constant term `c`
+- Small-prime prefiltering of candidate polynomials
+- Further primality verification of promising candidates
+- Ranking and comparison of prime-rich sequences
+- Selection and visual highlighting of interesting results
 
-최초 방문 시에는 해당 구역의 계산 시간이 발생하며, 재방문 캐시는 메모리 상황에 따라 유지되거나 정리될 수 있다.
+**Version 1.1.1 expands the supported constant-term range to:**
 
-미니맵의 연속적인 소수 밀도 배경은 실제 소수를 전수 조사한 결과가 아니라 **휴리스틱 근사 시각화**이다.
+`−7,000,000 ≤ c ≤ +7,000,000`
 
-또한 유한한 범위에서 소수생성 비율이 높다는 사실이 해당 수식이 무한히 많은 소수를 생성한다는 수학적 증명을 의미하지는 않는다.
+Both endpoints are included, allowing **up to 14,000,001 candidate values of `c` in a single search**.
 
-## 저장소 구성
+This makes it possible to investigate large families of quadratic expressions, compare nearby coefficient choices, and look for unexpectedly prime-rich sequences.
 
-| 파일 | 설명 |
-|---|---|
-| `index.html` | GitHub Pages용 메인 진입 파일, 완전한 독립 실행본 |
-| `Ulam Spiral & Prime-Generating Quadratic Explorer.html` | 정식 파일명을 보존한 독립 배포본 |
-| `README.md` | 영문 소개 |
-| `README.ko.md` | 이 문서 |
-| `CHANGELOG.md` | 주요 변경 기록 |
-| `scripts/verify_release.py` | 배포 파일의 동일성 및 구성 검사 |
-| `.github/workflows/verify.yml` | GitHub Actions 자동 검증 |
-| `tests/worker_pool_race.js` | Worker 준비 상태 관련 회귀 검사 |
-| `LICENSE` | MIT 라이선스 |
+A high observed prime rate does not mean a polynomial will always produce primes. That uncertainty is part of what makes these searches interesting.
 
-## 발전 과정
+### 5. Save and Revisit Interesting Sequences
 
-**1억 → 4억 → 9억 → … → 49억 → 100억 → 1조.**
+Found a particularly interesting polynomial?
 
-처음에는 소수를 한꺼번에 계산하는 체의 범위를 늘리는 데서 출발했다. 이후 더 넓은 울람 나선을 탐색하기 위해 필요한 공간만 선택적으로 계산하는 방식으로 발전했다.
+Save it for later investigation.
 
-그 과정에서 소수생성 이차식의 분석, 기울기별 비교, 계수 탐색, 수열 저장 기능 등을 추가하여 현재의 형태가 되었다.
+- Preserve selected quadratic sequences
+- Revisit saved results
+- Jump to the associated location in the spiral
+- Highlight saved polynomial patterns
+- Organize and remove saved entries
 
-궁극적으로는 단순히 소수를 많이 표시하는 프로그램보다는 **소수의 분포에서 흥미로운 수학적 규칙을 직접 발견하고 실험할 수 있는 도구**를 지향한다.
+Sequences are stored locally in the browser, so they are available during later visits using the same browser and storage profile.
 
-## 사용 환경과 제한
+### 6. Explore Integers up to 1 Trillion
 
-최근 Chromium 계열, Firefox 등 WebAssembly와 Web Worker를 지원하는 브라우저를 권장한다. 속도는 CPU, 메모리, 브라우저 및 화면 크기에 따라 달라진다.
+The explorer supports navigation over the integer range from **1 to 10¹²**.
 
-수열 저장 기능은 브라우저 로컬 저장소를 사용하므로 기기 간 자동 동기화되지 않는다.
+- Jump directly to a chosen integer
+- Explore nearby prime distributions
+- Pan and zoom through large regions
+- Use the minimap to understand the current position and scale
+- Switch between English and Korean
 
-소수생성 통계와 후보 탐색 결과는 지정된 유한 범위에서의 계산 결과이며, 일반적인 수학적 정리나 미해결 문제의 증명을 대신하지 않는다.
+To support such large positions, the application computes the regions needed for exploration rather than storing the primality of every integer up to 1 trillion.
 
-## 라이선스
+Web Workers, embedded WebAssembly, and caching help maintain interactive performance.
 
-이 프로젝트는 MIT 라이선스에 따라 배포된다.
+The interface is primarily designed for desktop use, with mobile layouts also supported.
+
+## How to Use
+
+1. Open the [online explorer](https://eprparadox44.github.io/Ulam-Spiral-Prime-Generating-Quadratic-Explorer/) or the standalone HTML file.
+2. Choose **Square** or **Hex** to select the spiral geometry.
+3. Enter an integer up to 10¹², or navigate by panning and zooming.
+4. Click an interesting point to inspect its associated polynomial sequences.
+5. Compare the prime-generation rates of different lines and expressions.
+6. Open **Sequence Search** to explore combinations of `a`, `b`, and `c`.
+7. Save promising sequences and return to them later.
+
+There is no need to begin with a specific mathematical hypothesis. Sometimes an unusual visual pattern is enough to suggest a new experiment.
+
+## Mathematical Notes and Limitations
+
+This application is intended for **experimental mathematical exploration**, not automated theorem proving.
+
+A few distinctions are important:
+
+- A high prime-generation rate over a finite interval does not establish that a polynomial produces infinitely many primes.
+- Comparisons depend on the evaluation range and the magnitudes of the resulting integers.
+- General prime-density estimates should not be interpreted as exact theoretical probabilities for a particular quadratic polynomial.
+- Visual patterns in a spiral may suggest mathematical structure, but they do not by themselves establish a proof.
+- The minimap's continuous prime-density background is a heuristic approximation, not an exhaustive primality calculation of every displayed region.
+
+The first visit to a distant region may require additional computation. Previously computed data may be cached and reused, depending on available memory.
+
+## Development History
+
+**100 million → 400 million → 900 million → … → 4.9 billion → 10 billion → 1 trillion.**
+
+The project began as an attempt to explore increasingly large ranges of prime numbers through direct sieving.
+
+As the supported range expanded, the implementation evolved toward computing only the relevant parts of the spiral.
+
+The exploration tools also developed beyond simple prime visualization, adding quadratic polynomial analysis, coefficient searches, prime-rate comparisons, and saved sequences.
+
+Version 1.1.1 further expands the mathematical visualization with **square and hexagonal spiral modes** and extends the available coefficient-search range.
+
+The long-term purpose remains the same: to provide an interactive tool for discovering interesting patterns in the distribution of prime numbers.
+
+## Browser Support
+
+A recent version of Chrome, Edge, Whale, Firefox, or another modern browser is recommended.
+
+Performance depends on the CPU, available memory, browser, viewport size, and selected operation.
+
+The application is distributed as a self-contained HTML file and requires no separate backend.
+
+Saved sequences use browser local storage and are not automatically synchronized between devices.
+
+## License
+
+This project is distributed under the **MIT License**.
 
 Copyright (c) 2026 지너드, G.nerd (eprparadox44)
 
-누구나 프로그램을 사용, 수정 및 재배포할 수 있으며, 상업적 이용도 허용된다. 다만 재배포 시 기존 저작권 표시와 MIT 라이선스 고지를 유지해야 한다.
+Use, modification, redistribution, and commercial use are permitted under the MIT License, provided that the required copyright and license notices are preserved.
 
-자세한 내용은 [LICENSE](LICENSE) 파일을 참조하기 바란다.
+See the [LICENSE](LICENSE) file for details.
