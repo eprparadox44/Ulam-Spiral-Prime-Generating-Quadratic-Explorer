@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.1.1
+Release: v1.2.26 BETA — exact prime lookup, shared exponent bits, reusable viewport and verification Workers
 
 MIT License
 
@@ -27,15 +27,16 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
+<meta name="application-version" content="1.2.26">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ulam Spiral</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
 #app{height:100%;display:grid;grid-template-rows:auto 1fr}header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0c1220;border-bottom:1px solid #243047;flex-wrap:wrap;z-index:5}.title{font-weight:800;font-size:16px;white-space:nowrap}.pill{border:1px solid #2a3853;background:#121b2b;border-radius:12px;padding:8px 10px;font-size:13px}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.controls button{padding-left:8px;padding-right:8px}input{width:190px;background:#070d18;color:#fff;border:1px solid #34435f;padding:8px 10px;border-radius:10px;font:inherit}header input,header button{font-size:14px}#jumpInput{width:150px;padding-left:8px;padding-right:8px}#jumpInput::placeholder{font-size:.93em}#langToggle{min-width:50px;padding-left:8px;padding-right:8px}button{border:1px solid #34435f;background:#162137;color:#fff;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer}button:hover{background:#1d2b47}#stage{position:relative;min-height:0}canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:default}
-#shapeToggle{display:inline-flex;align-items:center;gap:1px;padding:2px;border:1px solid #34435f;border-radius:9px;background:#10192b;flex:0 0 auto}
-#shapeToggle button{height:29px;padding:3px 9px;border:0;border-radius:6px;background:transparent;white-space:nowrap}
-#shapeToggle button.active{background:#0d3542;color:#d8faff;box-shadow:inset 0 0 0 1px #18d7f2}#shapeToggle{width:99px;min-width:99px}#shapeToggle #shapeSquare{flex:0 0 57px}#shapeToggle #shapeHex{flex:1 1 auto}
+#spiralModeSelect{width:104px;min-width:104px;height:36px;border:1px solid #34435f;border-radius:9px;background:#10192b;color:#e8eef8;padding:4px 7px;font:inherit;font-size:13px;cursor:pointer;flex:0 0 auto}
+
+
 #zoomIndicator{position:absolute;right:14px;bottom:14px;z-index:6;pointer-events:none;opacity:0;padding:5px 9px;border-radius:9px;background:rgba(7,11,19,.78);border:1px solid rgba(80,100,135,.65);font-size:13px;font-weight:800;color:#e8eef8;transform:translateZ(0)}
 #hoverTip{position:absolute;display:none;z-index:4;pointer-events:none;padding:7px 9px;border-radius:9px;background:rgba(7,11,19,.95);border:1px solid #3a4967;color:#fff;font-size:13px;line-height:1.35;box-shadow:0 4px 18px rgba(0,0,0,.35);white-space:nowrap}#hoverTip .prime{color:#fff;font-weight:800}#hoverTip .activePrime{color:var(--cyan);font-weight:800}#hoverTip .composite{color:#cfd7e5}#hoverTip .neither{color:var(--warn)}
 #status,#sel{display:none}#hud{position:absolute;left:14px;bottom:14px;max-width:min(520px,calc(100% - 28px));background:rgba(8,13,23,.90);border:1px solid #26334a;border-radius:12px;padding:7px 9px;font-size:12px;line-height:1.4;pointer-events:auto;z-index:2}.dot{width:9px;height:9px;display:inline-block;margin-right:5px}.primeDot{background:var(--prime)}.activeDot{background:var(--cyan)}.selDot{background:var(--warn)}#activeInfo:empty{display:none}#hudBtns{display:flex;gap:6px;flex-wrap:wrap}#activeInfo:not(:empty)+#hudBtns{margin-top:6px}#hud .hudBtn{padding:5px 9px;font-size:11px;border-radius:9px}#minimapWrap{position:absolute;left:14px;bottom:80px;z-index:2;border:1px solid #26334a;border-radius:12px;overflow:hidden;background:#0a101b;display:none;box-shadow:0 14px 40px rgba(0,0,0,.28)}#minimap{position:static;inset:auto;display:block;width:100%;height:100%;image-rendering:auto;cursor:pointer}#miniZoomControls{position:absolute;right:4px;top:4px;display:flex;align-items:center;gap:2px;padding:2px 3px;border-radius:8px;background:rgba(4,8,14,.76);border:1px solid rgba(72,91,124,.62);backdrop-filter:blur(2px);z-index:3}#miniZoomControls button{width:22px;height:22px;min-width:22px;padding:0;border-radius:6px;font-size:14px;font-weight:800;line-height:20px;background:rgba(20,31,51,.92)}#miniZoomControls button:disabled{opacity:.34}#miniZoomLabel{min-width:36px;text-align:center;font-size:9.5px;font-weight:800;color:#e7effb;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -170,7 +171,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
   header #jumpInput{width:92px;min-width:92px;height:25px;padding:3px 5px}
   header #jumpBtn{width:29px;min-width:29px;height:25px;padding:3px 2px}
   header #zin,header #zout{width:22px;min-width:22px;height:25px;padding:2px}
-  header #home{width:49px;min-width:49px;height:25px;padding:3px 2px}#shapeToggle{padding:1px;border-radius:6px;width:73px;min-width:73px}#shapeToggle #shapeSquare{flex-basis:40px}#shapeToggle button{height:22px;padding:2px 3px;font-size:9px}
+  header #home{width:49px;min-width:49px;height:25px;padding:3px 2px}#spiralModeSelect{width:80px;min-width:80px;height:25px;padding:2px 3px;font-size:9.33px}
   .langSeqRow{display:flex;flex:1 1 100%;width:100%;margin:0;min-width:0;align-items:center;gap:3px;flex-wrap:nowrap}
   .langSeqRow #langToggle{flex:0 0 34px;width:34px;min-width:34px;height:25px;padding:3px 2px}
   .langSeqRow .modeSwitch{display:flex;flex:1 1 auto;width:auto;min-width:0;margin:0;padding:0;border:0;justify-content:flex-end;align-items:center;gap:3px;flex-wrap:nowrap}
@@ -242,15 +243,40 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
   header #jumpInput{width:70px;min-width:70px}
   header #jumpBtn{width:26px;min-width:26px}
   header #zin,header #zout{width:19px;min-width:19px}
-  header #home{width:43px;min-width:43px}#shapeToggle button{padding-left:3px;padding-right:3px}
+  header #home{width:43px;min-width:43px}#spiralModeSelect{width:71px;min-width:71px}
   .langSeqRow{flex:0 0 auto;width:auto}
   .langSeqRow #langToggle{flex-basis:31px;width:31px;min-width:31px}
   .langSeqRow .modeSwitch .sequenceLabel{font-size:7px}
   .langSeqRow .modeSwitch button{font-size:8px;padding-left:4px;padding-right:4px}
 }
 
+
+/* v1.2.23 — Compact one-line desktop header. No canvas / computational changes.
+   Keep the 2/3-scale mobile rules and small-window wrapping intact. */
+@media (min-width:1160px) and (min-height:621px) {
+  header{flex-wrap:nowrap;gap:5px;padding:8px 9px;align-items:center;align-content:center}
+  header .title{flex:0 0 auto;width:auto;min-width:0;font-size:13px;line-height:1.2;letter-spacing:-.15px;white-space:nowrap}
+  header .controls{flex:0 0 auto;gap:4px;flex-wrap:nowrap;min-width:0}
+  header input,header button{font-size:12px}
+  header #jumpInput{width:125px;min-width:125px;height:34px;padding:6px 6px}
+  header #jumpInput::placeholder{font-size:11px}
+  header #jumpBtn{width:40px;min-width:40px;height:34px;padding:5px 3px}
+  header #zin,header #zout{width:31px;min-width:31px;height:34px;padding:5px 3px}
+  header #home{width:57px;min-width:57px;height:34px;padding:5px 3px}
+  header #spiralModeSelect{width:94px;min-width:94px;height:34px;font-size:12px;padding:4px 5px}
+  header .langSeqRow{display:flex;flex:0 0 auto;min-width:0;width:auto;align-items:center;gap:5px;margin:0 0 0 auto;flex-wrap:nowrap}
+  header #langToggle{flex:0 0 44px;width:44px;min-width:44px;height:34px;padding:5px 3px}
+  header .modeSwitch{flex:0 0 auto;margin:0;padding-left:6px;border-left:1px solid #2d3b55;gap:5px;white-space:nowrap}
+  header .modeSwitch .sequenceLabel{flex:0 0 58px;width:58px;min-width:58px;font-size:12px;text-align:center}
+  header .modeSwitch button{font-size:12px;height:34px;padding:5px 5px;border-radius:9px}
+  header #cSearchBtn{flex:0 0 58px;width:58px;min-width:58px;max-width:58px}
+  header #savedToggle{flex:0 0 83px;width:83px;min-width:83px;max-width:83px}
+  header #showFormula{flex:0 0 132px;width:132px;min-width:132px;max-width:132px;white-space:nowrap}
+  header #cSearchBtn{padding-left:4px;padding-right:4px}
+}
+
 </style></head>
-<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><span id="shapeToggle" role="group" aria-label="Spiral lattice"><button id="shapeSquare" class="active" type="button" aria-pressed="true">Square</button><button id="shapeHex" type="button" aria-pressed="false">Hex</button></span></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
+<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><select id="spiralModeSelect" aria-label="Spiral mode" title="Spiral mode"><option value="square">Square</option><option value="hex">Hexagonal</option><option value="tri">Triangular</option><option value="sacks">Sacks</option></select></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
 <div id="stage"><canvas id="cv"></canvas><div id="zoomIndicator">×1</div><div id="hoverTip"></div>
 
 <div id="cSearchPanel">
@@ -347,7 +373,10 @@ const I18N={
     status:(range,x,y,scale,count)=>`Range ${range} · center (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/cell · ${count.toLocaleString()} cells`,
     presetClassic:'n²−n+c · all-odd classic',presetMonic:'n²+c · monic',presetEven:'even b · odd c preferred',
     hexPresetGroup:k=>`Hex lattice line · k=${k} (a=3k²)`,
-    hintHex:'Hex mode: lattice-line presets use a=3k² (k=1…4), with b values observed on the hex spiral. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −7,000,000 to +7,000,000.'
+    hintHex:'Hex mode: lattice-line presets use a=3k² (k=1…4), with b values observed on the hex spiral. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −7,000,000 to +7,000,000.',
+    hintTri:'Triangular: six exact baseline lattice directions (3 original + 3 rotated by 30°), wherever integer-coefficient quadratics exist. Other a=6k² presets remain available. Prime counts use Worker/WASM verification.',
+    hintSacks:'Sacks: suggested a=k², giving asymptotically radial polynomial paths. These are candidate families, not proofs of exact lines. c is screened and the best candidates are verified.',
+    hintVogel:'Vogel: Fibonacci-related a values approximate golden-angle recurrences; no fixed exact straight-line quadratic family is guaranteed. Prime statistics are checked independently.'
   },
   ko:{
     go:'이동',go1:'1로 가기',sequence:'수열',search:'탐색',
@@ -393,7 +422,10 @@ const I18N={
     status:(range,x,y,scale,count)=>`범위 ${range} · 중심 (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/칸 · 화면 ${count.toLocaleString()}칸`,
     presetClassic:'n²−n+c · 고전적 전항 홀수 계열',presetMonic:'n²+c · 단순 monic 계열',presetEven:'짝수 b · 홀수 c 권장',
     hexPresetGroup:k=>`육각 격자선 · k=${k} (a=3k²)`,
-    hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −7000000부터 +7000000까지 한 번에 탐색할 수 있다.'
+    hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −7000000부터 +7000000까지 한 번에 탐색할 수 있다.',
+    hintTri:'삼각 모드: 기존 3방향과 추가 3방향의 기본 축에서 정수계수 이차식이 성립하면 고정식으로 표시한다. a=6k² 추천식도 유지하며, 소수율은 Worker/WASM으로 검증한다.',
+    hintSacks:'잭스 모드: 제곱수 a=k²에서 나오는 점근적 방사형 수식 후보를 추천한다. 항상 정확한 직선이 되는 것은 아니며, 소수율을 따로 검사한다.',
+    hintVogel:'보겔 모드: 황금각의 근사 주기에 해당하는 피보나치 계수 후보를 추천한다. 정확한 직선은 보장되지 않으며 소수율은 독립 검증한다.'
   }
 };
 let currentLang=(()=>{try{return localStorage.getItem('ULAM_UI_LANG')==='ko'?'ko':'en'}catch(_){return'en'}})();
@@ -411,11 +443,36 @@ function rangeNameEn(n){
   return n.toLocaleString();
 }
 function localizeSlopeLabel(label){
-  if(latticeMode==='hex'){if(label.startsWith('육각 축 '))return currentLang==='ko'?label:label.replace('육각 축 ','Hex axis ');if(label.startsWith('기울기 '))return currentLang==='ko'?'축좌표 '+label:'axial '+label.replace('기울기 ','slope ')}
-  if(currentLang==='ko')return label;
-  return label.replace('기울기 ','slope ').replace('(가로)','(horizontal)').replace('(세로)','(vertical)');
+  // Translate newly generated Sacks labels even if the language is switched
+  // after the point-analysis Worker has returned (no recomputation required).
+  const sacksSlope=/^(?:Basic slope|기본 기울기) (0|∞|\+1|−1)/.exec(label||'');
+  if(sacksSlope){
+    const sl=sacksSlope[1];
+    const dirs={'0':['가로 →','horizontal →'],'∞':['세로 ↑','vertical ↑'],'+1':['대각 ↗','diagonal ↗'],'−1':['대각 ↘','diagonal ↘']};
+    const d=dirs[sl]||dirs['0'];
+    return currentLang==='ko'?`기본 기울기 ${sl} (${d[0]}) · 잭스 점근 근사`:`Basic slope ${sl} (${d[1]}) · Sacks asymptotic`;
+  }
+  if((label||'').startsWith('Jacks approx. ray')||(label||'').startsWith('Sacks approx. ray')||(label||'').startsWith('잭스 방사형 근사')){
+    const a=/(a=\d+)/.exec(label);
+    return (currentLang==='ko'?'잭스 방사형 근사':'Sacks approx. ray')+(a?' · '+a[1]:'');
+  }
+  // Preserve the original labels in saved formulas while translating both
+  // hexagonal and triangular baseline-axis names when the UI language changes.
+  if(label.startsWith('육각 축 ')||label.startsWith('Hex axis ')){
+    return currentLang==='ko'?label.replace(/^Hex axis /,'육각 축 '):label.replace(/^육각 축 /,'Hex axis ');
+  }
+  if(label.startsWith('삼각 축 ')||label.startsWith('Tri axis ')){
+    return currentLang==='ko'?label.replace(/^Tri axis /,'삼각 축 '):label.replace(/^삼각 축 /,'Tri axis ');
+  }
+  if(latticeMode==='hex'&&label.startsWith('기울기 '))return currentLang==='ko'?'축좌표 '+label:'axial '+label.replace('기울기 ','slope ');
+  if(currentLang==='ko')return String(label).replace(/Sacks|Jacks/g,'잭스');
+  return String(label).replace(/잭스|Jacks/g,'Sacks').replace('기울기 ','slope ').replace('(가로)','(horizontal)').replace('(세로)','(vertical)');
 }
 function slopeCompact(f){
+  // Extra-mode fixed entries are named asymptotic directions, not square-grid
+  // dx/dy lines.  Showing m=0 for every such row would be misleading.
+  if(isExtraMode()&&(f.kind==='extra'||f.kind==='extra-fixed'||f.kind==='fixed'))return localizeSlopeLabel(f.label||'candidate');
+  if(f.kind==='extra' || f.kind==='extra-fixed')return localizeSlopeLabel(f.label||'candidate');
   if(latticeMode==='hex')return `axial Δ(${f.dx},${f.dy})`;
   if(currentLang==='ko')return localizeSlopeLabel(f.label);
   if(f.dx===0)return'm=∞ (V)';
@@ -433,6 +490,9 @@ function displaySavedLabel(label){
   return label;
 }
 function presetNote(p){
+  if(latticeMode==='tri')return currentLang==='ko'?`삼각 껍질 · a=6k² (k=${Math.round(Math.sqrt(p.a/6))})`:`Triangular shell · 6k² (k=${Math.round(Math.sqrt(p.a/6))})`;
+  if(latticeMode==='sacks')return currentLang==='ko'?`잭스 · 제곱수 계수 k² (k=${Math.round(Math.sqrt(p.a))})`:`Sacks · square coefficient k² (k=${Math.round(Math.sqrt(p.a))})`;
+  if(latticeMode==='vogel')return currentLang==='ko'?'보겔 · 피보나치 준주기 (직선 보장 없음)':'Vogel · Fibonacci quasiperiod (no exact straight-line guarantee)';
   if(latticeMode==='hex'){
     const k=Math.round(Math.sqrt(p.a/3));
     return tr('hexPresetGroup',k);
@@ -442,6 +502,7 @@ function presetNote(p){
   return `a=${p.a} · ${tr('presetEven')}`;
 }
 function selectionSummary(allowExact=true){
+  if(isExtraMode()&&selected){const p=selected;return `<b>${p.n.toLocaleString()}</b> · ${tr('coords')} (${p.x.toFixed(2)}, ${p.y.toFixed(2)})`;}
   if(!selected)return tr('hoverHint');
   const n=selected.n,known=cacheHasNumber(n);
   let cls='';
@@ -461,6 +522,18 @@ function refreshActiveInfo(){
   if(!activeFormula){activeInfo.textContent='';return}
   if(activeFormula.kind==='search'){
     activeInfo.textContent=`${tr('active')}: ${tr('searchLabel')} · P(n) = ${polyTextABC(activeFormula.a,activeFormula.b,activeFormula.c)}`;
+    return;
+  }
+  if(activeFormula.kind==='vogel-arm'){
+    activeInfo.textContent=currentLang==='ko'
+      ?`${tr('active')}: 보겔 가지 · step q=${activeFormula.armStep} · n±${activeFormula.armStep}, n±${2*activeFormula.armStep}, …`
+      :`${tr('active')}: Vogel arm · step q=${activeFormula.armStep} · n±${activeFormula.armStep}, n±${2*activeFormula.armStep}, …`;
+    return;
+  }
+  if(activeFormula.kind==='vogel-pair'){
+    activeInfo.textContent=currentLang==='ko'
+      ?`${tr('active')}: 보겔 pair · q=${activeFormula.armStepA} & ${activeFormula.armStepB} · 교차 가지 후보`
+      :`${tr('active')}: Vogel pair · q=${activeFormula.armStepA} & ${activeFormula.armStepB} · crossing-arm candidate`;
     return;
   }
   const eq=equivalentForm(activeFormula);
@@ -501,7 +574,7 @@ function updateUIText(){
   labelUseRecommended.textContent=tr('useRecommended');labelCStart.textContent=tr('cStart');
   labelCEnd.textContent=tr('cEnd');labelVerifyCount.textContent=tr('verifyCount');
   labelPrimeLimit.textContent=tr('primeLimit');runCSearch.textContent=tr('startSearch');
-  stopCSearch.textContent=tr('stop');cHintText.textContent=tr(latticeMode==='hex'?'hintHex':'hint');
+  stopCSearch.textContent=tr('stop');cHintText.textContent=tr(({square:'hint',hex:'hintHex',tri:'hintTri',sacks:'hintSacks',vogel:'hintVogel'})[latticeMode]||'hint');
   savedTitleText.textContent=tr('savedTitle');closeSaved.textContent=tr('hide');
   clearSaved.textContent=tr('clearAll');hideFormula.textContent=tr('hide');
   allDirsText.firstChild.textContent=tr('allSlopes')+' ';allDirsHint.textContent=tr('allSlopesHint');
@@ -843,7 +916,7 @@ function cancelBranchBuild(){
   ++sieveToken;branchSieveTask.terminate();branchSieveTask=null;branchPrimePreview=null;branchBuildTarget=null;
 }
 function prepareLocalCacheForView(){
-  if(latticeMode==='hex')return;
+  if(latticeMode!=='square')return;
   if(!ready||!W||!H)return;
   const branchCore=branchTargetForView(1.03,false);
   if(branchCore){
@@ -905,7 +978,43 @@ const SEARCH_AB_PRESETS_HEX=[
     return rows;
   })
 ];
-function searchABPresets(){return latticeMode==='hex'?SEARCH_AB_PRESETS_HEX:SEARCH_AB_PRESETS_SQUARE}
+// Extra modes: geometry-inspired *candidate* families, not guaranteed prime lines.
+// Triangle ring h ends at 1+3h(h+1)/2. Stepping h by 2k gives a=6k^2.
+const SEARCH_AB_PRESETS_TRI=[
+  ...[1,2,3,4,5,6].flatMap(k=>{
+    const a=6*k*k;return [0,2*k,4*k,6*k].map(b=>({a,b}));
+  })
+];
+// Sacks r=sqrt(n), theta=2*pi*sqrt(n). Perfect-square leading terms
+// have asymptotically fixed angular phase. Small c shifts permit primes.
+// First entries are the four basic Sacks asymptotic slope families.
+// For F(t)=k²t²+bt+c, angle theta(t) -> pi*b/k (mod 2pi) as t -> infinity.
+// They describe limiting ray directions; no finite-scale geometric line is guaranteed.
+const SACKS_BASIC_SLOPES=[
+ {a:1,b:0,slope:'0',dirKo:'가로 →',dirEn:'horizontal →'},
+ {a:4,b:1,slope:'∞',dirKo:'세로 ↑',dirEn:'vertical ↑'},
+ {a:16,b:1,slope:'+1',dirKo:'대각 ↗',dirEn:'diagonal ↗'},
+ {a:16,b:7,slope:'−1',dirKo:'대각 ↘',dirEn:'diagonal ↘'}
+];
+const SEARCH_AB_PRESETS_SACKS=[
+  ...SACKS_BASIC_SLOPES.map(({a,b})=>({a,b})),
+  ...[1,2,3,4,5,6,8,10,12,16].flatMap(k=>{
+    const a=k*k;return (k%2?[k,3*k,5*k,7*k]:[0,2*k,4*k,6*k]).map(b=>({a,b}));
+  }).filter(p=>!SACKS_BASIC_SLOPES.some(s=>s.a===p.a&&s.b===p.b))
+];
+// Vogel golden-angle coefficient: Fibonacci denominators approximate
+// integer turns. These are quasiperiodic candidates, not exact rays.
+const SEARCH_AB_PRESETS_VOGEL=[
+  ...[2,3,5,8,13,21,34,55,89,144,233,377,610].flatMap((a,i)=>[
+    {a,b:a%2},{a,b:a%2+2},{a,b:i?([1,1,2,3,5,8,13,21,34,55,89,144,233][i]):1}
+  ])
+];
+function searchABPresets(){
+  return latticeMode==='hex'?SEARCH_AB_PRESETS_HEX:
+    latticeMode==='tri'?SEARCH_AB_PRESETS_TRI:
+    latticeMode==='sacks'?SEARCH_AB_PRESETS_SACKS:
+    latticeMode==='vogel'?SEARCH_AB_PRESETS_VOGEL:SEARCH_AB_PRESETS_SQUARE;
+}
 function renderPresetOptions(){
   const keep=cPreset.value,presets=searchABPresets();
   cPreset.innerHTML='';
@@ -930,7 +1039,7 @@ function refreshSearchABForLattice(){
   const match=presets.findIndex(p=>p.a===prevA&&p.b===prevB);
   cPreset.value=String(match>=0?match:0);
   applySearchABPreset();
-  cHintText.textContent=tr(latticeMode==='hex'?'hintHex':'hint');
+  cHintText.textContent=tr(({square:'hint',hex:'hintHex',tri:'hintTri',sacks:'hintSacks',vogel:'hintVogel'})[latticeMode]||'hint');
 }
 function applySearchABPreset(){
   const use=cPresetMode.checked;
@@ -1008,12 +1117,12 @@ function miniLevelLabel(n){
   return'1B';
 }
 function miniViewport(){
-  const n=MINI_LEVELS[miniZoomIndex],r=latticeMode==='hex'?hexRadiusFor(n):radiusFor(n);
+  const n=MINI_LEVELS[miniZoomIndex],r=latticeMode==='hex'?hexRadiusFor(n):latticeMode==='tri'?extraTriRadiusFor(n):isExtraMode()?Math.sqrt(n):radiusFor(n);
   // The widest 1T overview is anchored on n=1. All closer levels follow the
   // current camera center. Since n grows as radius², each x10 level changes
   // the minimap side length by exactly about sqrt(10).
   if(n===MAX_N)return{n,r,cx:0,cy:0,originCentered:true};
-  const snap=Math.max(1,Math.round(r/128)),limit=Math.max(0,MAX_R-r);
+  const snap=Math.max(1,Math.round(r/128)),limit=Math.max(0,(isExtraMode()?(latticeMode==='tri'?extraTriRadiusFor(MAX_N):Math.sqrt(MAX_N)):MAX_R)-r);
   let cx=Math.round(camX/snap)*snap,cy=Math.round(camY/snap)*snap;
   cx=Math.max(-limit,Math.min(limit,cx));cy=Math.max(-limit,Math.min(limit,cy));
   return{n,r,cx,cy,originCentered:false};
@@ -1095,6 +1204,7 @@ function forEachFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn){
   return hits;
 }
 function activePrimeIntersectsCurrentView(f){
+  if(isExtraMode())return extraActiveFormulaIntersects(f);
   if(latticeMode==='hex'){const rect=hexViewRect(1);let found=false;forEachHexFormulaTermInRect(f,rect.xmin,rect.xmax,rect.ymin,rect.ymax,16000,(n,p)=>{if(hexKnown(p.x,p.y)===true||hexKnown(p.x,p.y)===null&&isPrimeExactSingle(n)){found=true;return false}});return found}
   if(!f||!W||!H)return false;const hx=W/(2*scale),hy=H/(2*scale);let found=false;
   forEachFormulaTermInRect(f,camX-hx,camX+hx,camY-hy,camY+hy,12000,(n)=>{
@@ -1103,6 +1213,7 @@ function activePrimeIntersectsCurrentView(f){
   return found;
 }
 function nearestPrimeTermToCamera(f){
+  if(isExtraMode())return extraNearestPrimeTerm(f);
   if(!f)return null;const tx=Math.round(camX),ty=Math.round(camY),target=Math.max(1,Math.min(MAX_N,latticeNumber(tx,ty))),seeds=[];
   if(f.a>0){const D=f.b*f.b-4*f.a*(f.c-target);if(D>=0){const root=Math.sqrt(D),den=2*f.a;seeds.push((-f.b+root)/den,(-f.b-root)/den)}}
   else if(f.a===0&&f.b!==0)seeds.push((target-f.c)/f.b);
@@ -1168,6 +1279,7 @@ function rebuildMiniFormula(){
 }
 
 function renderMinimap(){
+  if(isExtraMode())return renderExtraMinimap();
   if(latticeMode==='hex')return renderHexMinimap();
   if(!showMinimap||!ready){miniWrap.style.display='none';miniToggle.textContent=tr('showMinimap');return}
   resizeMinimap();rebuildMiniBackground();rebuildMiniFormula();
@@ -1230,6 +1342,7 @@ function primeFromCache(cache,n){
   return(cache.bits[i>>>3]&(1<<(i&7)))===0;
 }
 function isPrime(n){
+  if(isExtraMode())return isPrimeExactSingle(n);
   if(latticeMode==='hex'){if(n===2)return true;if(n<2||n%2===0)return false;const p=hexCoord(n);const known=hexKnown(p.x,p.y);return known===null?isPrimeExactSingle(n):known}
   if(n===2)return true;
   if(n<2||n%2===0)return false;
@@ -1249,7 +1362,7 @@ function isPrimeExactSingle(n){
   for(const p of basePrimes){if(p*p>n)break;if(n%p===0)return false}
   return true;
 }
-function validXY(x,y){if(latticeMode==='hex')return hexRadius(x,y)<=HEX_R&&hexNumber(x,y)<=MAX_N;if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R)return false;const n=ulamNumber(x,y);return n>=1&&n<=MAX_N}
+function validXY(x,y){if(isExtraMode())return false;if(latticeMode==='hex')return hexRadius(x,y)<=HEX_R&&hexNumber(x,y)<=MAX_N;if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R)return false;const n=ulamNumber(x,y);return n>=1&&n<=MAX_N}
 function gcd3(a,b,c){return gcd(gcd(a,b),c)}
 function fixedDivisor(a,b,c){for(const p of [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47]){let all=true;for(let n=0;n<p;n++){let v=(a*n*n+b*n+c)%p;if(v<0)v+=p;if(v!==0){all=false;break}}if(all)return p}return 0}
 function canonPoly(a,b,c){a=Math.round(a);b=Math.round(b);c=Math.round(c);if(a!==0){const ob=b,oc=c,h=Math.round(-ob/(2*a));b=2*a*h+ob;c=a*h*h+ob*h+oc;if(b<0)b=-b;return{a,b,c}}if(b!==0){if(b<0)b=-b;const h=Math.round(-c/b);c=b*h+c}return{a,b,c}}
@@ -1293,7 +1406,23 @@ function formulaStatsCore(a,b,c,maxN,primes,primeLimit){
   let termCount=0,primeCount=0,oddCount=0,oddPrimeCount=0;
   const range=formulaParamRange(a,b,c,maxN);
   if(range){
-    const[lo,hi]=range,len=hi-lo+1,composite=new Uint8Array(len);
+    const[lo,hi]=range,len=hi-lo+1;
+    // A handful of terms is cheaper to divide exactly than to compute modular
+    // polynomial roots for all 78,497 base primes. Also accelerates WASM self-checks.
+    if(len<=64){
+      for(let t=lo;t<=hi;t++){
+        const v=a*t*t+b*t+c;if(v<1||v>maxN)continue;
+        termCount++;const odd=v%2!==0;if(odd)oddCount++;
+        let prime=v===2;
+        if(v>2&&odd){
+          if(v<=primeLimit)prime=basePrimeContains(primes,v);
+          else{prime=true;for(const p of primes){if(p*p>v)break;if(v%p===0){prime=false;break}}}
+        }
+        if(prime){primeCount++;if(odd)oddPrimeCount++}
+      }
+      return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
+    }
+    const composite=new Uint8Array(len);
     for(let i=0,t=lo;i<len;i++,t++){
       const v=a*t*t+b*t+c;
       if(v<2||v>maxN||(v!==2&&v%2===0))composite[i]=1;
@@ -1347,6 +1476,7 @@ function localFormula(x0,y0,dir,withStats=false){
   return base;
 }
 function polyKey(f){return`${f.a}|${f.b}|${f.c}`}
+function formulaId(f){if(!f)return'';if(f.kind==='vogel-arm')return`vogel-arm:${f.armStep}`;if(f.kind==='vogel-pair')return`vogel-pair:${Math.min(f.armStepA,f.armStepB)}:${Math.max(f.armStepA,f.armStepB)}`;return polyKey(f)}
 function simpleFormulaCopy(f){return{a:f.a,b:f.b,c:f.c,label:f.label||'',kind:f.kind||'saved'}}
 function formulaHeadline(f){const eq=equivalentForm(f);return eq?eq.main:formatPoly(f)}
 function compactFormulaStatFromValues(primeCount,span,oddPrimeCount,oddCount){
@@ -1359,7 +1489,7 @@ function compactFormulaStatFromValues(primeCount,span,oddPrimeCount,oddCount){
   }
   return `${tr('primeRate')} ${(all*100).toFixed(1)}%`;
 }
-function isFormulaSaved(f){const k=polyKey(f);return savedEntries.some(v=>v.id===k)}
+function isFormulaSaved(f){if(!f||f.kind==='vogel-arm'||f.kind==='vogel-pair')return false;const k=polyKey(f);return savedEntries.some(v=>v.id===k)}
 function updateSavedToggle(){savedToggle.textContent=tr('saved',savedEntries.length);savedToggle.title=`${tr('savedTitle')}: ${savedEntries.length}`;syncMobileHeaderWidths()}
 function updateModeTabs(){const searchActive=cSearchOpen;const savedActive=savedOpen&&!cSearchOpen;const pointActive=!!selected&&!cSearchOpen&&!savedOpen&&!formulaHidden;cSearchBtn.classList.toggle('active',searchActive);savedToggle.classList.toggle('active',savedActive);showFormula.classList.toggle('active',pointActive)}
 function persistSaved(){try{localStorage.setItem(SAVED_KEY,JSON.stringify(savedEntries))}catch(_){}}
@@ -1453,7 +1583,7 @@ function runSavedStatsBackfill(){
   worker.onerror=e=>{e.preventDefault?.();console.warn('[saved stats]',e.message);finish(false)};
   if(warm)send();else worker.postMessage({type:'init',maxN:MAX_N,primeLimit:basePrimeLimit,primes:basePrimes});
 }
-function setFormulaSaved(f,on){const id=polyKey(f);if(on){const old=savedEntries.find(v=>v.id===id);if(!old)savedEntries.unshift(makeSavedEntry(f))}else savedEntries=savedEntries.filter(v=>v.id!==id);persistSaved();updateSavedToggle();renderSavedPanel();renderFormulaPanel();sched()}
+function setFormulaSaved(f,on){if(!f||f.kind==='vogel-arm'||f.kind==='vogel-pair')return;const id=polyKey(f);if(on){const old=savedEntries.find(v=>v.id===id);if(!old)savedEntries.unshift(makeSavedEntry(f))}else savedEntries=savedEntries.filter(v=>v.id!==id);persistSaved();updateSavedToggle();renderSavedPanel();renderFormulaPanel();sched()}
 function moveSavedBefore(dragId,targetId){if(!dragId||!targetId||dragId===targetId)return;const from=savedEntries.findIndex(v=>v.id===dragId),to=savedEntries.findIndex(v=>v.id===targetId);if(from<0||to<0)return;const[item]=savedEntries.splice(from,1);const newTo=savedEntries.findIndex(v=>v.id===targetId);savedEntries.splice(newTo,0,item);persistSaved();renderSavedPanel()}
 function renderSavedPanel(){
   updateSavedToggle();updateModeTabs();
@@ -1550,6 +1680,7 @@ function pointVisibilityBonus(f){
   return 9/(Math.hypot(ax,ay)+1);
 }
 function preparePointCandidates(x,y){
+  if(isExtraMode())return extraPointCandidates(selected?.n||extraApproxNumber(x,y));
   if(latticeMode==='hex')return hexPointCandidates(x,y);
   const fixed=[],rawDynamic=[],seenFixed=new Set(),seenDynamic=new Set();
   for(const d of FIXED_DIRS){const f=localFormula(x,y,d,false);if(!f)continue;const k=polyKey(f);if(seenFixed.has(k))continue;seenFixed.add(k);f.kind='fixed';fixed.push(f)}
@@ -1562,17 +1693,33 @@ function preparePointCandidates(x,y){
   return{fixed,pool:showAllDirections?rawDynamic:rawDynamic.slice(0,18)};
 }
 function pointFormulaWithStats(f,fs){
+  if(f&&(f.kind==='vogel-arm'||f.kind==='vogel-pair'))return {...f};
   if(!fs||!fs.termCount||!fs.oddCount)return null;
   return{...f,span:fs.termCount,primeCount:fs.primeCount,ratio:fs.ratio,oddCount:fs.oddCount,oddPrimeCount:fs.oddPrimeCount,oddRatio:fs.oddRatio};
 }
 function finishPointCandidateSet(fixed,pool,statsByKey){
-  const fixedDone=[],dynamic=[];
-  for(const f of fixed){const x=pointFormulaWithStats(f,statsByKey.get(polyKey(f)));if(x)fixedDone.push(x)}
-  for(const f of pool){const x=pointFormulaWithStats(f,statsByKey.get(polyKey(f)));if(x)dynamic.push(x)}
+  const fixedDone=[],dynamic=[],pairRows=[],armRows=[];
+  for(const f of fixed){
+    const x=pointFormulaWithStats(f,statsByKey.get(polyKey(f)));
+    if(!x)continue;
+    if(x.kind==='vogel-pair')pairRows.push(x);
+    else if(x.kind==='vogel-arm')armRows.push(x);
+    else fixedDone.push(x);
+  }
+  for(const f of pool){
+    const x=pointFormulaWithStats(f,statsByKey.get(polyKey(f)));
+    if(!x)continue;
+    if(x.kind==='vogel-pair')pairRows.push(x);
+    else if(x.kind==='vogel-arm')armRows.push(x);
+    else dynamic.push(x);
+  }
   const recommendScore=f=>f.oddRatio*100+pointVisibilityBonus(f);
   dynamic.sort((u,v)=>recommendScore(v)-recommendScore(u)||v.oddRatio-u.oddRatio||v.oddCount-u.oddCount||v.span-u.span);
   dynamic.forEach((f,i)=>f.rank=i+1);
-  return showAllDirections?fixedDone.concat(dynamic):fixedDone.concat(dynamic.slice(0,4));
+  pairRows.sort((u,v)=>v.pairScore-u.pairScore||u.rank-v.rank);
+  armRows.sort((u,v)=>v.armScore-u.armScore||u.armStep-v.armStep);
+  const head=pairRows.concat(armRows);
+  return showAllDirections?head.concat(fixedDone,dynamic):head.concat(fixedDone,dynamic.slice(0,4));
 }
 function cancelPointAnalysis(refill=true){
   ++pointAnalyzeToken;
@@ -1600,6 +1747,7 @@ function analyzePointAsync(x,y){
   const token=pointAnalyzeToken,prepared=preparePointCandidates(x,y),all=prepared.fixed.concat(prepared.pool),stats=new Map(),jobs=[];
   pointAnalysisPending=true;formulas=[];renderFormulaPanel();sched();
   for(const f of all){
+    if(f.kind==='vogel-arm'||f.kind==='vogel-pair')continue;
     const key=`${MAX_N}|${f.a}|${f.b}|${f.c}`,cached=formulaStatCache.get(key);
     if(cached)stats.set(polyKey(f),cached);else jobs.push({f,key});
   }
@@ -1677,44 +1825,101 @@ function renderFormulaPanel(){
   formulaList.innerHTML='';
   if(pointAnalysisPending){formulaList.innerHTML=`<div class="formulaMeta">${currentLang==='ko'?'수열을 병렬 분석 중…':'Analyzing sequences in parallel…'}</div>`;return}
   if(!formulas.length){formulaList.innerHTML=`<div class="formulaMeta">${tr('noFormula')}</div>`;return}
+  if(latticeMode==='sacks'){
+    const note=document.createElement('div');note.className='formulaMeta';
+    note.textContent=currentLang==='ko'
+      ?'기본 기울기 0, ∞, +1, −1: 선택 수를 지나는 잭스 점근 방향 후보. 유한 거리에서 정확한 직선이라는 뜻은 아님.'
+      :'Basic slopes 0, ∞, +1, −1: asymptotic Sacks rays through the selected number, not exact finite-scale straight lines.';
+    formulaList.appendChild(note);
+  }
+  if(latticeMode==='vogel'){
+    const note=document.createElement('div');note.className='formulaMeta';
+    note.textContent=currentLang==='ko'
+      ?'보겔은 기하학적 arm/pair와 소수생성 이차식을 구분한다. A(k), B(k), L(k)는 1차식이며 1~1조 전체의 항을 강조한다. 연결선은 크게 확대했을 때만 나타난다.'
+      :'Vogel geometric arm/pair paths are separate from prime-generating polynomials. A(k), B(k) and L(k) are linear and highlighted over 1..1T; connecting lines appear only when zoomed in.';
+    formulaList.appendChild(note);
+  }
+  let lastSection='';
   for(const f of formulas){
+    if(latticeMode==='vogel'){
+      const section=(f.kind==='vogel-arm'||f.kind==='vogel-pair')?'geometry':'numberTheory';
+      if(section!==lastSection){
+       const header=document.createElement('div');header.className='formulaMeta';
+       header.style.cssText='margin-top:9px;padding-top:7px;border-top:1px solid #293750;font-weight:750;color:#c8dcf6';
+       header.textContent=section==='geometry'
+        ?(currentLang==='ko'?'기하학적 가지 / Pair (위치 정렬 기준)':'Geometric arms / pairs (position alignment)')
+        :(currentLang==='ko'?'소수 생성 이차식 후보 (별도 분석)':'Prime-generating quadratic candidates (separate ranking)');
+       formulaList.appendChild(header);lastSection=section;
+      }
+    }
     const b=document.createElement('div');
-    b.className='formulaBtn'+(compact?' compact':'')+(activeFormula&&polyKey(activeFormula)===polyKey(f)?' active':'');
+    const fid=formulaId(f),active=!!activeFormula&&formulaId(activeFormula)===fid;
+    b.className='formulaBtn'+(compact?' compact':'')+(active?' active':'');
     b.tabIndex=0;
-    const eq=equivalentForm(f);
-    const tag=currentLang==='ko'
-      ?(f.kind==='fixed'?'고정':(showAllDirections?`순위 #${f.rank}`:`추천 #${f.rank}`))
-      :(f.kind==='fixed'?'Fixed':(showAllDirections?`#${f.rank}`:`R#${f.rank}`));
-    let stat='';
-    if(compact){
-      stat=compactFormulaStatFromValues(f.primeCount,f.span,f.oddPrimeCount,f.oddCount);
-      b.innerHTML=`<div class="formulaExpr">${eq?eq.main:formatPoly(f)}</div><div class="formulaStat">${stat}</div>`;
-    }else{
-      if(currentLang==='ko'){
-        stat=f.oddCount!==f.span
-          ?`홀수 ${f.oddPrimeCount.toLocaleString()} / ${f.oddCount.toLocaleString()} (${(f.oddRatio*100).toFixed(1)}%) · 전체 ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · 선분 ${f.localSpan.toLocaleString()}칸`
-          :`전체 ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · 선분 ${f.localSpan.toLocaleString()}칸`;
-        b.innerHTML=`<div class="formulaSlope">${tag} · ${localizeSlopeLabel(f.label)}</div>`+
-          (eq?`<div class="formulaExpr">${eq.main}</div><div class="formulaParam">${eq.note}</div>`:`<div class="formulaExpr">격자선 식 ${formatPoly(f)}</div>`)+
-          `<div class="formulaStat">${stat}</div>`;
+    if(f.kind==='vogel-pair'){
+      const tag=currentLang==='ko'?(showAllDirections?`pair #${f.rank}`:`추천 pair #${f.rank}`):`Pair #${f.rank}`;
+      const stat=currentLang==='ko'
+        ?`q=${f.armStepA} & ${f.armStepB} · 교차 점수 ${f.pairScore.toFixed(2)} · 교차도 ${(f.crossScore*100).toFixed(0)}%`
+        :`q=${f.armStepA} & ${f.armStepB} · pair score ${f.pairScore.toFixed(2)} · crossing ${(f.crossScore*100).toFixed(0)}%`;
+      if(compact){
+        b.innerHTML=`<div class="formulaExpr">${currentLang==='ko'?'보겔 pair':'Vogel pair'} ${f.armStepA}/${f.armStepB}</div><div class="formulaStat">${currentLang==='ko'?`A(k)=n+${f.armStepA}k, B(k)=n+${f.armStepB}k · `:''}${stat}</div>`;
       }else{
-        stat=f.oddCount!==f.span
-          ?`Odd ${f.oddPrimeCount.toLocaleString()} / ${f.oddCount.toLocaleString()} (${(f.oddRatio*100).toFixed(1)}%) · All ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · Seg ${f.localSpan.toLocaleString()}`
-          :`All ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · Seg ${f.localSpan.toLocaleString()}`;
-        b.innerHTML=`<div class="formulaSlope">${tag} · ${slopeCompact(f)}</div>`+
-          (eq?`<div class="formulaExpr">${eq.main}</div><div class="formulaParam">${eq.note}</div>`:`<div class="formulaExpr">${formatPoly(f)}</div>`)+
+        b.innerHTML=`<div class="formulaSlope">${tag} · ${currentLang==='ko'?'보겔 pair':'Vogel pair'}</div>`+
+          `<div class="formulaExpr">A(k)=n+${f.armStepA}k, B(k)=n+${f.armStepB}k</div>`+
+          `<div class="formulaParam">${currentLang==='ko'?'두 기하학적 1차식의 1~1조 범위를 강조. 축소 시 항을 표본 표시하며, 연결선은 확대 시에만 표시':'Highlights both full-domain linear arms (1..1T), using sampled terms at overview zoom; connections appear only at close zoom.'}</div>`+
           `<div class="formulaStat">${stat}</div>`;
+      }
+    }else if(f.kind==='vogel-arm'){
+      const tag=currentLang==='ko'?(showAllDirections?`가지 #${f.rank}`:`추천 가지 #${f.rank}`):`Arm #${f.rank}`;
+      const stat=currentLang==='ko'
+        ?`step q=${f.armStep} · 정렬 점수 ${f.armScore.toFixed(2)} · 로컬 점 ${f.armCount}개${f.isFib?' · Fibonacci':''}`
+        :`step q=${f.armStep} · alignment ${f.armScore.toFixed(2)} · local points ${f.armCount}${f.isFib?' · Fibonacci':''}`;
+      if(compact){
+        b.innerHTML=`<div class="formulaExpr">${currentLang==='ko'?'보겔 가지':'Vogel arm'} q=${f.armStep}</div><div class="formulaStat">${currentLang==='ko'?`L(k)=n+${f.armStep}k · `:''}${stat}</div>`;
+      }else{
+        b.innerHTML=`<div class="formulaSlope">${tag} · ${currentLang==='ko'?'보겔 가지':'Vogel arm'}</div>`+
+          `<div class="formulaExpr">L(k)=n+${f.armStep}k</div>`+
+          `<div class="formulaParam">${currentLang==='ko'?`선택 수 n을 기준으로 한 1차식 가지. 즉 n, n±${f.armStep}, n±${2*f.armStep}, …`:`Linear arm through the selected n: n, n±${f.armStep}, n±${2*f.armStep}, …`}</div>`+
+          `<div class="formulaStat">${stat}</div>`;
+      }
+    }else{
+      const eq=equivalentForm(f);
+      const tag=currentLang==='ko'
+        ?(f.kind==='fixed'?'고정':(f.kind==='extra'?'후보':(showAllDirections?`순위 #${f.rank}`:`추천 #${f.rank}`)))
+        :(f.kind==='fixed'?'Fixed':(f.kind==='extra'?'Candidate':(showAllDirections?`#${f.rank}`:`R#${f.rank}`)));
+      let stat='';
+      if(compact){
+        stat=compactFormulaStatFromValues(f.primeCount,f.span,f.oddPrimeCount,f.oddCount);
+        b.innerHTML=`<div class="formulaExpr">${eq?eq.main:formatPoly(f)}</div><div class="formulaStat">${stat}</div>`;
+      }else{
+        if(currentLang==='ko'){
+          stat=f.oddCount!==f.span
+            ?`홀수 ${f.oddPrimeCount.toLocaleString()} / ${f.oddCount.toLocaleString()} (${(f.oddRatio*100).toFixed(1)}%) · 전체 ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · 선분 ${f.localSpan==null?'해당 없음':f.localSpan.toLocaleString()+'칸'}`
+            :`전체 ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · 선분 ${f.localSpan==null?'해당 없음':f.localSpan.toLocaleString()+'칸'}`;
+          b.innerHTML=`<div class="formulaSlope">${tag} · ${localizeSlopeLabel(f.label)}</div>`+
+            (eq?`<div class="formulaExpr">${eq.main}</div><div class="formulaParam">${eq.note}</div>`:`<div class="formulaExpr">${isExtraMode()?'수식':'격자선 식'} ${formatPoly(f)}</div>`)+
+            `<div class="formulaStat">${stat}</div>`;
+        }else{
+          stat=f.oddCount!==f.span
+            ?`Odd ${f.oddPrimeCount.toLocaleString()} / ${f.oddCount.toLocaleString()} (${(f.oddRatio*100).toFixed(1)}%) · All ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · Seg ${f.localSpan==null?'n/a':f.localSpan.toLocaleString()}`
+            :`All ${f.primeCount.toLocaleString()} / ${f.span.toLocaleString()} (${(f.ratio*100).toFixed(1)}%) · Seg ${f.localSpan==null?'n/a':f.localSpan.toLocaleString()}`;
+          b.innerHTML=`<div class="formulaSlope">${tag} · ${slopeCompact(f)}</div>`+
+            (eq?`<div class="formulaExpr">${eq.main}</div><div class="formulaParam">${eq.note}</div>`:`<div class="formulaExpr">${formatPoly(f)}</div>`)+
+            `<div class="formulaStat">${stat}</div>`;
+        }
       }
     }
     const cb=document.createElement('input');cb.type='checkbox';cb.className='formulaSaveBox';
-    const saved=isFormulaSaved(f),active=activeFormula&&polyKey(activeFormula)===polyKey(f);
-    cb.checked=saved;if(!compact&&!active&&!saved)cb.classList.add('hidden');
+    const saved=isFormulaSaved(f);
+    cb.checked=saved;
+    if(f.kind==='vogel-arm'||f.kind==='vogel-pair'){cb.classList.add('hidden');cb.disabled=true}
+    else if(!compact&&!active&&!saved)cb.classList.add('hidden');
     cb.title=saved?tr('unsaveFormula'):tr('saveFormula');
     cb.onclick=e=>e.stopPropagation();
     cb.onchange=e=>{e.stopPropagation();setFormulaSaved(f,cb.checked)};
     b.appendChild(cb);
     const activate=()=>{
-      activeFormula=activeFormula&&polyKey(activeFormula)===polyKey(f)?null:f;
+      activeFormula=active?null:f;
       refreshActiveInfo();renderFormulaPanel();renderSavedPanel();resizeMinimap();sched();
     };
     b.onclick=activate;
@@ -1723,6 +1928,7 @@ function renderFormulaPanel(){
   }
 }
 function selectPoint(x,y,cacheDelay=140){
+  if(isExtraMode())return extraSelectAtXY(x,y);
   const n=latticeNumber(x,y);if(n<1||n>MAX_N)return;
   ++pointAnalyzeKick;cancelPointAnalysis();
   selected={x,y,n};activeFormula=null;activeInfo.textContent='';formulas=[];pointAnalysisDoneKey='';
@@ -1730,12 +1936,35 @@ function selectPoint(x,y,cacheDelay=140){
   pointAnalysisPending=true;selEl.innerHTML=selectionSummary(cacheDelay!==0);renderFormulaPanel();sched(cacheDelay);
   deferPointAnalysis(x,y);
 }
-function clamp(){if(latticeMode==='hex'){const margin=Math.max(W,H)/scale*.20;camX=Math.max(-HEX_R-margin,Math.min(HEX_R+margin,camX));camY=Math.max(-HEX_R-margin,Math.min(HEX_R+margin,camY));return}const mx=W/(2*scale),my=H/(2*scale);camX=Math.max(-MAX_R-mx*.25,Math.min(MAX_R+mx*.25,camX));camY=Math.max(-MAX_R-my*.25,Math.min(MAX_R+my*.25,camY))}
+function clamp(){if(isExtraMode()){
+  // Unlike Square Ulam, these worlds do NOT fill a square bounding box.
+  // Sacks/Vogel live inside a disk of radius sqrt(MAX_N).  A minimap click
+  // in a corner outside that disk used to show a totally black, yet 'done', view.
+  if(latticeMode==='sacks'||latticeMode==='vogel'){
+    const rad=Math.sqrt(MAX_N),dist=Math.hypot(camX,camY);
+    if(dist>rad){const f=rad/dist;camX*=f;camY*=f}
+  }else if(latticeMode==='tri'){
+    const h=extraTriRadiusFor(MAX_N),s=EXTRA_SQRT3;
+    const A=[0,h],B=[-s*h/2,-h/2],C=[s*h/2,-h/2];
+    if(camY< -h/2||camY>h-s*Math.abs(camX)){
+      let bx=camX,by=camY,bd=Infinity;
+      for(const [u,v] of [[A,B],[B,C],[C,A]]){
+        const dx=v[0]-u[0],dy=v[1]-u[1];
+        const t=Math.max(0,Math.min(1,((camX-u[0])*dx+(camY-u[1])*dy)/(dx*dx+dy*dy)));
+        const x=u[0]+t*dx,y=u[1]+t*dy,d=(x-camX)**2+(y-camY)**2;
+        if(d<bd){bd=d;bx=x;by=y}
+      }
+      camX=bx;camY=by;
+    }
+  }
+  return;
+}if(latticeMode==='hex'){const margin=Math.max(W,H)/scale*.20;camX=Math.max(-HEX_R-margin,Math.min(HEX_R+margin,camX));camY=Math.max(-HEX_R-margin,Math.min(HEX_R+margin,camY));return}const mx=W/(2*scale),my=H/(2*scale);camX=Math.max(-MAX_R-mx*.25,Math.min(MAX_R+mx*.25,camX));camY=Math.max(-MAX_R-my*.25,Math.min(MAX_R+my*.25,camY))}
 function requestRender(){
   if(pending)return;pending=true;
   requestAnimationFrame(()=>{pending=false;render();if(primeAfterFrame){primeAfterFrame=false;queueLocalCacheEnsure(0)}});
 }
 function sched(cacheDelay=140){
+  if(isExtraMode()){extraQueueEnsure(cacheDelay);requestRender();return}
   if(latticeMode==='hex'){hexQueueEnsure(cacheDelay);requestRender();return}
   if(cacheDelay===0){prepareLocalCacheForView();clearTimeout(localCacheTimer);primeAfterFrame=true}
   else if(!primeAfterFrame)queueLocalCacheEnsure(cacheDelay);
@@ -1922,7 +2151,7 @@ async function preloadPointAnalyzeWorkerPool(onProgress){
   await Promise.all(jobs);
 }
 function schedulePointAnalyzeWarmup(delay=120){
-  clearTimeout(pointAnalyzeWarmTimer);pointAnalyzeWarmTimer=setTimeout(()=>{pointAnalyzeWarmTimer=0;const cap=pointAnalyzeWorkerCap(),missing=cap-idlePointAnalyzeWorkers.length-warmingPointAnalyzeWorkers.length-pointAnalyzeWorkers.length;for(let i=0;i<missing;i++)warmOnePointAnalyzeWorker()},delay);
+  clearTimeout(pointAnalyzeWarmTimer);pointAnalyzeWarmTimer=setTimeout(()=>{pointAnalyzeWarmTimer=0;if(cVerifyWorkers.length)return;const cap=pointAnalyzeWorkerCap(),missing=cap-idlePointAnalyzeWorkers.length-warmingPointAnalyzeWorkers.length-pointAnalyzeWorkers.length;for(let i=0;i<missing;i++)warmOnePointAnalyzeWorker()},delay);
 }
 function polyTextABC(a,b,c){
   let s=a===1?'n²':a===-1?'−n²':`${a}n²`;
@@ -1933,7 +2162,7 @@ function polyTextABC(a,b,c){
 function stopCSearchRun(){
   ++cSearchToken;
   if(cSearchWorker){cSearchWorker.terminate();cSearchWorker=null}
-  if(cVerifyWorkers.length){for(const w of cVerifyWorkers)try{w.terminate()}catch(_){}cVerifyWorkers=[]}
+  if(cVerifyWorkers.length){for(const w of cVerifyWorkers)try{w.terminate()}catch(_){}cVerifyWorkers=[];if(ready)schedulePointAnalyzeWarmup(0)}
   runCSearch.disabled=false;stopCSearch.disabled=true;
 }
 function renderCSearchResults(rows){
@@ -1986,19 +2215,17 @@ function verifyCSearchCandidates(a,b,candidates,token){
 
   const hc=Math.max(1,Number(navigator.hardwareConcurrency)||2),mobile=navigator.userAgentData?.mobile||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const workerCount=Math.min(jobs.length,mobile?Math.max(1,Math.min(2,hc)):Math.max(1,Math.min(8,hc-1||1)));
-  const source=formulaStatsWorkerSource();
-  let url=null,next=0,finished=false;
-  function cleanup(){if(cVerifyWorkers.length){for(const w of cVerifyWorkers)try{w.terminate()}catch(_){}cVerifyWorkers=[]}if(url){URL.revokeObjectURL(url);url=null}}
+  let next=0,finished=false;
+  function cleanup(reuse=false){if(cVerifyWorkers.length){for(const w of cVerifyWorkers)try{w.onmessage=null;w.onerror=null;w._job=null;if(reuse&&w._pointWarmed&&idlePointAnalyzeWorkers.length<pointAnalyzeWorkerCap())idlePointAnalyzeWorkers.push(w);else w.terminate()}catch(_){}cVerifyWorkers=[]}schedulePointAnalyzeWarmup(80)}
   function fail(message){if(finished||token!==cSearchToken)return;finished=true;cleanup();runCSearch.disabled=false;stopCSearch.disabled=true;cSearchStatus.textContent=`${tr('error')}: ${message}`}
   function send(w){if(token!==cSearchToken||finished)return;if(next>=jobs.length){w._busy=false;return}const job=jobs[next++];w._busy=true;w._job=job;w.postMessage({type:'job',index:job.index,a,b,c:job.item.c})}
   try{
-    url=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
     cVerifyWorkers=[];
     for(let k=0;k<workerCount;k++){
-      const w=new Worker(url);cVerifyWorkers.push(w);w._busy=false;w._job=null;
+      const warm=idlePointAnalyzeWorkers.length>0,w=warm?idlePointAnalyzeWorkers.pop():new Worker(ensurePointAnalyzeWorkerURL());cVerifyWorkers.push(w);w._busy=false;w._job=null;
       w.onmessage=e=>{
         if(token!==cSearchToken||finished)return;const d=e.data;
-        if(d.type==='ready'){send(w);return}
+        if(d.type==='ready'){w._pointWarmed=true;send(w);return}
         if(d.type==='error'){fail(d.message);return}
         if(d.type!=='result'||!w._job){fail('Formula verification worker response error');return}
         const job=w._job,fs=d.stats;w._job=null;w._busy=false;
@@ -2006,11 +2233,11 @@ function verifyCSearchCandidates(a,b,candidates,token){
         if(formulaStatCache.size>8192){let drop=formulaStatCache.size-6144;for(const k of formulaStatCache.keys()){formulaStatCache.delete(k);if(--drop<=0)break}}
         if(fs.oddCount)rows.push({a,b,c:job.item.c,prefilterScore:job.item.score,...fs});
         completed++;cSearchStatus.textContent=tr('verifying',completed,candidates.length);
-        if(completed===candidates.length){finished=true;cleanup();finishCSearchVerification(rows,token);return}
+        if(completed===candidates.length){finished=true;cleanup(true);finishCSearchVerification(rows,token);return}
         send(w);
       };
       w.onerror=e=>{e.preventDefault?.();fail(e.message||tr('workerError'))};
-      w.postMessage({type:'init',maxN:MAX_N,primeLimit:basePrimeLimit,primes:basePrimes});
+      if(warm)send(w);else w.postMessage({type:'init',maxN:MAX_N,primeLimit:basePrimeLimit,primes:basePrimes});
     }
   }catch(err){fail(err&&err.message||err)}
 }
@@ -2073,13 +2300,20 @@ const HEX_SQRT3=Math.sqrt(3);
 const HEX_SIEVE_B64='AGFzbQEAAAABGANgAAF/YAh/f39/f39/fgF/YAN/f38BfwMFBAAAAQIEBQFwAQEBBQQBAUBABgkBfwFBoNP3AAsHLgQGbWVtb3J5AgAKcHJpbWVzX3B0cgAACmJpdG1hcF9wdHIAAQdjb21wdXRlAAIKgAsECABBwIiAgAALCABBwMyTgAALtAkMAn8HfgJ/An4BfwJ+An8BfgF/An4CfwN+I4CAgIAAQcAAayIIJICAgIAAQX8hCQJAIAGsIgogAKwiC30iDEIAUw0AIAOsIg0gAqwiDn0iD0IAUw0AIAZBgPEESw0AIA9CAXwgDEIBfCIQfiIMQoC23AVWDQBBwMyTgABBACAMQgd8QgOIpyIJEIOAgIAAIREgBCAFSg0AIARBf2ohEgJAA0ACQCAEQQFIDQBCfiAErSITIBKtfkIDfn0hFCAIQQA2AjQgCEEANgIoIAggBDYCJCAIIAQ2AiAgCEEAIARrIhU2AjAgCCAVNgIsIAggBDYCFCAIIAQ2AhAgCEEANgIMIAggFTYCCCAIIBU2AgQgCEEANgIAIARBf2qtIhZCA34hF0IAIQ8DQCAPpyIVQQJ0IRgCQAJAAkACQCAVDgQAAQEAAQsgCEEgaiAYaigCACIZIABIDQJCACEMIBYhGiAZIAFMDQEMAgsgCEEgaiAYaigCACIZrCEMAkAgFUEGcUEERw0AIBYgCiAMfSIaIBYgGlMbIRogCyAMfSIMQgAgDEIAVRshDAwBCyAWIAwgC30iGiAWIBpTGyEaIAwgCn0iDEIAIAxCAFUbIQwLAkACQAJAIBVBf2oOBAABAQABCyAIIBhqKAIAIhsgAkgNAiAbIANMDQEMAgsgCCAYaigCACIbrCEcAkAgFUEGcUECRw0AIBogDSAcfSIdIBogHVMbIRogDCAOIBx9IhwgDCAcVRshDAwBCyAaIBwgDn0iHSAaIB1TGyEaIAwgHCANfSIcIAwgHFUbIQwLIAwgGlUNACAMIBcgD3wgE35CAnwiHXwiHCAHVQ0AIAwgByAaIB18Ih19QgAgByAdUxsgGnxVDQAgGEGAiICAAGohHiAYQaCIgIAAaiEfIB0gByAHIB1VGyEgAkAgHEICVQ0AICBCAlMNACAZrCALfSAMIBx9QgJ8IgwgHjQCAH58IBusIA59IAwgHzQCAH58IBB+fCIMQgOIpyARaiIVQQEgDKdBB3F0IBUtAAByOgAACyAgIBxCAYQiDEIDIAxCA1UbIh1TDQAgICAdfSIMQgJ/ISEgDEJ/Uw0AICFCAXwiHEKAwABWDQRBoJPvgABBACAhp0EBahCDgICAACEVAkAgBkUNAEEAIRgDQCAYQQJ0QcCIgIAAajUCACIaIBp+IgwgIFYNAQJAIB0gGnxCf3wiIiAiIBqCfSIiIAwgIiAMVhsiDCAdfSAaQgAgDEIBg1AbfEIBiCIMIBxaDQADQCAMpyAVakEBOgAAIAwgGnwiDCAcVA0ACwsgGEEBaiIYIAZHDQALCyAdIBR8IQwgGawgC30hHSAbrCAOfSEgICFCACAhQgBVG0IBfCEaQaCT74AAIRUDQAJAIBUtAAANACAdIAwgHjQCAH58ICAgDCAfNAIAfnwgEH58IhxCA4inIBFqIhhBASAcp0EHcXQgGC0AAHI6AAALIBVBAWohFSAMQgJ8IQwgGkJ/fCIaQgBSDQALCyAUIBN9IRQgD0IBfCIPQgZSDQALCyASQQFqIRIgBCAFRiEVIARBAWohBCAVRQ0ADAILC0F+IQkLIAhBwABqJICAgIAAIAkLtQEBA38CQCACRQ0AIAJBB3EhA0EAIQQCQCACQQhJDQAgAkF4cSEFQQAhBANAIAAgBGoiAiABOgAAIAJBB2ogAToAACACQQZqIAE6AAAgAkEFaiABOgAAIAJBBGogAToAACACQQNqIAE6AAAgAkECaiABOgAAIAJBAWogAToAACAFIARBCGoiBEcNAAsLIANFDQAgACAEaiECA0AgAiABOgAAIAJBAWohAiADQX9qIgMNAAsLIAALCz8BAEGACAs4AAAAAP//////////AAAAAAEAAAABAAAAAAAAAAAAAAD/////AAAAAAEAAAABAAAAAAAAAP////8AYgRuYW1lAA8OaGV4X3NpZXZlLndhc20BKgQACmdldF9wcmltZXMBCmdldF9iaXRtYXACB2NvbXB1dGUDBm1lbXNldAcSAQAPX19zdGFja19wb2ludGVyCQoBAAcucm9kYXRhAH8JcHJvZHVjZXJzAQxwcm9jZXNzZWQtYnkBBWNsYW5nXzE3LjAuMCAoaHR0cHM6Ly9naXRodWIuY29tL3N3aWZ0bGFuZy9sbHZtLXByb2plY3QuZ2l0IDEwOTk5YjZkMDM0ZmUzMThmM2Q1NmM4M2JkZGI2NTcyNTkzYThiYjApAEkPdGFyZ2V0X2ZlYXR1cmVzBCsKbXVsdGl2YWx1ZSsPbXV0YWJsZS1nbG9iYWxzKw9yZWZlcmVuY2UtdHlwZXMrCHNpZ24tZXh0';
 let latticeMode='square',HEX_R=hexRadiusFor(MAX_N);
 let hexCache=null,hexPreview=null,hexTask=null,hexGeneration=0,hexHistory=[],hexTimer=0,hexLastPaint=0;
-let hexWorkerURL=null;
-const hexToggle=document.getElementById('shapeToggle'),hexSquareBtn=document.getElementById('shapeSquare'),hexHexBtn=document.getElementById('shapeHex');
+let hexWorkerURL=null,idleHexWorkers=[];
+function resetHexWorkerPool(){for(const w of idleHexWorkers)w.terminate();idleHexWorkers=[]}
+function hexWorkerCap(){return Math.max(1,Math.min(mobilePrimeDevice()?2:6,Math.max(1,(navigator.hardwareConcurrency||4)-1)))}
+// Vogel's entire engine, arm search, formulas and rendering stay in this HTML.
+// To re-enable Vogel, flip ONLY this flag to true; its dropdown option is
+// then restored automatically in updateShapeUI(). No other code changes needed.
+const ENABLE_VOGEL_MODE=false;
+const spiralModeSelect=document.getElementById('spiralModeSelect');
 function hexRadiusFor(n){if(n<=1)return 0;let h=Math.max(0,Math.ceil((Math.sqrt(12*n-3)-3)/6));while(3*h*(h+1)+1<n)h++;while(h>0&&3*(h-1)*h+1>=n)h--;return h}
 function hexRadius(q,r){return Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))}
-function hexNumber(q,r){
- if(q===0&&r===0)return 1;
- const h=hexRadius(q,r),start=3*h*(h-1)+2;
+// When a renderer already knows the ring radius, avoid recalculating it.
+function hexNumberWithRadius(q,r,h){
+ if(h===0)return 1;
+ const start=3*h*(h-1)+2;
  if(q===h&&r<=0&&r>-h)return start-r;
  if(r===-h&&q>0&&q<=h)return start+h+(h-q);
  if(q+r===-h&&q<=0&&q>-h)return start+2*h-q;
@@ -2087,14 +2321,15 @@ function hexNumber(q,r){
  if(r===h&&q>=-h&&q<0)return start+4*h+(q+h);
  return start+5*h+q;
 }
+function hexNumber(q,r){return hexNumberWithRadius(q,r,hexRadius(q,r))}
 function hexCoord(n){
  if(n<=1)return{x:0,y:0};
  const h=hexRadiusFor(n),start=3*h*(h-1)+2,d=n-start,side=Math.floor(d/h),t=d%h;
  const q0=[h,h,0,-h,-h,0],r0=[0,-h,-h,0,h,h];
  return{x:q0[side]+HEX_DQ[side]*t,y:r0[side]+HEX_DR[side]*t};
 }
-function latticeNumber(x,y){return latticeMode==='hex'?hexNumber(x,y):ulamNumber(x,y)}
-function latticeCoord(n){return latticeMode==='hex'?hexCoord(n):ulamCoord(n)}
+function latticeNumber(x,y){return latticeMode==='hex'?hexNumber(x,y):isExtraMode()?extraApproxNumber(x,y):ulamNumber(x,y)}
+function latticeCoord(n){return latticeMode==='hex'?hexCoord(n):isExtraMode()?extraCoord(latticeMode,n):ulamCoord(n)}
 function hexAtPixel(px,py,s=scale,cx=camX,cy=camY){
  const dr=(H/2-py)/(1.5*s),dq=(px-W/2)/(HEX_SQRT3*s)-dr/2;
  return{x:cx+dq,y:cy+dr};
@@ -2119,7 +2354,9 @@ function hexRingBounds(rect){
 }
 function hexSide(q,r){const h=hexRadius(q,r);if(h===0)return-1;if(q===h&&r<=0&&r>-h)return 0;if(r===-h&&q>0)return 1;if(q+r===-h&&q<=0&&q>-h)return 2;if(q===-h&&r>=0&&r<h)return 3;if(r===h&&q<0)return 4;return 5}
 function hexCacheContains(cache,rect){return !!cache&&cache.xmin<=rect.xmin&&cache.xmax>=rect.xmax&&cache.ymin<=rect.ymin&&cache.ymax>=rect.ymax}
-function hexCachePrime(cache,q,r){if(!cache||q<cache.xmin||q>cache.xmax||r<cache.ymin||r>cache.ymax)return null;const h=hexRadius(q,r);if(h<cache.lo||h>cache.hi||cache.done[h-cache.lo]!==1)return null;const idx=(r-cache.ymin)*cache.width+(q-cache.xmin);return (cache.bits[idx>>>3]&(1<<(idx&7)))!==0}
+function hexCachePrimeAtRadius(cache,q,r,h){if(!cache||q<cache.xmin||q>cache.xmax||r<cache.ymin||r>cache.ymax)return null;if(h<cache.lo||h>cache.hi||cache.done[h-cache.lo]!==1)return null;const idx=(r-cache.ymin)*cache.width+(q-cache.xmin);return (cache.bits[idx>>>3]&(1<<(idx&7)))!==0}
+function hexCachePrime(cache,q,r){return cache?hexCachePrimeAtRadius(cache,q,r,hexRadius(q,r)):null}
+function hexKnownAtRadius(q,r,h){return hexCachePrimeAtRadius(hexPreview,q,r,h) ?? hexCachePrimeAtRadius(hexCache,q,r,h)}
 function hexKnown(q,r){return hexCachePrime(hexPreview,q,r) ?? hexCachePrime(hexCache,q,r)}
 function hexKnownNumber(n){const p=hexCoord(n);return hexKnown(p.x,p.y)!==null}
 function hexIsPrime(n,q,r){if(n===2)return true;if(n<2||n%2===0)return false;const cached=hexKnown(q,r);return cached===null?false:cached}
@@ -2180,7 +2417,7 @@ function hexWorkerMain(){
 function hexWorkerSource(){return `const HEX_SIEVE_B64=${JSON.stringify(HEX_SIEVE_B64)};\n(${hexWorkerMain.toString()})();`}
 function startHexBuild(target){
  hexCancelBuild();
- const old=hexCache;if(old&&old.done.every(v=>v===1)){hexHistory.unshift(old);if(hexHistory.length>4)hexHistory.pop()}
+ const old=hexCache;if(old&&old.done.every(v=>v===1)){hexHistory=hexHistory.filter(c=>c!==old);hexHistory.unshift(old);if(hexHistory.length>4)hexHistory.pop()}
  const width=target.xmax-target.xmin+1,height=target.ymax-target.ymin+1,count=width*height;
  if(count>12000000){console.warn('[hex] viewport larger than 12M cells');return}
  const bounds=hexRingBounds(target),cache={...target,...bounds,width,height,bits:new Uint8Array(Math.ceil(count/8)),done:new Uint8Array(bounds.hi-bounds.lo+1)};
@@ -2192,8 +2429,8 @@ function startHexBuild(target){
  const stripe=24;for(let h=Math.max(1,bounds.lo);h<=bounds.hi;h+=stripe)jobs.push({h0:h,h1:Math.min(bounds.hi,h+stripe-1)});
  const focus=hexRadius(Math.round(camX),Math.round(camY));jobs.sort((a,b)=>Math.abs((a.h0+a.h1)/2-focus)-Math.abs((b.h0+b.h1)/2-focus));
  const workers=[],poolCount=Math.min(workerCount,jobs.length);let next=0,completed=0,wasmCount=0,stopped=false;
- const cleanup=()=>{for(const w of workers)w.terminate();workers.length=0};
- function done(){if(stopped)return;stopped=true;cleanup();if(token!==hexGeneration)return;hexCache=cache;hexPreview=null;hexTask=null;hexHistory.unshift(cache);hexHistory=hexHistory.filter((c,i)=>i===0||c!==cache).slice(0,4);console.info(`[hex sieve] ${Math.round(performance.now()-t0)} ms · ${jobs.length} stripes · ${poolCount} Workers (${wasmCount} WASM)`);requestRender()}
+ const cleanup=(reuse=false)=>{for(const w of workers){w.onmessage=null;w.onerror=null;if(reuse&&w._hexReady&&idleHexWorkers.length<hexWorkerCap())idleHexWorkers.push(w);else w.terminate()}workers.length=0};
+ function done(){if(stopped)return;stopped=true;cleanup(true);if(token!==hexGeneration)return;hexCache=cache;hexPreview=null;hexTask=null;hexHistory.unshift(cache);hexHistory=hexHistory.filter((c,i)=>i===0||c!==cache).slice(0,4);console.info(`[hex sieve] ${Math.round(performance.now()-t0)} ms · ${jobs.length} stripes · ${poolCount} Workers (${wasmCount} WASM)`);requestRender()}
  function send(w){if(stopped||token!==hexGeneration)return;if(next>=jobs.length)return;w.postMessage({type:'job',...target,...jobs[next++],maxN:MAX_N})}
  function fail(err){console.error('[hex sieve]',err);if(stopped)return;stopped=true;cleanup();if(token===hexGeneration){hexTask=null;hexPreview=null;requestRender()}}
  hexTask={stop(){if(stopped)return;stopped=true;cleanup()}};
@@ -2201,10 +2438,10 @@ function startHexBuild(target){
  try{
    if(!hexWorkerURL)hexWorkerURL=URL.createObjectURL(new Blob([hexWorkerSource()],{type:'text/javascript'}));
    for(let k=0;k<poolCount;k++){
-     const w=new Worker(hexWorkerURL);workers.push(w);
+     const warm=idleHexWorkers.length>0,w=warm?idleHexWorkers.pop():new Worker(hexWorkerURL);workers.push(w);if(warm&&w._hexWasm)wasmCount++;
      w.onmessage=e=>{
        if(stopped||token!==hexGeneration)return;const d=e.data;
-       if(d.type==='ready'){if(d.wasm)wasmCount++;send(w);return}
+       if(d.type==='ready'){w._hexReady=true;w._hexWasm=!!d.wasm;if(d.wasm)wasmCount++;send(w);return}
        if(d.type==='error'){fail(d.message);return}
        if(d.type!=='chunk'||!(d.bits instanceof ArrayBuffer)){fail('Invalid hex worker response');return}
        const bits=new Uint8Array(d.bits);if(bits.length!==cache.bits.length){fail('Invalid hex result bitmap length');return}
@@ -2213,7 +2450,7 @@ function startHexBuild(target){
        if(completed===jobs.length)done();else send(w);
      };
      w.onerror=e=>{e.preventDefault?.();fail(e.message||'Hex worker error')};
-     w.postMessage({type:'init',primes:basePrimes});
+     if(warm)send(w);else w.postMessage({type:'init',primes:basePrimes});
    }
  }catch(e){fail(e)}
 }
@@ -2226,25 +2463,44 @@ function hexEnsureCache(){
  const desired=hexViewRect(1.18);startHexBuild(desired);
 }
 function hexQueueEnsure(delay=120){clearTimeout(hexTimer);hexTimer=setTimeout(()=>{hexTimer=0;hexEnsureCache()},delay)}
-function hexDrawPoly(path,x,y,r){path.moveTo(x,y-r);for(let i=1;i<6;i++){const a=i*Math.PI/3-Math.PI/2;path.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}path.closePath()}
+// Same point-up hexagon as v1.2.19; precomputed vertices remove six
+// trigonometric calls per prime/cell while retaining the exact orientation.
+const HEX_VERTICES=Array.from({length:6},(_,i)=>{
+ const a=i*Math.PI/3-Math.PI/2;return[Math.cos(a),Math.sin(a)];
+});
+function hexDrawPoly(path,x,y,r){
+ path.moveTo(x+r*HEX_VERTICES[0][0],y+r*HEX_VERTICES[0][1]);
+ for(let i=1;i<6;i++)path.lineTo(x+r*HEX_VERTICES[i][0],y+r*HEX_VERTICES[i][1]);
+ path.closePath();
+}
 function renderHex(){
  if(!W||!H)return;
  ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);
  if(!ready){renderHexMinimap();return}
  const rect=hexViewRect(1),primePath=new Path2D(),selectedPath=new Path2D();
  const tile=scale>=8,point=Math.max(1,Math.min(5,scale*.67)),showGrid=scale>=15;
- if(showGrid){const gridPath=new Path2D();for(let r=rect.ymin;r<=rect.ymax;r++)for(let q=rect.xmin;q<=rect.xmax;q++){
-   if(hexRadius(q,r)>HEX_R||hexNumber(q,r)>MAX_N)continue;
-   const p=hexPixel(q,r);if(p.x<-scale*2||p.x>W+scale*2||p.y<-scale*2||p.y>H+scale*2)continue;
-   hexDrawPoly(gridPath,p.x,p.y,scale*.96);
- }ctx.strokeStyle='rgba(75,94,126,.24)';ctx.lineWidth=.65;ctx.stroke(gridPath)}
- for(let r=rect.ymin;r<=rect.ymax;r++)for(let q=rect.xmin;q<=rect.xmax;q++){
+ const gridPath=showGrid?new Path2D():null;
+ // SINGLE PASS over visible coordinates: old renderer scanned the entire
+ // grid twice and repeatedly constructed hexPixel objects / trig vertices.
+ const xUnit=HEX_SQRT3*scale,yUnit=1.5*scale,pxZero=W*.5,pyZero=H*.5;
+ const margin=2*scale;
+ for(let r=rect.ymin;r<=rect.ymax;r++){
+  const dr=r-camY,py=pyZero-yUnit*dr;
+  if(py<-margin||py>H+margin)continue;
+  const xRow=pxZero+xUnit*(-camX+dr*.5);
+  const qLo=Math.max(rect.xmin,Math.ceil((-margin-xRow)/xUnit));
+  const qHi=Math.min(rect.xmax,Math.floor((W+margin-xRow)/xUnit));
+  for(let q=qLo;q<=qHi;q++){
    const h=hexRadius(q,r);if(h>HEX_R)continue;
-   const n=hexNumber(q,r);if(n<2||n>MAX_N||!hexIsPrime(n,q,r))continue;
-   const p=hexPixel(q,r);if(p.x<-scale*2||p.x>W+scale*2||p.y<-scale*2||p.y>H+scale*2)continue;
-   if(tile)hexDrawPoly(primePath,p.x,p.y,scale*.93);
-   else primePath.rect(p.x-point/2,p.y-point/2,point,point);
+   const n=hexNumberWithRadius(q,r,h);if(n<1||n>MAX_N)continue;
+   const px=xRow+xUnit*q;
+   if(gridPath)hexDrawPoly(gridPath,px,py,scale*.96);
+   if(n<2||(n!==2&&(n%2===0||!hexKnownAtRadius(q,r,h))))continue;
+   if(tile)hexDrawPoly(primePath,px,py,scale*.93);
+   else primePath.rect(px-point/2,py-point/2,point,point);
+  }
  }
+ if(gridPath){ctx.strokeStyle='rgba(150,180,235,.68)';ctx.lineWidth=1.15;ctx.stroke(gridPath)}
  ctx.fillStyle='#f5f7fb';ctx.fill(primePath);
  if(activeFormula){
    const formulaPath=new Path2D(),highlight=new Path2D(),dimSize=Math.max(1,Math.min(2,scale*.32));
@@ -2348,7 +2604,18 @@ function hexLineFormula(q,r,dir){
  return{label:dir.label,dx:dir.dx,dy:dir.dy,...can,localSpan:span};
 }
 function hexPointCandidates(q,r){
- const fixedDirs=[{label:'육각 축 A',dx:1,dy:0},{label:'육각 축 B',dx:0,dy:1},{label:'육각 축 C',dx:1,dy:-1}];
+ // Six *unoriented* baseline axes, in two interleaved 30-degree families.
+ // A/B/C are the existing three axial directions (cyan in the reference).
+ // D/E/F are the new three oblique directions (green in the reference).
+ // Pixel mapping is (x,y)=(q+r/2, sqrt(3)*r/2).
+ const fixedDirs=[
+  {label:'육각 축 A (0°)',dx:1,dy:0},
+  {label:'육각 축 B (+60°)',dx:0,dy:1},
+  {label:'육각 축 C (−60°)',dx:1,dy:-1},
+  {label:'육각 축 D (+30°)',dx:1,dy:1},
+  {label:'육각 축 E (90°)',dx:1,dy:-2},
+  {label:'육각 축 F (−30°)',dx:2,dy:-1}
+ ];
  const fixed=[],pool=[],seen=new Set();
  for(const dir of fixedDirs){const f=hexLineFormula(q,r,dir);if(!f)continue;const key=polyKey(f);if(seen.has(key))continue;seen.add(key);fixed.push({...f,kind:'fixed'})}
  const dirs=[];for(const d of [...DYNAMIC_DIRS,...[{dx:1,dy:1,label:'육각 대각 +1'}]]){
@@ -2361,16 +2628,22 @@ function hexPointCandidates(q,r){
  return{fixed,pool:showAllDirections?pool:pool.slice(0,18)};
 }
 function switchLattice(next){
+ if((next==='vogel'&&!ENABLE_VOGEL_MODE)||!['square','hex','tri','sacks','vogel'].includes(next))return;
  if(next===latticeMode)return;
+ const oldIsExtra=isExtraMode();
+ const previousMode=latticeMode;
  const oldN=selected?.n||Math.max(1,Math.min(MAX_N,latticeNumber(Math.round(camX),Math.round(camY))));
  const oldSavedSelected=selected?.n||null;
- if(next==='hex'){
-   // Square background jobs never publish into the hex cache.
+ if(next==='hex'||(next!=='square'&&next!=='hex')){
+   // Square background jobs never publish into a different lattice cache.
    if(branchSieveTask)cancelBranchBuild();if(cornerSieveTask)cancelCornerBuild();
    if(sieveWorker){++sieveToken;sieveWorker.terminate();sieveWorker=null;localPrimePreview=null;localBuildTarget=null}
- }else hexCancelBuild();
+ }
+ if(previousMode==='hex'){hexCancelBuild();resetHexWorkerPool()}
+ if(oldIsExtra){extraCancelBuild();if(!EXTRA_MODES.has(next))resetExtraWorkerPool()}
  stopSavedStatsBackfill();++pointAnalyzeKick;cancelPointAnalysis(false);
  latticeMode=next;
+ extraPinnedFormula=null;
  const target=latticeCoord(oldN);camX=target.x;camY=target.y;
  if(oldSavedSelected)selected={x:target.x,y:target.y,n:oldN};
  formulas=[];pointAnalysisDoneKey='';pointAnalysisPending=false;
@@ -2380,14 +2653,1111 @@ function switchLattice(next){
  try{localStorage.setItem('ULAM_LATTICE_MODE',next)}catch(_){ }
 }
 function updateShapeUI(){
- hexSquareBtn.textContent=currentLang==='ko'?'사각':'Square';hexHexBtn.textContent=currentLang==='ko'?'육각':'Hex';
- hexSquareBtn.classList.toggle('active',latticeMode==='square');hexHexBtn.classList.toggle('active',latticeMode==='hex');
- hexSquareBtn.setAttribute('aria-pressed',latticeMode==='square');hexHexBtn.setAttribute('aria-pressed',latticeMode==='hex');
+ // Dormant Vogel option is materialized only when the restore flag is true.
+ let vogelOption=spiralModeSelect.querySelector('option[value="vogel"]');
+ if(ENABLE_VOGEL_MODE&&!vogelOption){vogelOption=document.createElement('option');vogelOption.value='vogel';spiralModeSelect.appendChild(vogelOption)}
+ else if(!ENABLE_VOGEL_MODE&&vogelOption)vogelOption.remove();
+ const names=currentLang==='ko'?{square:'사각',hex:'육각',tri:'삼각',sacks:'잭스',vogel:'보겔'}:{square:'Square',hex:'Hexagonal',tri:'Triangular',sacks:'Sacks',vogel:'Vogel'};
+ for(const o of spiralModeSelect.options)o.textContent=names[o.value];
+ spiralModeSelect.value=latticeMode;
+ spiralModeSelect.title=currentLang==='ko'?'나선 배치 선택':'Select spiral layout';
+ document.getElementById('allDirsToggle').closest('.checkRow').style.display=isExtraMode()?'none':'';
 }
-hexSquareBtn.onclick=()=>switchLattice('square');hexHexBtn.onclick=()=>switchLattice('hex');
+spiralModeSelect.onchange=()=>switchLattice(spiralModeSelect.value);
 // End of hex module.
 
-function render(){if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
+// Geometry-informed quadratic suggestions for an explicitly selected point.
+// They are anchored to the selected number; only some are truly exact straight lines.
+// Keep a formula that was highlighted at the moment a new point was picked.
+// Original 1.2.2 unconditionally cleared activeFormula before constructing
+// candidates, therefore even a mathematically valid highlighted formula vanished.
+let extraPinnedFormula=null;
+function extraFormulaContainsN(n,f){
+ if(!f||!Number.isSafeInteger(n)||![f.a,f.b,f.c].every(Number.isSafeInteger))return false;
+ const A=BigInt(f.a),B=BigInt(f.b),C=BigInt(f.c),N=BigInt(n);
+ if(A===0n)return B===0n?C===N:(N-C)%B===0n;
+ const D=B*B-4n*A*(C-N);if(D<0n)return false;
+ let r=BigInt(Math.floor(Math.sqrt(Number(D))));
+ while(r*r>D)r--;while((r+1n)*(r+1n)<=D)r++;
+ if(r*r!==D)return false;
+ const den=2n*A;
+ return ((-B+r)%den===0n)||((-B-r)%den===0n);
+}
+function extraSacksBaselineCandidates(n,seen){
+ // A selected point has infinitely many quadratics through it.  Construct
+ // the four basic *asymptotic* Sacks directions with the nearest t, and
+ // preserve coefficients rather than canonPoly(), which obscures the b=0 ray.
+ // Horizontal a=1,b=0 gives F(t)=t²+(n-round(sqrt(n))²), e.g. n²−362.
+ const rows=[];
+ for(const def of SACKS_BASIC_SLOPES){
+  const {a,b}=def;
+  const t=Math.max(0,Math.round((-b+Math.sqrt(b*b+4*a*n))/(2*a)));
+  const c=n-a*t*t-b*t;
+  if(!Number.isSafeInteger(c))continue;
+  const key=`${a}|${b}|${c}`;
+  if(seen.has(key))continue;
+  seen.add(key);
+  const label=currentLang==='ko'
+    ?`기본 기울기 ${def.slope} (${def.dirKo}) · 잭스 점근 근사`
+    :`Basic slope ${def.slope} (${def.dirEn}) · Sacks asymptotic`;
+  rows.push({a,b,c,label,kind:'fixed',dx:1,dy:0,localSpan:null});
+ }
+ return rows;
+}
+
+function vogelArmCandidates(n){
+ const fibSet=new Set([5,8,13,21,34,55,89,144,233]);
+ const rows=[];
+ const center=extraCoord('vogel',n);
+ for(let q=4;q<=233;q++){
+  const pts=[];
+  for(let k=-6;k<=6;k++){
+   const m=n+k*q;
+   if(m<1||m>MAX_N)continue;
+   const c=extraCoord('vogel',m);
+   pts.push({k,n:m,x:c.x,y:c.y});
+  }
+  if(pts.length<5)continue;
+  pts.sort((u,v)=>u.k-v.k);
+  const prev=pts.find(v=>v.k===-1),next=pts.find(v=>v.k===1);
+  let opp=0,balance=0,gap=0,smooth=0,segs=0,turns=0,dirAngle=0;
+  if(prev&&next){
+   const v1={x:prev.x-center.x,y:prev.y-center.y},v2={x:next.x-center.x,y:next.y-center.y};
+   const l1=Math.hypot(v1.x,v1.y),l2=Math.hypot(v2.x,v2.y);
+   if(l1>1e-9&&l2>1e-9){
+    const dot=(v1.x*v2.x+v1.y*v2.y)/(l1*l2);
+    opp=(1-dot)/2;
+    balance=1-Math.abs(l1-l2)/(l1+l2);
+    dirAngle=Math.atan2(v2.y-v1.y,v2.x-v1.x);
+   }
+  }
+  const vecs=[];
+  for(let i=1;i<pts.length;i++){
+   const dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y,l=Math.hypot(dx,dy);
+   if(l<=1e-9)continue;
+   vecs.push({dx:dx/l,dy:dy/l,l});gap+=l;segs++;
+  }
+  if(segs)gap/=segs;
+  for(let i=1;i<vecs.length;i++){smooth+=(1+(vecs[i-1].dx*vecs[i].dx+vecs[i-1].dy*vecs[i].dy))/2;turns++}
+  if(turns)smooth/=turns;
+  const fibBonus=fibSet.has(q)?0.18:0;
+  const score=opp*3.2+balance*1.35+(smooth||0)*2.5+3.6/(1+gap*0.9)+pts.length*0.08+fibBonus;
+  rows.push({kind:'vogel-arm',armStep:q,armScore:score,armCount:pts.length,pts,armAngle:dirAngle,isFib:fibSet.has(q),
+    label:currentLang==='ko'?`보겔 가지 step ${q}`:`Vogel arm step ${q}`,
+    localSpan:pts.length-1});
+ }
+ rows.sort((a,b)=>b.armScore-a.armScore||a.armStep-b.armStep);
+ rows.forEach((r,i)=>r.rank=i+1);
+ return rows;
+}
+function vogelPairCandidates(arms){
+ const top=arms.slice(0,18),pairs=[];
+ for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){
+  const a=top[i],b=top[j];
+  let diff=Math.abs((a.armAngle||0)-(b.armAngle||0));
+  while(diff>Math.PI)diff-=Math.PI;
+  diff=Math.abs(diff);
+  const cross=Math.sin(diff); // 0 parallel, 1 orthogonal
+  const qGap=Math.abs(a.armStep-b.armStep);
+  if(diff<0.22||qGap<2)continue;
+  const pairScore=a.armScore+b.armScore+cross*1.5+Math.min(qGap,34)/70;
+  pairs.push({kind:'vogel-pair',armStepA:a.armStep,armStepB:b.armStep,armA:a,armB:b,pairScore,crossScore:cross,
+    armCount:a.armCount+b.armCount,localSpan:Math.max(a.localSpan||0,b.localSpan||0),
+    label:currentLang==='ko'?`보겔 pair ${a.armStep}/${b.armStep}`:`Vogel pair ${a.armStep}/${b.armStep}`});
+ }
+ pairs.sort((u,v)=>v.pairScore-u.pairScore||u.armStepA-v.armStepA||u.armStepB-v.armStepB);
+ const out=[],seen=new Set();
+ for(const p of pairs){
+  const key=`${Math.min(p.armStepA,p.armStepB)}|${Math.max(p.armStepA,p.armStepB)}`;
+  if(seen.has(key))continue;
+  seen.add(key);out.push(p);
+  if(out.length>=8)break;
+ }
+ out.forEach((p,i)=>p.rank=i+1);
+ return out;
+}
+
+// Triangular 30-degree-rotated Voronoi cell layout: three nearest-neighbour
+// lattice axes and three interleaved 30-degree axes.  Coordinates use the
+// exact integer lattice (i,j), x=sqrt(3)/2*i, y=j+i/2.
+const EXTRA_TRI_BASE_DIRS=[
+ {label:'삼각 축 A (+30°)',dx:1,dy:0},
+ {label:'삼각 축 B (90°)',dx:0,dy:1},
+ {label:'삼각 축 C (−30°)',dx:1,dy:-1},
+ {label:'삼각 축 D (+60°)',dx:1,dy:1},
+ {label:'삼각 축 E (0°)',dx:2,dy:-1},
+ {label:'삼각 축 F (−60°)',dx:1,dy:-2}
+];
+function extraTriIJ(n){
+ const h=extraTriRadiusFor(n);if(!h)return{i:0,j:0};
+ const off=n-(3*(h-1)*h/2+2),side=Math.floor(off/h),t=off%h;
+ if(side===0)return{i:-t,j:h-t};
+ if(side===1)return{i:-h+2*t,j:-t};
+ return{i:h-t,j:-h+2*t};
+}
+function extraTriBranch(i,j){
+ const h=Math.max(j-i,-i-2*j,2*i+j);
+ if(h===0)return -1;
+ if(j-i===h&&-h<i&&i<=0)return 0;
+ if(-i-2*j===h&&-h<j&&j<=0)return 1;
+ return 2;
+}
+function extraTriLineFormula(n,dir,stride=1){
+ const ij=extraTriIJ(n),branch=extraTriBranch(ij.i,ij.j);
+ if(branch<0)return null;
+ const dx=dir.dx*stride,dy=dir.dy*stride;
+ const value=t=>extraTriNumberFromIJ(ij.i+dx*t,ij.j+dy*t);
+ const member=t=>{
+  const i=ij.i+dx*t,j=ij.j+dy*t;
+  return extraTriBranch(i,j)===branch&&value(t)<=MAX_N;
+ };
+ function endpoint(sign){
+  let good=0,bad=1;
+  while(member(sign*bad)){good=bad;bad*=2;if(bad>4194304)break}
+  while(bad-good>1){const mid=Math.floor((good+bad)/2);if(member(sign*mid))good=mid;else bad=mid}
+  return sign*good;
+ }
+ const lo=endpoint(-1),hi=endpoint(1),span=hi-lo+1;
+ if(span<3)return null;
+ const a0=Math.max(lo,Math.min(0,hi-2));
+ const v0=value(a0),v1=value(a0+1),v2=value(a0+2);
+ const diff=v2-2*v1+v0;
+ // Half-integral quadratic coefficients arise in the triangular indexing.
+ // Re-try with stride=2 to obtain a genuine integer-coefficient polynomial.
+ if(diff%2)return null;
+ const a=diff/2,b=v1-v0-a*(2*a0+1),c=v0-a*a0*a0-b*a0;
+ if(a<=0)return null;
+ for(const t of new Set([lo,Math.min(lo+1,hi),Math.floor((lo+hi)/2),0,Math.max(hi-1,lo),hi])){
+  if(t<lo||t>hi)continue;
+  if(a*t*t+b*t+c!==value(t))return null;
+ }
+ const can=canonPoly(a,b,c);
+ if(can.a<=0||gcd3(can.a,can.b,can.c)>1||fixedDivisor(can.a,can.b,can.c))return null;
+ return{...can,label:dir.label,dx,dy,kind:'fixed',localSpan:span};
+}
+function extraTriBaselineCandidates(n,seen){
+ if(!Number.isSafeInteger(n)||n<=1)return[];
+ const rows=[];
+ for(const dir of EXTRA_TRI_BASE_DIRS){
+  const f=extraTriLineFormula(n,dir,1)||extraTriLineFormula(n,dir,2);
+  if(!f)continue;
+  const key=polyKey(f);if(seen.has(key))continue;
+  seen.add(key);rows.push(f);
+ }
+ return rows;
+}
+
+// Triangular-mode point recommendations: canonical polynomials can share the
+// same constant term c while using scaled quadratic coefficients.  Retain
+// only the minimum-a representative of each c *before* costly prime stats.
+// Prefer a fixed/basic-direction entry when the minimum a is tied, then
+// a smaller |b|.  Other modes and user-saved formulas are left untouched.
+function extraTriDeduplicateConstants(fixed,pool){
+ const bestByC=new Map();
+ for(const [group,rows] of [['fixed',fixed],['pool',pool]])for(const f of rows){
+  if(f.pinned)continue; // 사용자의 활성/저장 수식은 중복 제거 대상이 아님
+  if(!Number.isSafeInteger(f.c)||!Number.isFinite(f.a))continue;
+  const prev=bestByC.get(f.c);
+  if(!prev||f.a<prev.f.a||
+    (f.a===prev.f.a&&(
+       (group==='fixed'&&prev.group!=='fixed')||
+       (group===prev.group&&Math.abs(f.b)<Math.abs(prev.f.b))
+    )))bestByC.set(f.c,{f,group});
+ }
+ return{
+  fixed:fixed.filter(f=>f.pinned||bestByC.get(f.c)?.f===f),
+  pool:pool.filter(f=>bestByC.get(f.c)?.f===f)
+ };
+}
+
+function extraPointCandidates(n){
+ if(!Number.isSafeInteger(n)||n<1)return{fixed:[],pool:[]};
+ const presets=searchABPresets(),fixed=[],pool=[],seen=new Set();
+ if(latticeMode==='vogel'){
+  const arms=vogelArmCandidates(n);
+  const pairs=vogelPairCandidates(arms);
+  fixed.push(...pairs.slice(0,2));
+  fixed.push(...arms.slice(0,2));
+  pool.push(...(showAllDirections?pairs.slice(2):pairs.slice(2,4)));
+  pool.push(...(showAllDirections?arms.slice(2,12):arms.slice(2,6)));
+ }
+ // Exact membership takes priority over the heuristic lattice-coefficient menu.
+ // Preserve the user's original a,b,c; canonicalisation would rename the saved
+ // formula and could hide it even when it is mathematically present.
+ const exacts=[];
+ if(extraPinnedFormula&&extraFormulaContainsN(n,extraPinnedFormula))exacts.push({...extraPinnedFormula,label:currentLang==='ko'?'활성 수식':'Active formula'});
+ for(const entry of savedEntries){
+  if(exacts.length>=16)break;
+  if(extraFormulaContainsN(n,entry))exacts.push({...entry,label:currentLang==='ko'?'저장 수식':'Saved formula'});
+ }
+ for(const item of exacts){
+  const key=polyKey(item);if(seen.has(key))continue;seen.add(key);
+  fixed.push({a:item.a,b:item.b,c:item.c,label:item.label,kind:'fixed',dx:1,dy:0,localSpan:null,pinned:true});
+ }
+ // Match the four basic slopes shown in Square mode.  Here the terms are
+ // asymptotic polar ray candidates, not Euclidean straight-line proofs.
+ if(latticeMode==='sacks')fixed.push(...extraSacksBaselineCandidates(n,seen));
+ if(latticeMode==='tri')fixed.push(...extraTriBaselineCandidates(n,seen));
+ // Cheap candidate generation, then the already-existing point-analysis WASM
+ // computes actual full-range prime statistics in background workers.
+ const chosen=latticeMode==='tri'
+   ?presets.filter((p,i)=>i%4===0).slice(0,5)
+   :latticeMode==='sacks'?presets.filter((p,i)=>i%4===0).slice(0,6)
+   :presets.filter((p,i)=>i%3===0).slice(0,7);
+ for(let i=0;i<chosen.length;i++){
+  const p=chosen[i],a=p.a,b=p.b;
+  const seed=Math.max(0,Math.round((-b+Math.sqrt(Math.max(0,b*b+4*a*n)))/(2*a)));
+  for(const t of [seed, Math.max(0,seed-1)]){
+   const c=n-a*t*t-b*t;
+   if(!Number.isSafeInteger(c))continue;
+   const can=canonPoly(a,b,c),key=polyKey(can);
+   if(seen.has(key)||gcd3(can.a,can.b,can.c)>1||fixedDivisor(can.a,can.b,can.c))continue;
+   seen.add(key);
+   const label=(latticeMode==='tri'?(currentLang==='ko'?'삼각 껍질':'Triangular shell'):'')+
+     (latticeMode==='sacks'?(currentLang==='ko'?'잭스 방사형 근사':'Sacks approx. ray'):'')+
+     (latticeMode==='vogel'?(currentLang==='ko'?'보겔 준주기':'Vogel quasiperiod'):'')+` · a=${a}`;
+   const f={...can,label,dx:1,dy:0,kind:'extra',localSpan:null};
+   if(i<2&&t===seed)fixed.push(f);else pool.push(f);
+  }
+ }
+ if(latticeMode==='tri')return extraTriDeduplicateConstants(fixed,pool);
+ return{fixed,pool};
+}
+// ===== v1.2 experimental 3-mode main-view engine: preserve original Square and Hex code =====
+// Euclidean coordinates for triangular ring, Sacks sqrt spiral, Vogel phyllotaxis.
+// Workers enumerate every grid point in a viewport, not a 1T scan nor a picture of a polynomial only.
+const EXTRA_MODES=new Set(['tri','sacks','vogel']);
+const EXTRA_TAU=2*Math.PI,EXTRA_SQRT3=Math.sqrt(3),EXTRA_PHI=(3-Math.sqrt(5))/2;
+const EXTRA_PHI_FIXED=30262465214248651242265067423n,EXTRA_PHASE_MASK=(1n<<96n)-1n;
+let extraWorker=null,extraWorkers=[],extraTimer=0,extraToken=0,extraChunks=[],extraPreview=null,extraLayer=null,extraLayerCtx=null,extraGridLayer=null,extraGridCtx=null,extraFormulaLayer=null,extraFormulaCtx=null,extraArmLayer=null,extraArmCtx=null,extraDataCount=0,extraPrimeCount=0,extraTestedCount=0,extraTriPrimeNumbers=new Set(),extraLastMessage=0;
+let extraSpatialBuckets=new Map();
+let idleExtraWorkers=[],extraWorkerURL=null;
+function extraWorkerCap(){return Math.min(mobilePrimeDevice()?2:4,Math.max(1,(navigator.hardwareConcurrency||2)-1))}
+function resetExtraWorkerPool(){for(const w of idleExtraWorkers)w.terminate();idleExtraWorkers=[];if(extraWorkerURL){URL.revokeObjectURL(extraWorkerURL);extraWorkerURL=null}}
+function releaseExtraWorker(w){w.onmessage=null;w.onerror=null;extraWorkers=extraWorkers.filter(v=>v!==w);extraWorker=extraWorkers[extraWorkers.length-1]||null;if(idleExtraWorkers.length<extraWorkerCap())idleExtraWorkers.push(w);else w.terminate()}
+const EXTRA_PICK_GRID=32;
+let extraWatchdog=0; // Re-check suspended far-view jobs; never treat unfinished preview as permanently ready.
+const EXTRA_WATCHDOG_PERIOD_MS=14000;
+const EXTRA_OVERSCAN=1.24;
+// During pan/short zoom, reuse a complete overscanned bitmap instead of
+// starting a new Worker for every pointer event. Old image is reprojected.
+function extraPreviewCoversCurrent(){
+ const p=extraPreview;if(!p||p.error||p.mode!==latticeMode||p.sourceW!==W||p.sourceH!==H)return false;
+ // A stalled, incomplete preview must not suppress another view request forever.
+ if(!p.done&&p.started&&performance.now()-p.lastProgressAt>EXTRA_WATCHDOG_PERIOD_MS*1.5)return false;
+ if(p.formulaKey!==(activeFormula?formulaId(activeFormula)+(String(activeFormula.kind||'').startsWith('vogel-')&&selected?':'+selected.n:''):''))return false;
+ if(scale/p.scale<0.82||scale/p.scale>1.22)return false;
+ // Repaint immediately when a zoom crosses the geometry threshold. An older
+ // overscanned layer cannot supply composite rings / cell outlines it never drew.
+ if(p.mode==='tri'){
+  if(extraTriShowTiles(scale)!==extraTriShowTiles(p.scale)||
+     extraTriShowOutlines(scale)!==extraTriShowOutlines(p.scale))return false;
+ }else if(extraShowCircles(scale)!==extraShowCircles(p.scale)||
+          extraShowCompositeOutlines(scale)!==extraShowCompositeOutlines(p.scale))return false;
+ const r=extraViewRect(1.005),b=p.bounds;
+ return r.xmin>=b.xmin&&r.xmax<=b.xmax&&r.ymin>=b.ymin&&r.ymax<=b.ymax;
+}
+function isExtraMode(){return EXTRA_MODES.has(latticeMode)}
+function extraTriRadiusFor(n){if(n<=1)return 0;let h=Math.ceil((Math.sqrt(1+8*(n-1)/3)-1)/2);while(1+3*h*(h+1)/2<n)h++;while(h>0&&1+3*(h-1)*h/2>=n)h--;return h}
+function extraTriNumberFromIJ(i,j){
+ const h=Math.max(j-i,-i-2*j,2*i+j);
+ if(h===0)return 1;
+ const start=3*(h-1)*h/2+2;
+ if(j-i===h&&-h<i&&i<=0)return start-i;
+ if(-i-2*j===h&&-h<j&&j<=0)return start+h-j;
+ return start+3*h-i;
+}
+// Renderer thresholds match the existing Hex renderHex() tile/grid behaviour.
+// Only the geometric scale changes: triangular lattice nearest-neighbour = 1,
+// and its Voronoi hexagon circumradius = (world scale)/sqrt(3).
+function extraTriHexRadius(pScale){return pScale/EXTRA_SQRT3}
+function extraTriShowTiles(pScale){return extraTriHexRadius(pScale)>=8}
+function extraTriShowOutlines(pScale){return extraTriHexRadius(pScale)>=15}
+// The triangular lattice's Voronoi hexagons are flat-topped. Rotate the
+// native point-up hexagon by exactly +30°; keep the Hex-mode polygon untouched.
+// The six vertices at ±r/2,±sqrt(3)r/2 and ±r,0 align adjacent cell edges.
+function extraTriDrawHexPoly(path,x,y,r){
+ const half=r*.5,top=r*EXTRA_SQRT3*.5;
+ path.moveTo(x+half,y-top);
+ path.lineTo(x+r,y);
+ path.lineTo(x+half,y+top);
+ path.lineTo(x-half,y+top);
+ path.lineTo(x-r,y);
+ path.lineTo(x-half,y-top);
+ path.closePath();
+}
+// Sacks and Vogel use continuously positioned points, not tiling cells.
+// Tiny distant points remain pixel-sized; expanded points are true circles.
+function extraCircleRadius(pScale){return pScale*.30}
+function extraShowCircles(pScale){return pScale>=6}
+// Large-zoom polar point map: outline ALL integer sites, including composites.
+// Draw only when individual circles become resolvable. At distant zoom levels
+// this would waste time and appear as a dense, misleading mesh.
+// Four wheel-up steps after the former threshold of 6 (wheel zoom factor 1.18).
+function extraShowCompositeOutlines(pScale){return pScale>=6*Math.pow(1.18,4)}
+function extraShowSequenceLinks(pScale){return pScale>=16}
+function extraPaintTriGrid(rect,pCamX,pCamY,pScale,pW,pH,paint){
+ // Match the native Hex-mode tile thresholds by *circumradius*:
+ // triangular neighbour spacing is 1 world unit, so cell circumradius is
+ // pScale/sqrt(3); the native hex renderer outlines at radius >= 15px.
+ // Exact inverse lets us draw lattice cells without Worker data.
+ const unit=EXTRA_SQRT3/2,grid=new Path2D();
+ const i0=Math.ceil(rect.xmin/unit-1e-9),i1=Math.floor(rect.xmax/unit+1e-9);
+ for(let i=i0;i<=i1;i++){
+  const x=i*unit;if(x<rect.xmin||x>=rect.xmax)continue;
+  const j0=Math.ceil(rect.ymin-i/2-1e-9),j1=Math.floor(rect.ymax-i/2+1e-9);
+  for(let j=j0;j<=j1;j++){
+   const y=j+i/2;if(y<rect.ymin||y>=rect.ymax)continue;
+   const n=extraTriNumberFromIJ(i,j);if(n<1||n>MAX_N)continue;
+   const px=pW/2+(x-pCamX)*pScale,py=pH/2-(y-pCamY)*pScale;
+   extraTriDrawHexPoly(grid,px,py,pScale/EXTRA_SQRT3*.96);
+  }
+ }
+ paint.strokeStyle='rgba(150,180,235,.68)';paint.lineWidth=1.15;paint.stroke(grid);
+}
+function extraTriCoord(n){if(n<=1)return{x:0,y:0};const h=extraTriRadiusFor(n),off=n-(1+3*(h-1)*h/2+1),s=Math.floor(off/h),t=off%h;const A=[0,h],B=[-EXTRA_SQRT3*h/2,-h/2],C=[EXTRA_SQRT3*h/2,-h/2],points=[A,B,C,A],p=points[s],q=points[s+1];return{x:p[0]+(q[0]-p[0])*t/h,y:p[1]+(q[1]-p[1])*t/h}}
+const EXTRA_GOLDEN_FRACS=[0n,16n,32n].map(shift=>
+ Number(((EXTRA_PHI_FIXED<<shift)&EXTRA_PHASE_MASK)>>43n)/9007199254740992);
+function extraVogelPhase(n){
+ const hi=Math.floor(n/4294967296),mid=Math.floor(n/65536)%65536,lo=n%65536;
+ const f=(hi*EXTRA_GOLDEN_FRACS[2]+mid*EXTRA_GOLDEN_FRACS[1]+lo*EXTRA_GOLDEN_FRACS[0])%1;
+ return f*EXTRA_TAU;
+}
+function extraCoord(mode,n){if(n<=1)return{x:0,y:0};if(mode==='tri')return extraTriCoord(n);const r=Math.sqrt(n),theta=mode==='sacks'?EXTRA_TAU*(r%1):extraVogelPhase(n);return{x:r*Math.cos(theta),y:r*Math.sin(theta)}}
+function extraApproxNumber(x,y){if(latticeMode==='tri'){const h=Math.max(0,-2*y,y+EXTRA_SQRT3*Math.abs(x));return Math.max(1,Math.min(MAX_N,Math.round(1+1.5*h*(h+1))))}return Math.max(1,Math.min(MAX_N,Math.round(x*x+y*y)))}
+function extraCancelBuild(){++extraToken;clearTimeout(extraTimer);clearTimeout(extraWatchdog);extraWatchdog=0;extraTimer=0;for(const w of extraWorkers)try{w.terminate()}catch(_){}extraWorkers=[];if(extraWorker){extraWorker.terminate();extraWorker=null}extraPreview=null;extraChunks=[];extraSpatialBuckets.clear();extraTriPrimeNumbers.clear();extraLayer=null;extraLayerCtx=null;extraGridLayer=null;extraGridCtx=null;extraFormulaLayer=null;extraFormulaCtx=null;extraArmLayer=null;extraArmCtx=null}
+function extraQueueEnsure(delay=140){if(extraPreviewCoversCurrent())return;clearTimeout(extraTimer);extraTimer=setTimeout(()=>{extraTimer=0;extraEnsure()},Math.max(0,delay))}
+function extraViewRect(factor=1.06){return {xmin:camX-W*factor/(2*scale),xmax:camX+W*factor/(2*scale),ymin:camY-H*factor/(2*scale),ymax:camY+H*factor/(2*scale)}}
+function extraEnsure(recovery=false){
+ if(!isExtraMode()||!ready||!W||!H||(!recovery&&extraPreviewCoversCurrent()))return;
+ clearTimeout(extraWatchdog);extraWatchdog=0;
+ const formulaKey=activeFormula?formulaId(activeFormula)+(String(activeFormula.kind||'').startsWith('vogel-')&&selected?':'+selected.n:''):'';
+ const fullRect=extraViewRect(EXTRA_OVERSCAN),token=++extraToken;
+ for(const w of extraWorkers)try{w.terminate()}catch(_){}extraWorkers=[];extraWorker=null;
+ extraChunks=[];extraSpatialBuckets.clear();extraTriPrimeNumbers.clear();extraDataCount=0;extraPrimeCount=0;extraTestedCount=0;
+ const layerW=W*EXTRA_OVERSCAN,layerH=H*EXTRA_OVERSCAN;
+ const pxScale=cv.width/W;
+ extraLayer=document.createElement('canvas');extraLayer.width=Math.round(layerW*pxScale);extraLayer.height=Math.round(layerH*pxScale);
+ extraLayerCtx=extraLayer.getContext('2d',{alpha:true});extraLayerCtx.setTransform(pxScale,0,0,pxScale,0,0);
+ extraGridLayer=null;extraGridCtx=null;
+ if(latticeMode==='tri'&&extraTriShowOutlines(scale)){extraGridLayer=document.createElement('canvas');extraGridLayer.width=extraLayer.width;extraGridLayer.height=extraLayer.height;extraGridCtx=extraGridLayer.getContext('2d',{alpha:true});extraGridCtx.setTransform(pxScale,0,0,pxScale,0,0);extraPaintTriGrid(fullRect,camX,camY,scale,layerW,layerH,extraGridCtx)}
+ extraFormulaLayer=document.createElement('canvas');extraFormulaLayer.width=extraLayer.width;extraFormulaLayer.height=extraLayer.height;
+ extraFormulaCtx=extraFormulaLayer.getContext('2d',{alpha:true});extraFormulaCtx.setTransform(pxScale,0,0,pxScale,0,0);
+ extraArmLayer=document.createElement('canvas');extraArmLayer.width=extraLayer.width;extraArmLayer.height=extraLayer.height;
+ extraArmCtx=extraArmLayer.getContext('2d',{alpha:true});extraArmCtx.setTransform(pxScale,0,0,pxScale,0,0);
+ extraPreview={mode:latticeMode,camX,camY,scale,W:layerW,H:layerH,sourceW:W,sourceH:H,bounds:fullRect,formulaKey,done:false,error:'',started:performance.now(),lastProgressAt:performance.now(),recovery};
+ // Pool is bounded to 4: exact enumeration and primality can be CPU-heavy.
+ // Each worker owns a nonoverlapping horizontal region, while the first worker
+ // evaluates the active polynomial over the complete region once.
+ const hc=Math.max(1,navigator.hardwareConcurrency||2);
+ const workerCount=recovery?1:Math.min(mobilePrimeDevice()?2:4,Math.max(1,hc-1));
+ let finished=0,elapsed=0;
+ if(!extraWorkerURL)extraWorkerURL=URL.createObjectURL(new Blob([`(${extraWorkerMain.toString()})();`],{type:'text/javascript'}));
+ const url=extraWorkerURL;
+ window.__ulamExtraMetrics={mode:latticeMode,count:0,primeCount:0,done:false,error:'',workers:workerCount,recovery,centerN:Math.round(extraApproxNumber(camX,camY)),scale,startedAt:Date.now()};
+ // A failed/blocked Worker used to leave an apparently valid empty preview forever.
+ // A single conservative retry is allowed when no progress arrives for 14s.
+ function checkProgress(){
+  if(token!==extraToken||!isExtraMode())return;
+  const p=extraPreview;if(!p||p.done||p.error)return;
+  const silence=performance.now()-p.lastProgressAt;
+  if(silence>=EXTRA_WATCHDOG_PERIOD_MS){
+   if(!p.recovery){console.warn('[extra spiral] No Worker progress; retrying with one Worker');extraEnsure(true);return}
+   p.error='Viewport Worker stopped responding. Please move or retry.';
+   window.__ulamExtraMetrics.error=p.error;
+   for(const w of extraWorkers)try{w.terminate()}catch(_){}
+   extraWorkers=[];extraWorker=null;requestRender();return;
+  }
+  extraWatchdog=setTimeout(checkProgress,Math.max(1500,EXTRA_WATCHDOG_PERIOD_MS-silence+200));
+ }
+ extraWatchdog=setTimeout(checkProgress,EXTRA_WATCHDOG_PERIOD_MS);
+ try{
+  for(let part=0;part<workerCount;part++){
+   const rect={xmin:fullRect.xmin,xmax:fullRect.xmax,
+    ymin:fullRect.ymin+(fullRect.ymax-fullRect.ymin)*part/workerCount,
+    ymax:fullRect.ymin+(fullRect.ymax-fullRect.ymin)*(part+1)/workerCount};
+   const w=idleExtraWorkers.pop()||new Worker(url);extraWorkers.push(w);extraWorker=w;
+   w.onmessage=e=>{
+    if(token!==extraToken||!isExtraMode())return;
+    const d=e.data,p=extraPreview;
+    if(d.type==='chunk'){
+     p.lastProgressAt=performance.now();
+     const xs=new Float64Array(d.x),ys=new Float64Array(d.y),ns=new Float64Array(d.n),ps=new Uint8Array(d.p);
+     const chunkIndex=extraChunks.length;
+     extraChunks.push({xs,ys,ns,ps,box:d.box});extraDataCount+=ns.length;
+     if(p.mode==='tri')for(let i=0;i<ns.length;i++)extraTriPrimeNumbers.add(ns[i]);
+     // Cache the overscanned preview in 32-pixel spatial buckets so selecting
+     // a point or moving the mouse does not rescan the entire triangular view.
+     for(let i=0;i<ns.length;i++){
+      if(p.mode==='tri')break; // Triangular picking is analytic: no spatial-bucket construction.
+      const px=p.W/2+(xs[i]-p.camX)*p.scale,py=p.H/2-(ys[i]-p.camY)*p.scale;
+      const gx=Math.floor(px/EXTRA_PICK_GRID),gy=Math.floor(py/EXTRA_PICK_GRID);
+      const key=gy*65536+gx;let bucket=extraSpatialBuckets.get(key);
+      if(!bucket){bucket=[];extraSpatialBuckets.set(key,bucket)}
+      bucket.push(chunkIndex,i);
+     }
+     // Hex mode retains the original point-up glyph.  Tri's regular
+     // triangular point lattice uses 30°-rotated flat-top Voronoi hexagons,
+     // with circumradius 1/sqrt(3) times the pixel scale.
+     const tile=p.mode==='tri'&&extraTriShowTiles(p.scale);
+     const circle=p.mode!=='tri'&&extraShowCircles(p.scale);
+     const showPolarSites=p.mode!=='tri'&&extraShowCompositeOutlines(p.scale);
+     const point=Math.max(1,Math.min(5,p.scale*.70));
+     let pc=0;
+     const primePath=(tile||circle)?new Path2D():null;
+     const compositeRings=showPolarSites?new Path2D():null;
+     const radius=extraTriHexRadius(p.scale),circleRadius=extraCircleRadius(p.scale);
+     for(let i=0;i<ns.length;i++){
+      const px=p.W/2+(xs[i]-p.camX)*p.scale,py=p.H/2-(ys[i]-p.camY)*p.scale;
+      // Sacks / Vogel chunks include composites; draw their precise positions
+      // with a faint circular ring, while primes remain bright filled disks.
+      if(!ps[i]){
+       if(compositeRings){compositeRings.moveTo(px+circleRadius,py);compositeRings.arc(px,py,circleRadius,0,EXTRA_TAU)}
+       continue;
+      }
+      pc++;
+      if(tile)extraTriDrawHexPoly(primePath,px,py,radius*.93);
+      else if(circle){primePath.moveTo(px+circleRadius,py);primePath.arc(px,py,circleRadius,0,EXTRA_TAU)}
+      else{extraLayerCtx.fillStyle='#f5f7fb';extraLayerCtx.fillRect(Math.round(px)-point/2,Math.round(py)-point/2,point,point)}
+     }
+     if(compositeRings){
+      extraLayerCtx.fillStyle='rgba(150,185,235,.12)';
+      extraLayerCtx.fill(compositeRings);
+      extraLayerCtx.strokeStyle='rgba(170,200,245,.88)';
+      extraLayerCtx.lineWidth=1.1;
+      extraLayerCtx.stroke(compositeRings);
+     }
+     if(primePath){extraLayerCtx.fillStyle='#f5f7fb';extraLayerCtx.fill(primePath)}
+     extraPrimeCount+=pc;
+     window.__ulamExtraMetrics.count=p.mode==='tri'?extraTestedCount:extraDataCount;window.__ulamExtraMetrics.primeCount=extraPrimeCount;window.__ulamExtraMetrics.spatialCells=extraSpatialBuckets.size;
+     if(p.mode==='vogel'&&activeFormula&&(activeFormula.kind==='vogel-arm'||activeFormula.kind==='vogel-pair')&&selected){
+      const arms=activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:[activeFormula.armStepA,activeFormula.armStepB];
+      for(let ai=0;ai<arms.length;ai++){
+       const step=arms[ai];if(!Number.isSafeInteger(step)||step<1)continue;
+       const color=ai===0?'rgba(255,188,91,.98)':'rgba(98,221,255,.98)',path=new Path2D();
+       const rr=Math.max(1.8,Math.min(5.3,p.scale*.26));
+       for(let j=0;j<ns.length;j++){
+        const delta=ns[j]-selected.n;
+        if(delta%step!==0)continue;
+        const xp=p.W/2+(xs[j]-p.camX)*p.scale,yp=p.H/2-(ys[j]-p.camY)*p.scale;
+        path.moveTo(xp+rr,yp);path.arc(xp,yp,rr,0,EXTRA_TAU);
+       }
+       extraArmCtx.fillStyle=color;extraArmCtx.fill(path);
+      }
+     }
+     const now=performance.now();if(now-extraLastMessage>110){extraLastMessage=now;requestRender()}
+    }else if(d.type==='arm'){ 
+     p.lastProgressAt=performance.now();
+     const xs=new Float64Array(d.x),ys=new Float64Array(d.y),a=d.armIndex||0;
+     const g=extraArmCtx,pt=Math.max(1.65,Math.min(3.8,p.scale*.20));
+     g.fillStyle=a===0?'rgba(255,183,92,.85)':'rgba(96,219,255,.85)';
+     const path=new Path2D();
+     for(let j=0;j<xs.length;j++){
+      const px=p.W/2+(xs[j]-p.camX)*p.scale,py=p.H/2-(ys[j]-p.camY)*p.scale;
+      path.rect(px-pt/2,py-pt/2,pt,pt);
+     }
+     g.fill(path);requestRender();
+    }else if(d.type==='tested'){
+     // Tri mode transfers primes only.  Keep checked-cells metric separate.
+     extraTestedCount+=d.count;
+     window.__ulamExtraMetrics.count=extraTestedCount;
+    }else if(d.type==='formula'){
+     p.lastProgressAt=performance.now();
+     const xs=new Float64Array(d.x),ys=new Float64Array(d.y),ps=new Uint8Array(d.p),g=extraFormulaCtx;
+     const pt=Math.max(1,Math.min(2,p.scale*.40)),hpt=Math.max(3,Math.min(6,p.scale*.75));
+     const tile=p.mode==='tri'&&extraTriShowTiles(p.scale);
+     const circle=p.mode!=='tri'&&extraShowCircles(p.scale);
+     const path=(tile||circle)?new Path2D():null,weakCircles=circle&&extraShowCompositeOutlines(p.scale)?new Path2D():null;
+     const circleRadius=extraCircleRadius(p.scale),hexRadius=extraTriHexRadius(p.scale);
+     for(let i=0;i<xs.length;i++){
+      const px=p.W/2+(xs[i]-p.camX)*p.scale,py=p.H/2-(ys[i]-p.camY)*p.scale;
+      if(ps[i]){
+       if(tile)extraTriDrawHexPoly(path,px,py,hexRadius*.96);
+       else if(circle){path.moveTo(px+circleRadius*1.06,py);path.arc(px,py,circleRadius*1.06,0,EXTRA_TAU)}
+       else{g.fillStyle='#18d7f2';g.fillRect(Math.round(px)-hpt/2,Math.round(py)-hpt/2,hpt,hpt)}
+      }else if(weakCircles){
+       const r=Math.max(1,circleRadius*.92);weakCircles.moveTo(px+r,py);weakCircles.arc(px,py,r,0,EXTRA_TAU);
+      }else{g.fillStyle='rgba(24,215,242,.36)';g.fillRect(Math.round(px)-pt/2,Math.round(py)-pt/2,pt,pt)}
+     }
+     if(weakCircles){g.fillStyle='rgba(150,185,235,.12)';g.fill(weakCircles);g.strokeStyle='rgba(170,200,245,.88)';g.lineWidth=Math.max(1.2,Math.min(2.25,p.scale*.072));g.stroke(weakCircles)}
+     if(path){g.fillStyle='#18d7f2';g.fill(path)}
+     requestRender();
+    }else if(d.type==='done'){
+     p.lastProgressAt=performance.now();finished++;elapsed=Math.max(elapsed,d.elapsed||0);releaseExtraWorker(w);
+     if(finished>=workerCount){clearTimeout(extraWatchdog);extraWatchdog=0;p.done=true;p.elapsed=elapsed;p.count=latticeMode==='tri'?extraTestedCount:extraDataCount;p.primes=extraPrimeCount;
+      window.__ulamExtraMetrics.done=true;window.__ulamExtraMetrics.count=p.count;window.__ulamExtraMetrics.elapsed=elapsed;extraWorkers=[];extraWorker=null;requestRender()}
+    }else if(d.type==='error'){clearTimeout(extraWatchdog);extraWatchdog=0;p.error=d.message;window.__ulamExtraMetrics.error=d.message;w.terminate();console.warn('[extra spiral]',d.message);requestRender()}
+   };
+   w.onerror=e=>{if(token===extraToken){pError(e.message);requestRender()}};
+   w.postMessage({mode:latticeMode,rect,formulaRect:part===0?fullRect:null,maxN:MAX_N,
+    formula:part===0&&activeFormula&&activeFormula.kind!=='vogel-arm'&&activeFormula.kind!=='vogel-pair'?{a:activeFormula.a,b:activeFormula.b,c:activeFormula.c}:null,
+    arms:part===0&&latticeMode==='vogel'&&activeFormula&&selected?(activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:(activeFormula.kind==='vogel-pair'?[activeFormula.armStepA,activeFormula.armStepB]:null)):null,
+    armOrigin:part===0&&selected?selected.n:0});
+  }
+ }catch(err){extraPreview.error=String(err);console.error(err)}
+
+ function pError(msg){if(extraPreview)extraPreview.error=msg||'Worker error';window.__ulamExtraMetrics.error=msg||'Worker error'}
+}
+
+// Only the Sacks local path uses all currently visible n -> n+1 links.
+// Vogel's irrational golden-angle step makes the all-number connection a
+// screen-wide web.  Do not draw a false global guide curve.
+function drawExtraSequenceLinks(){
+ const p=extraPreview;
+ if(!p||!extraChunks.length||p.mode!=='sacks'||!extraShowSequenceLinks(scale))return;
+ const view={xmin:camX-W/(2*scale)-1/scale,xmax:camX+W/(2*scale)+1/scale,ymin:camY-H/(2*scale)-1/scale,ymax:camY+H/(2*scale)+1/scale};
+ const map=new Map();
+ for(const chunk of extraChunks){
+  const b=chunk.box;
+  if(b&&(b.xmax<view.xmin||b.xmin>view.xmax||b.ymax<view.ymin||b.ymin>view.ymax))continue;
+  const xs=chunk.xs,ys=chunk.ys,ns=chunk.ns;
+  for(let i=0;i<ns.length;i++){
+   const x=xs[i],y=ys[i];
+   if(x<view.xmin||x>view.xmax||y<view.ymin||y>view.ymax)continue;
+   map.set(ns[i],[x,y]);
+  }
+ }
+ if(map.size<2)return;
+ ctx.save();
+ ctx.strokeStyle='rgba(130,170,235,.44)';
+ ctx.lineWidth=Math.max(.75,Math.min(1.5,scale*.038));
+ ctx.lineJoin='round';ctx.lineCap='round';
+ ctx.beginPath();
+ let segments=0;
+ for(const [n,a] of map){
+  const b=map.get(n+1);
+  if(!b)continue;
+  ctx.moveTo(W/2+(a[0]-camX)*scale,H/2-(a[1]-camY)*scale);
+  ctx.lineTo(W/2+(b[0]-camX)*scale,H/2-(b[1]-camY)*scale);
+  segments++;
+ }
+ if(segments)ctx.stroke();
+ ctx.restore();
+}
+
+// Vogel: selecting a point reveals the next five values after that
+// integer, retaining the genuine golden-angle ordering without a global web.
+// Each line is drawn only when BOTH endpoints are on screen.
+// At high zoom only: join actual consecutive q-steps on the visible arm.
+// Never bridge invisible intermediate terms, which caused the old web artifact.
+function extraDrawVogelArmConnections(){
+ if(latticeMode!=='vogel'||!activeFormula||!selected||!extraShowSequenceLinks(scale)||!extraChunks.length)return;
+ const steps=activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:activeFormula.kind==='vogel-pair'?[activeFormula.armStepA,activeFormula.armStepB]:[];
+ if(!steps.length)return;
+ const view=extraViewRect(1.03),map=new Map();
+ for(const chunk of extraChunks){
+  const b=chunk.box;
+  if(b&&(b.xmax<view.xmin||b.xmin>view.xmax||b.ymax<view.ymin||b.ymin>view.ymax))continue;
+  const ns=chunk.ns,xs=chunk.xs,ys=chunk.ys;
+  for(let j=0;j<ns.length;j++){
+   if(xs[j]<view.xmin||xs[j]>view.xmax||ys[j]<view.ymin||ys[j]>view.ymax)continue;
+   for(const q of steps){if((ns[j]-selected.n)%q===0){map.set(ns[j],[xs[j],ys[j]]);break}}
+  }
+ }
+ if(!map.size)return;
+ ctx.save();ctx.lineWidth=1.45;
+ for(let ai=0;ai<steps.length;ai++){
+  const q=steps[ai];ctx.strokeStyle=ai===0?'rgba(255,190,91,.7)':'rgba(97,215,255,.74)';ctx.beginPath();
+  for(const [n,a] of map){
+   if((n-selected.n)%q!==0)continue;
+   const b=map.get(n+q);if(!b)continue;
+   ctx.moveTo(W/2+(a[0]-camX)*scale,H/2-(a[1]-camY)*scale);
+   ctx.lineTo(W/2+(b[0]-camX)*scale,H/2-(b[1]-camY)*scale);
+  }
+  ctx.stroke();
+ }
+ ctx.restore();
+}
+
+function extraDrawVogelLocalTrace(){
+ if(latticeMode!=='vogel'||!selected||!Number.isSafeInteger(selected.n))return;
+ const isPair=activeFormula&&activeFormula.kind==='vogel-pair';
+ const isArm=activeFormula&&activeFormula.kind==='vogel-arm';
+ // A chosen formula extends across the full [1, MAX_N] domain through the
+ // Worker overlay. The local ±5 *integer values* remain an independent guide.
+ // Show actual numeric labels n-5 .. n+5, e.g. 10 => 5,6,...,15.
+ const points=[];
+ for(let d=-5;d<=5;d++){
+  const n=selected.n+d;if(n<1||n>MAX_N)continue;
+  const p=extraCoord('vogel',n);
+  const x=W/2+(p.x-camX)*scale,y=H/2-(p.y-camY)*scale;
+  points.push({n,x,y,d,vis:x>=-12&&x<W+12&&y>=-12&&y<H+12});
+ }
+ ctx.save();
+ if(extraShowSequenceLinks(scale)){
+  ctx.strokeStyle='rgba(245,172,99,.52)';ctx.lineWidth=1.05;ctx.beginPath();
+  for(let i=1;i<points.length;i++){
+   const a=points[i-1],b=points[i];
+   if(a.vis&&b.vis&&b.n===a.n+1){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}
+  }
+  ctx.stroke();
+ }
+ // Numeric position markers are available at all zoom levels; when several
+ // values project onto the same pixel the screen necessarily cannot separate
+ // them, but zooming resolves their exact locations.
+ ctx.fillStyle='#f6b675';ctx.strokeStyle='rgba(250,174,102,.75)';ctx.lineWidth=1;
+ ctx.font='11px system-ui';ctx.textAlign='left';ctx.textBaseline='bottom';
+ for(const p of points){
+  if(!p.vis)continue;
+  if(p.d!==0){ctx.beginPath();ctx.arc(p.x,p.y,Math.max(2.3,Math.min(4.5,scale*.12)),0,EXTRA_TAU);ctx.stroke()}
+  if(scale>=4&&p.x+23<W&&p.y>15){ctx.fillText(p.n.toLocaleString(),p.x+6,p.y-6)}
+ }
+ ctx.restore();
+}
+
+function renderExtra(){
+ if(!W||!H)return;
+ ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);
+ if(!ready){renderExtraMinimap();return}
+ if(extraPreview&&extraLayer){
+  const p=extraPreview,ratio=scale/p.scale,xx=W/2+(p.camX-camX-p.W/(2*p.scale))*scale,yy=H/2-(p.camY-camY+p.H/(2*p.scale))*scale;
+  if(extraGridLayer)ctx.drawImage(extraGridLayer,xx,yy,p.W*ratio,p.H*ratio);
+  drawExtraSequenceLinks();
+  ctx.drawImage(extraLayer,xx,yy,p.W*ratio,p.H*ratio);
+  if(extraFormulaLayer)ctx.drawImage(extraFormulaLayer,xx,yy,p.W*ratio,p.H*ratio);
+  if(extraArmLayer)ctx.drawImage(extraArmLayer,xx,yy,p.W*ratio,p.H*ratio);
+ }
+ extraDrawVogelArmConnections();
+ extraDrawVogelLocalTrace();
+ if(selected){const px=W/2+(selected.x-camX)*scale,py=H/2-(selected.y-camY)*scale;if(px>-30&&px<W+30&&py>-30&&py<H+30){
+  ctx.lineWidth=Math.max(2,Math.min(4,scale*.16));ctx.strokeStyle='#ffb454';
+  if(latticeMode==='tri'){
+   const path=new Path2D();extraTriDrawHexPoly(path,px,py,Math.max(7,extraTriHexRadius(scale)*1.09));ctx.stroke(path);
+  }else{
+   ctx.beginPath();ctx.arc(px,py,Math.max(7,extraCircleRadius(scale)+3),0,EXTRA_TAU);ctx.stroke();
+  }
+ }}
+ if(extraPreview&&!extraPreview.done&&!extraPreview.error){
+  // Show a real loading state instead of presenting a black far-away viewport
+  // as a completed prime-free region while the Workers are still busy.
+  const m=window.__ulamExtraMetrics,age=Math.max(0,(performance.now()-extraPreview.started)/1000);
+  if(age>0.35){ctx.fillStyle='rgba(7,11,19,.86)';ctx.fillRect(13,13,Math.min(W-26,345),52);
+   ctx.fillStyle='#c4d6f0';ctx.font='13px system-ui';ctx.fillText(currentLang==='ko'?'화면 소수 계산 중…':'Computing viewport primes…',23,34);
+   ctx.fillStyle='#8ea6c5';ctx.font='11px system-ui';ctx.fillText(`${(m?.count||0).toLocaleString()} checked · ${(m?.primeCount||0).toLocaleString()} primes · ${age.toFixed(1)}s`,23,53)}
+ }
+ if(extraPreview&&extraPreview.error){ctx.fillStyle='#ff9b9b';ctx.font='14px system-ui';ctx.fillText(extraPreview.error.slice(0,110),16,30)}
+ renderExtraMinimap();
+}
+// Triangular mode is a mathematically exact triangular lattice: rather than
+// shipping every composite just for hover, invert its nearest grid cell.
+function extraPickTriPixel(px,py,maxPx){
+ const wx=camX+(px-W/2)/scale,wy=camY-(py-H/2)/scale;
+ const fi=wx*2/EXTRA_SQRT3,fj=wy-fi*.5;
+ const ci=Math.round(fi),cj=Math.round(fj);
+ let best=null,bestD=maxPx*maxPx;
+ for(let i=ci-1;i<=ci+1;i++)for(let j=cj-1;j<=cj+1;j++){
+  const x=i*EXTRA_SQRT3*.5,y=j+i*.5,dx=(x-wx)*scale,dy=(y-wy)*scale,d=dx*dx+dy*dy;
+  if(d>=bestD)continue;
+  const n=extraTriNumberFromIJ(i,j);if(n<1||n>MAX_N)continue;
+  bestD=d;best={n,x,y,prime:extraTriPrimeNumbers.has(n)};
+ }
+ return best;
+}
+function extraPickPixel(px,py,maxPx=14){
+ if(latticeMode==='tri')return extraPickTriPixel(px,py,maxPx);
+ const p=extraPreview;if(!p||!extraChunks.length)return null;
+ const wx=camX+(px-W/2)/scale,wy=camY-(py-H/2)/scale;
+ const previewX=p.W/2+(wx-p.camX)*p.scale,previewY=p.H/2-(wy-p.camY)*p.scale;
+ const searchRadius=Math.max(1,maxPx*p.scale/scale),grid=EXTRA_PICK_GRID;
+ let best=null,bestD=maxPx*maxPx;
+ const x0=Math.floor((previewX-searchRadius)/grid),x1=Math.floor((previewX+searchRadius)/grid),
+       y0=Math.floor((previewY-searchRadius)/grid),y1=Math.floor((previewY+searchRadius)/grid);
+ for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++){
+  const bucket=extraSpatialBuckets.get(gy*65536+gx);if(!bucket)continue;
+  for(let j=0;j<bucket.length;j+=2){
+   const c=extraChunks[bucket[j]],i=bucket[j+1];if(!c)continue;
+   const x=c.xs[i],y=c.ys[i],dx=(x-wx)*scale,dy=(y-wy)*scale,d=dx*dx+dy*dy;
+   if(d<bestD){bestD=d;best={n:c.ns[i],x,y,prime:!!c.ps[i]}}
+  }
+ }
+ return best;
+}
+function extraSelectNumber(n,q=extraCoord(latticeMode,n)){
+ extraPinnedFormula=activeFormula&&extraFormulaContainsN(n,activeFormula)?simpleFormulaCopy(activeFormula):null;
+ ++pointAnalyzeKick;cancelPointAnalysis(false);selected={n,x:q.x,y:q.y};formulas=[];pointAnalysisPending=true;pointAnalysisDoneKey='';formulaHidden=false;savedOpen=false;cSearchOpen=false;cSearchPanel.style.display='none';activeFormula=null;refreshActiveInfo();renderSavedPanel();renderFormulaPanel();selEl.innerHTML=selectionSummary(false);sched(0);
+ deferPointAnalysis(q.x,q.y);
+}
+function extraSelectScreen(x,y){const p=extraPickPixel(x,y,Math.max(14,scale*.75));if(!p)return;extraSelectNumber(p.n,{x:p.x,y:p.y})}
+function extraSelectAtXY(x,y){extraSelectScreen(W/2+(x-camX)*scale,H/2-(y-camY)*scale)}
+function extraUpdateHover(clientX,clientY){if(!ready){hoverTip.style.display='none';return}const r=cv.getBoundingClientRect(),mx=clientX-r.left,my=clientY-r.top,p=extraPickPixel(mx,my,Math.max(9,scale*.65));if(!p){hoverTip.style.display='none';return}hoverTip.innerHTML=`<b>${p.n.toLocaleString()}</b> · <span class="${p.prime?'prime':'composite'}">${tr(p.prime?'prime':'composite')}</span><br><span style="color:#9eabc0">(${p.x.toFixed(2)}, ${p.y.toFixed(2)})</span>`;hoverTip.style.display='block';const tw=hoverTip.offsetWidth,th=hoverTip.offsetHeight;hoverTip.style.left=Math.max(6,Math.min(W-tw-6,mx+14))+'px';hoverTip.style.top=Math.max(6,Math.min(H-th-6,my+14))+'px'}
+function extraActiveFormulaIntersects(f){
+ if(!f||!extraChunks.length)return false;
+ const vis=extraViewRect(1);
+ for(const chunk of extraChunks){
+  for(let i=0;i<chunk.ns.length;i++){
+   if(!chunk.ps[i])continue;
+   const x=chunk.xs[i],y=chunk.ys[i];
+   if(x<vis.xmin||x>vis.xmax||y<vis.ymin||y>vis.ymax)continue;
+   if(inSequence(chunk.ns[i],f))return true;
+  }
+ }
+ return false;
+}
+function extraNearestPrimeTerm(f){
+ if(!f)return null;const target=Math.max(1,Math.min(MAX_N,extraApproxNumber(camX,camY))),D=f.b*f.b-4*f.a*(f.c-target);if(D<0)return null;
+ const centers=[(-f.b+Math.sqrt(D))/(2*f.a),(-f.b-Math.sqrt(D))/(2*f.a)];let best=null,dist=Infinity;
+ for(const center of centers)for(let j=-60;j<=60;j++){const t=Math.round(center)+j,n=f.a*t*t+f.b*t+f.c;if(!Number.isSafeInteger(n)||n<2||n>MAX_N||!isPrimeExactSingle(n))continue;const p=extraCoord(latticeMode,n),d=(p.x-camX)**2+(p.y-camY)**2;if(d<dist){dist=d;best={n,t,x:p.x,y:p.y}}}return best;
+}
+function renderExtraMinimap(){
+ if(!showMinimap||!ready){miniWrap.style.display='none';return}
+ resizeMinimap();const v=miniViewport(),key=`extra-mini:${latticeMode}:${miniSide}:${v.r}:${v.cx}:${v.cy}`;
+ if(miniBgKey!==key||!miniBgCanvas){
+  const c=document.createElement('canvas');c.width=64;c.height=64;const g=c.getContext('2d',{alpha:false}),img=g.createImageData(64,64),data=img.data;
+  for(let py=0;py<64;py++)for(let px=0;px<64;px++){
+   const x=v.cx+((px+.5)/64*2-1)*v.r,y=v.cy+(1-(py+.5)/64*2)*v.r;
+   const rr=latticeMode==='tri'?Math.max(-2*y,y+EXTRA_SQRT3*Math.abs(x)):Math.hypot(x,y);
+   const n=Math.max(3,Math.min(MAX_N,latticeMode==='tri'?1+1.5*rr*(rr+1):rr*rr));
+   const d=1/Math.log(n),lo=1/Math.log(MAX_N),hi=1/Math.log(3),t=Math.max(0,Math.min(1,(d-lo)/(hi-lo))),shade=Math.round(27+135*Math.pow(t,.5)),i=(py*64+px)*4;
+   data[i]=data[i+1]=data[i+2]=shade;data[i+3]=255;
+  }
+  g.putImageData(img,0,0);miniBgCanvas=c;miniBgKey=key;
+ }
+ miniCtx.drawImage(miniBgCanvas,0,0,miniSide,miniSide);
+ const formulaKey=activeFormula?`${key}:${formulaId(activeFormula)}:${String(activeFormula.kind||'').startsWith('vogel-')&&selected?selected.n:''}`:'';
+ if(formulaKey!==miniFormulaKey||!miniFormulaCanvas){
+  miniFormulaKey=formulaKey;miniFormulaCanvas=null;
+  if(activeFormula){
+   const c=document.createElement('canvas');c.width=miniCv.width;c.height=miniCv.height;const g=c.getContext('2d',{alpha:true}),sc=c.width/miniSide;
+   g.setTransform(sc,0,0,sc,0,0);g.fillStyle='#18d7f2';
+   if(latticeMode==='vogel'&&selected&&(activeFormula.kind==='vogel-arm'||activeFormula.kind==='vogel-pair')){
+    const arms=activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:[activeFormula.armStepA,activeFormula.armStepB];
+    for(let ai=0;ai<arms.length;ai++){
+     const q=arms[ai],count=Math.floor((MAX_N-selected.n)/q)-Math.ceil((1-selected.n)/q)+1;
+     if(count<=0)continue;
+     const klo=Math.ceil((1-selected.n)/q),sample=Math.min(count,6000),jump=Math.max(1,Math.ceil(count/sample));
+     g.fillStyle=ai===0?'rgba(255,188,91,.85)':'rgba(96,219,255,.85)';
+     for(let k=klo;k<klo+count;k+=jump){
+      const n=selected.n+k*q;if(n<1||n>MAX_N)continue;
+      const p=extraCoord(latticeMode,n),mx=(p.x-v.cx+v.r)*miniSide/(2*v.r),my=(v.cy+v.r-p.y)*miniSide/(2*v.r);
+      if(mx>=0&&mx<miniSide&&my>=0&&my<miniSide)g.fillRect(mx-.75,my-.75,1.5,1.5);
+     }
+    }
+   }else{
+    const ranges=formulaTRange(activeFormula);if(ranges){const count=ranges[1]-ranges[0]+1,step=Math.max(1,Math.ceil(count/(mobilePrimeDevice()?8000:30000)));
+     for(let t=ranges[0];t<=ranges[1];t+=step){const n=activeFormula.a*t*t+activeFormula.b*t+activeFormula.c;if(n<1||n>MAX_N)continue;const p=extraCoord(latticeMode,n),mx=(p.x-v.cx+v.r)*miniSide/(2*v.r),my=(v.cy+v.r-p.y)*miniSide/(2*v.r);if(mx>=0&&mx<miniSide&&my>=0&&my<miniSide)g.fillRect(mx-1,my-1,2,2)}
+    }
+   }
+   miniFormulaCanvas=c;
+  }
+ }
+ if(miniFormulaCanvas)miniCtx.drawImage(miniFormulaCanvas,0,0,miniSide,miniSide);
+ // Draw the actual admissible world boundary. The 1T overview is square as
+ // a canvas, but Sacks/Vogel are a disk and Triangle is a filled triangle.
+ // A corner of the minimap does not necessarily correspond to a valid integer.
+ miniCtx.save();miniCtx.strokeStyle='rgba(170,195,228,.42)';miniCtx.lineWidth=1.2;
+ miniCtx.beginPath();
+ if(latticeMode==='sacks'||latticeMode==='vogel'){
+  const R=Math.sqrt(MAX_N),origin=miniMapXYInView(0,0,v);
+  miniCtx.arc(origin.px,origin.py,R*miniSide/(2*v.r),0,Math.PI*2);
+ }else if(latticeMode==='tri'){
+  const h=extraTriRadiusFor(MAX_N),s=EXTRA_SQRT3;
+  const pts=[[0,h],[-s*h/2,-h/2],[s*h/2,-h/2]].map(q=>miniMapXYInView(q[0],q[1],v));
+  miniCtx.moveTo(pts[0].px,pts[0].py);
+  for(let i=1;i<pts.length;i++)miniCtx.lineTo(pts[i].px,pts[i].py);
+  miniCtx.closePath();
+ }
+ miniCtx.stroke();miniCtx.restore();
+ const a=miniMapXYInView(camX-W/(2*scale),camY+H/(2*scale),v),b=miniMapXYInView(camX+W/(2*scale),camY-H/(2*scale),v);
+ const left=Math.max(0,Math.min(a.px,b.px)),right=Math.min(miniSide,Math.max(a.px,b.px)),top=Math.max(0,Math.min(a.py,b.py)),bottom=Math.min(miniSide,Math.max(a.py,b.py));
+ if(right>=left&&bottom>=top){miniCtx.strokeStyle='#ff4d4f';miniCtx.fillStyle='#ff4d4f';miniCtx.lineWidth=1.5;if(right-left<4||bottom-top<4)miniCtx.fillRect((left+right)/2-2,(top+bottom)/2-2,4,4);else miniCtx.strokeRect(left,top,right-left,bottom-top)}
+ miniCtx.font='600 10px system-ui';miniCtx.textAlign='left';miniCtx.textBaseline='bottom';miniCtx.fillStyle='rgba(220,230,244,.80)';miniCtx.fillText(`${miniLevelLabel(v.n)} · ~1/ln(n)`,7,miniSide-5);
+}
+function extraWorkerMain(){
+ 'use strict';
+ const MAX=1000000000000,TAU=2*Math.PI,SQ3=Math.sqrt(3),PHI=(3-Math.sqrt(5))/2,PHI_FIXED=30262465214248651242265067423n,MASK=(1n<<96n)-1n;
+ let tStart=0;
+ const goldenFrac=[0n,16n,32n].map(shift=>Number(((PHI_FIXED<<shift)&MASK)>>43n)/9007199254740992);
+ function phase(n){
+  const hi=Math.floor(n/4294967296),mid=Math.floor(n/65536)%65536,lo=n%65536;
+  return ((hi*goldenFrac[2]+mid*goldenFrac[1]+lo*goldenFrac[0])%1)*TAU;
+ }
+ function coord(mode,n){if(n<=1)return{x:0,y:0};if(mode==='tri'){
+  let h=Math.ceil((Math.sqrt(1+8*(n-1)/3)-1)/2);while(1+3*h*(h+1)/2<n)h++;while(h>0&&1+3*(h-1)*h/2>=n)h--;
+  const off=n-(1+3*(h-1)*h/2+1),s=Math.floor(off/h),t=off%h;const pts=[[0,h],[-SQ3*h/2,-h/2],[SQ3*h/2,-h/2],[0,h]],a=pts[s],b=pts[s+1];return{x:a[0]+(b[0]-a[0])*t/h,y:a[1]+(b[1]-a[1])*t/h};
+ }const r=Math.sqrt(n),ang=mode==='sacks'?TAU*(r%1):phase(n);return{x:r*Math.cos(ang),y:r*Math.sin(ang)}}
+ // Exact lookup for n <= 1e6; the original six-base deterministic Miller-Rabin for 1 <= n <= 1e12 (bases 2,3,5,7,11,13 cover >3e12).
+ // Trial division prefilter cheaply discards most composites before BigInt MR.
+ const small=(()=>{const lim=251,flag=new Uint8Array(lim+1),out=[];for(let p=2;p<=lim;p++)if(!flag[p]){out.push(p);for(let j=p*p;j<=lim;j+=p)flag[j]=1}return out})();
+ // Lazy exact 1 MB sieve: allocate only if this Worker inspects n <= 1e6.
+ const lookupLimit=1000000;
+ let primeMark=null;
+ function lookupPrime(n){if(!primeMark)primeMark=(()=>{const a=new Uint8Array(lookupLimit+1);a[0]=a[1]=1;for(let p=2;p*p<=lookupLimit;p++)if(!a[p])for(let n=p*p;n<=lookupLimit;n+=p)a[n]=1;return a})();return primeMark[n]===0}
+ function isPrime(n){if(n<2)return false;if(n<=lookupLimit)return lookupPrime(n);for(const p of small){if(n===p)return true;if(n%p===0)return false}
+  let d=n-1,s=0;while(d%2===0){d/=2;s++}
+  // n <= 1e12: Number division by 2 keeps every exponent bit exact.
+  // The modular products and all six witnesses remain BigInt / unchanged.
+  const M=BigInt(n),minusOne=M-1n,bits=[];for(let e=d;e>0;e=Math.floor(e/2))bits.push(e%2);
+  function pow(b){let x=BigInt(b)%M,z=1n;for(let i=0;i<bits.length;i++){if(bits[i])z=z*x%M;if(i+1<bits.length)x=x*x%M}return z}
+  for(const b of [2,3,5,7,11,13]){let x=pow(b);if(x===1n||x===minusOne)continue;let ok=false;for(let i=1;i<s;i++){x=x*x%M;if(x===minusOne){ok=true;break}}if(!ok)return false}return true;
+ }
+ function emit(mode,rect,points,box){if(!points.length)return;const size=points.length,x=new Float64Array(size),y=new Float64Array(size),n=new Float64Array(size),p=new Uint8Array(size);for(let i=0;i<size;i++){const a=points[i];x[i]=a.x;y[i]=a.y;n[i]=a.n;p[i]=a.p}self.postMessage({type:'chunk',x:x.buffer,y:y.buffer,n:n.buffer,p:p.buffer,box},[x.buffer,y.buffer,n.buffer,p.buffer])}
+ // Typed-array chunk writer: the dense triangular and near-origin Sacks
+ // paths no longer allocate a JS object for every prime / integer site.
+ function packedEmitter(mode,rect,box){
+  const LIMIT=12000;
+  const x=new Float64Array(LIMIT),y=new Float64Array(LIMIT),n=new Float64Array(LIMIT),p=new Uint8Array(LIMIT);
+  let len=0;
+  function flush(){
+   if(!len)return;
+   const xx=x.slice(0,len),yy=y.slice(0,len),nn=n.slice(0,len),pp=p.slice(0,len);
+   self.postMessage({type:'chunk',x:xx.buffer,y:yy.buffer,n:nn.buffer,p:pp.buffer,box},[xx.buffer,yy.buffer,nn.buffer,pp.buffer]);
+   len=0;
+  }
+  function push(xx,yy,nn,pp){
+   const i=len++;x[i]=xx;y[i]=yy;n[i]=nn;p[i]=pp;
+   if(len===LIMIT)flush();
+  }
+  return {push,flush};
+ }
+ // Exact triangular coordinate inversion.  The three sides of shell h are
+ // the integer lattice lines j-i=h, -i-2j=h, and 2i+j=h.
+ // Their shell numbers are 1+3*h*(h+1)/2; only points inside the viewport
+ // are inspected.  This removes per-shell * per-side work at distant corners.
+ function triNumberFromIJ(i,j){
+  const h=Math.max(j-i,-i-2*j,2*i+j);
+  if(h===0)return 1;
+  const start=3*(h-1)*h/2+2;
+  if(j-i===h && -h<i && i<=0)return start-i;   // side A -> B
+  if(-i-2*j===h && -h<j && j<=0)return start+h-j; // side B -> C
+  return start+3*h-i;                            // side C -> A
+ }
+ // Visible triangular-grid scan.  Exact and independent of ring location.
+ // The point lattice is x=sqrt(3)/2*i, y=i/2+j, with integer i,j.
+ // Accordingly each visible integer coordinate is visited exactly once;
+ // the quadratic shell number is a constant-time inverse transformation.
+ function triangle(rect,maxN,mode){
+  const unit=SQ3/2;
+  const i0=Math.ceil(rect.xmin/unit-1e-9),i1=Math.floor(rect.xmax/unit+1e-9);
+  const output=packedEmitter(mode,rect,{...rect});
+  let tested=0;
+  for(let i=i0;i<=i1;i++){
+   const x=unit*i;if(x<rect.xmin||x>=rect.xmax)continue;
+   const j0=Math.ceil(rect.ymin-i/2-1e-9),j1=Math.floor(rect.ymax-i/2+1e-9);
+   for(let j=j0;j<=j1;j++){
+    const y=j+i/2;if(y<rect.ymin||y>=rect.ymax)continue;
+    const n=triNumberFromIJ(i,j);
+    if(n<2||n>maxN)continue;
+    tested++;
+    // Exact parity shortcut before the Miller-Rabin/trial-division pipeline.
+    // 2 is retained; bitwise operators are avoided because n may reach 1e12.
+    if(n>2&&n%2===0)continue;
+    // Send only prime dots: composite positions can be inverted in O(1) on hover.
+    if(!isPrime(n))continue;
+    output.push(x,y,n,1);
+   }
+  }
+  output.flush();
+  self.postMessage({type:'tested',count:tested});
+ }
+ function modang(x){x%=TAU;if(x>Math.PI)x-=TAU;if(x< -Math.PI)x+=TAU;return x}
+ function redBasis(r,derivative){
+  function make(dn,m){return{dn,m,s:dn/(2*r),t:r*(derivative*dn-TAU*m)}}
+  let a=make(1,0),b=make(0,1);
+  function size(v){return v.s*v.s+v.t*v.t}
+  for(let iter=0;iter<90;iter++){
+   if(size(b)<size(a)){const t=a;a=b;b=t}
+   const mu=Math.round((a.s*b.s+a.t*b.t)/size(a));
+   if(!mu)break;
+   b=make(b.dn-mu*a.dn,b.m-mu*a.m);
+  }
+  return[a,b];
+ }
+ function polarTile(box,mode,maxN){
+  const tx=(box.xmin+box.xmax)/2,ty=(box.ymin+box.ymax)/2,rr=Math.hypot(tx,ty);
+  const n0=Math.max(1,Math.min(maxN,Math.round(rr*rr))),theta=Math.atan2(ty,tx);
+  const deriv=mode==='sacks'?Math.PI/rr:TAU*PHI;
+  const [a,b]=redBasis(rr,deriv),det=a.s*b.t-a.t*b.s;
+  if(!Number.isFinite(det)||Math.abs(det)<1e-8)return [];
+  const phase0=mode==='sacks'?TAU*(Math.sqrt(n0)%1):phase(n0),disparity=modang(theta-phase0);
+  const goalS=0,goalT=rr*disparity;
+  const ix=(goalS*b.t-goalT*b.s)/det,iy=(a.s*goalT-a.t*goalS)/det;
+  let anchor=null,dmin=Infinity;
+  for(let i=Math.round(ix)-2;i<=Math.round(ix)+2;i++)for(let j=Math.round(iy)-2;j<=Math.round(iy)+2;j++){
+   const n=n0+i*a.dn+j*b.dn;if(n<1||n>maxN)continue;const p=coord(mode,n),d=(p.x-tx)**2+(p.y-ty)**2;
+   if(d<dmin){anchor={n,p};dmin=d}
+  }
+  if(!anchor)return [];
+  const ux=tx/rr,uy=ty/rr,vtX=-uy,vtY=ux;const toST=(x,y)=>({s:(x-anchor.p.x)*ux+(y-anchor.p.y)*uy,t:(x-anchor.p.x)*vtX+(y-anchor.p.y)*vtY});
+  let mini=Infinity,maxi=-Infinity,minj=Infinity,maxj=-Infinity;
+  for(const x of [box.xmin,box.xmax])for(const y of [box.ymin,box.ymax]){
+   const p=toST(x,y),i=(p.s*b.t-p.t*b.s)/det,j=(a.s*p.t-a.t*p.s)/det;
+   mini=Math.min(mini,i);maxi=Math.max(maxi,i);minj=Math.min(minj,j);maxj=Math.max(maxj,j);
+  }
+  let out=[];
+  const pad=3+Math.ceil(Math.hypot(box.xmax-box.xmin,box.ymax-box.ymin)**2/Math.max(200,rr)/Math.sqrt(Math.abs(det)));
+  for(let i=Math.floor(mini)-pad;i<=Math.ceil(maxi)+pad;i++)for(let j=Math.floor(minj)-pad;j<=Math.ceil(maxj)+pad;j++){
+   const n=anchor.n+i*a.dn+j*b.dn;if(n<1||n>maxN)continue;
+   const p=coord(mode,n);
+   if(p.x>=box.xmin&&p.x<box.xmax&&p.y>=box.ymin&&p.y<box.ymax)out.push({x:p.x,y:p.y,n,p:isPrime(n)?1:0});
+  }
+  return out;
+ }
+
+ // Exact Sacks viewport enumeration: each turn has sqrt(n) in [k,k+1).
+ // Angular window maps to fractional intervals of sqrt(n), hence contiguous n ranges.
+ // Avoids a local linear spiral approximation losing points over many turns.
+ function sacksTile(box,maxN){
+  const clamp0=(a,b)=>a<=0&&b>=0?0:Math.min(Math.abs(a),Math.abs(b));
+  const rmin=Math.hypot(clamp0(box.xmin,box.xmax),clamp0(box.ymin,box.ymax));
+  const rmax=Math.max(...[box.xmin,box.xmax].flatMap(x=>[box.ymin,box.ymax].map(y=>Math.hypot(x,y))));
+  const tx=(box.xmin+box.xmax)/2,ty=(box.ymin+box.ymax)/2,tc=Math.atan2(ty,tx);
+  let amin=Infinity,amax=-Infinity;
+  for(const x of [box.xmin,box.xmax])for(const y of [box.ymin,box.ymax]){
+   let d=Math.atan2(y,x)-tc;d%=TAU;if(d>Math.PI)d-=TAU;if(d< -Math.PI)d+=TAU;
+   amin=Math.min(amin,d);amax=Math.max(amax,d);
+  }
+  // If tile touches the origin, use complete angular turns.
+  if(rmin<1 || Math.max(amax-amin,0)>Math.PI){amin=-Math.PI;amax=Math.PI}
+  const thetaLo=tc+amin-1e-12,thetaHi=tc+amax+1e-12;
+  const parts=[];
+  for(let m=Math.floor(thetaLo/TAU)-1;m<=Math.ceil(thetaHi/TAU)+1;m++){
+   const f0=Math.max(0,(thetaLo-m*TAU)/TAU),f1=Math.min(1,(thetaHi-m*TAU)/TAU);
+   if(f1>=f0)parts.push([f0,f1]);
+  }
+  let out=[];
+  for(let k=Math.floor(rmin)-1;k<=Math.floor(rmax)+1;k++){
+   if(k<0)continue;
+   for(const [a,b] of parts){
+    const u0=Math.max(rmin,k+a),u1=Math.min(rmax,k+b,k+1);
+    if(u1<u0)continue;
+    const n0=Math.max(1,Math.ceil(u0*u0-0.001)),n1=Math.min(maxN,Math.floor(u1*u1+0.001));
+    for(let n=n0;n<=n1;n++){
+     const p=coord('sacks',n);
+     if(p.x>=box.xmin&&p.x<box.xmax&&p.y>=box.ymin&&p.y<box.ymax)out.push({x:p.x,y:p.y,n,p:isPrime(n)?1:0});
+    }
+   }
+  }
+  return out;
+ }
+ function buildPolar(rect,mode,maxN){
+  // For Sacks close to the origin, the old 6x6 tiler redundantly scanned
+  // n=1..rMax² inside *every* tile. Traverse each integer once for the
+  // complete Worker stripe instead. Preserve exact coordinates/prime tests.
+  if(mode==='sacks'){
+   const rmax=Math.max(
+    Math.hypot(rect.xmin,rect.ymin),Math.hypot(rect.xmin,rect.ymax),
+    Math.hypot(rect.xmax,rect.ymin),Math.hypot(rect.xmax,rect.ymax));
+   if(rmax<800){
+    const limit=Math.min(maxN,Math.ceil(rmax*rmax)+5),output=packedEmitter(mode,rect,rect);
+    for(let n=1;n<=limit;n++){
+     const p=coord('sacks',n);
+     if(p.x<rect.xmin||p.x>=rect.xmax||p.y<rect.ymin||p.y>=rect.ymax)continue;
+     output.push(p.x,p.y,n,isPrime(n)?1:0);
+    }
+    output.flush();
+    return;
+   }
+  }
+  const tile=Math.max(56,Math.min(190,(rect.xmax-rect.xmin)/6));
+  const nx=Math.max(1,Math.ceil((rect.xmax-rect.xmin)/tile)),ny=Math.max(1,Math.ceil((rect.ymax-rect.ymin)/tile));
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+   const box={xmin:rect.xmin+(rect.xmax-rect.xmin)*i/nx,xmax:rect.xmin+(rect.xmax-rect.xmin)*(i+1)/nx,
+     ymin:rect.ymin+(rect.ymax-rect.ymin)*j/ny,ymax:rect.ymin+(rect.ymax-rect.ymin)*(j+1)/ny};
+   const rmax=Math.max(...[box.xmin,box.xmax].flatMap(x=>[box.ymin,box.ymax].map(y=>Math.hypot(x,y))));
+   let out=[];
+   if(rmax<800){const nmax=Math.min(maxN,Math.ceil(rmax*rmax)+5);for(let n=1;n<=nmax;n++){const p=coord(mode,n);if(p.x>=box.xmin&&p.x<box.xmax&&p.y>=box.ymin&&p.y<box.ymax)out.push({x:p.x,y:p.y,n,p:isPrime(n)?1:0})}}
+   else out=mode==='sacks'?sacksTile(box,maxN):polarTile(box,mode,maxN);
+   for(let k=0;k<out.length;k+=12000)emit(mode,rect,out.slice(k,k+12000),box);
+  }
+ }
+ function armTerms(mode,steps,origin,rect,maxN){
+  if(mode!=='vogel'||!Array.isArray(steps)||!Number.isSafeInteger(origin)||origin<1)return;
+  // Process the whole 1..maxN arm mathematically, but enumerate only the
+  // radial annulus intersecting the current viewport. Up to 60k true terms
+  // per arm are drawn exactly; denser overviews are deterministically sampled.
+  function clos(v0,v1){return v0>0?v0:(v1<0?-v1:0)}
+  const near=Math.hypot(clos(rect.xmin,rect.xmax),clos(rect.ymin,rect.ymax));
+  const far=Math.max(...[rect.xmin,rect.xmax].flatMap(x=>[rect.ymin,rect.ymax].map(y=>Math.hypot(x,y))));
+  const minN=Math.max(1,Math.floor(near*near)-2),maxRadiusN=Math.min(maxN,Math.ceil(far*far)+2);
+  for(let ai=0;ai<steps.length;ai++){
+   const q=steps[ai];if(!Number.isSafeInteger(q)||q<1||maxRadiusN<minN)continue;
+   const lo=Math.ceil((minN-origin)/q),hi=Math.floor((maxRadiusN-origin)/q),count=hi-lo+1;
+   if(count<=0)continue;
+   const samples=Math.min(count,60000),stride=Math.max(1,Math.ceil(count/samples));
+   let xx=[],yy=[];
+   function flush(){if(!xx.length)return;const x=Float64Array.from(xx),y=Float64Array.from(yy);
+    self.postMessage({type:'arm',armIndex:ai,x:x.buffer,y:y.buffer},[x.buffer,y.buffer]);xx=[];yy=[]}
+   // A bounded stratified representation of the FULL valid domain, never a
+   // local ±5-step truncation. Exact scan when count <= 60k.
+   if(stride===1){
+    for(let k=lo;k<=hi;k++){
+     const n=origin+k*q;if(n<1||n>maxN)continue;
+     const p=coord('vogel',n);
+     if(p.x<rect.xmin||p.x>rect.xmax||p.y<rect.ymin||p.y>rect.ymax)continue;
+     xx.push(p.x);yy.push(p.y);if(xx.length>=6000)flush();
+    }
+   }else{
+    const intervals=Math.ceil(count/stride);
+    for(let i=0;i<intervals;i++){
+     const from=lo+i*stride,to=Math.min(hi,from+stride-1);
+     // Hash in [0,1) avoids visually misleading angular aliasing when q*stride
+     // happens to be near a rational multiple of one golden-angle revolution.
+     const t=((Math.imul((i+1)^Math.imul(q,7919),1103515245)+12345)>>>0)/4294967296;
+     const k=from+Math.floor(t*(to-from+1));
+     const n=origin+k*q;if(n<1||n>maxN)continue;
+     const p=coord('vogel',n);
+     if(p.x<rect.xmin||p.x>rect.xmax||p.y<rect.ymin||p.y>rect.ymax)continue;
+     xx.push(p.x);yy.push(p.y);if(xx.length>=6000)flush();
+    }
+   }
+   flush();
+  }
+ }
+ function formulaTerms(mode,f,rect,maxN){
+  if(!f||!Number.isSafeInteger(f.a)||f.a<=0)return;
+  const D=f.b*f.b-4*f.a*(f.c-maxN);if(D<0)return;const root=Math.sqrt(D),den=2*f.a,lo=Math.ceil((-f.b-root)/den),hi=Math.floor((-f.b+root)/den);
+  // Restrict only the coordinate enumeration, never the exact prime test.
+  // Integer polynomial evaluation must be exact throughout the original span;
+  // unusual large coefficients keep the original full traversal.
+  const maxT=Math.max(Math.abs(lo),Math.abs(hi));
+  let spans=[[lo,hi]];
+  if(Number.isSafeInteger(f.b)&&Number.isSafeInteger(f.c)&&f.a*maxT*maxT+Math.abs(f.b)*maxT+Math.abs(f.c)<Number.MAX_SAFE_INTEGER/4){
+   let lowN,highN;
+   if(mode==='tri'){
+    const hmin=Math.max(0,-2*rect.ymax,rect.ymin+SQ3*rect.xmin,rect.ymin-SQ3*rect.xmax);
+    const hmax=Math.max(-2*rect.ymin,rect.ymax+SQ3*Math.max(Math.abs(rect.xmin),Math.abs(rect.xmax)));
+    const a=Math.max(0,Math.floor(hmin)-2),b=Math.max(0,Math.ceil(hmax)+2);
+    lowN=Math.max(1,1+3*(a-1)*a/2);highN=Math.min(maxN,1+3*b*(b+1)/2);
+   }else{
+    const near=(a,b)=>a<=0&&b>=0?0:Math.min(Math.abs(a),Math.abs(b));
+    const rmin=Math.hypot(near(rect.xmin,rect.xmax),near(rect.ymin,rect.ymax));
+    const rmax=Math.max(Math.hypot(rect.xmin,rect.ymin),Math.hypot(rect.xmin,rect.ymax),Math.hypot(rect.xmax,rect.ymin),Math.hypot(rect.xmax,rect.ymax));
+    lowN=Math.max(1,Math.floor(rmin*rmin)-16);highN=Math.min(maxN,Math.ceil(rmax*rmax)+16);
+   }
+   const value=t=>f.a*t*t+f.b*t+f.c;
+   function first(l,r,test){let end=r+1;while(l<end){const m=l+Math.floor((end-l)/2);if(test(value(m)))end=m;else l=m+1}return l}
+   const turn=Math.floor(-f.b/(2*f.a));spans=[];
+   for(const [l,r,up] of [[lo,Math.min(hi,turn),false],[Math.max(lo,turn+1),hi,true]]){
+    if(l>r)continue;
+    const begin=first(l,r,up?v=>v>=lowN:v=>v<=highN);
+    const end=first(l,r,up?v=>v>highN:v=>v<lowN)-1;
+    if(begin<=end)spans.push([begin,end]);
+   }
+  }
+  let xs=[],ys=[],ps=[];
+  function flush(){if(!xs.length)return;const x=Float64Array.from(xs),y=Float64Array.from(ys),p=Uint8Array.from(ps);self.postMessage({type:'formula',x:x.buffer,y:y.buffer,p:p.buffer},[x.buffer,y.buffer,p.buffer]);xs=[];ys=[];ps=[]}
+  for(const [begin,end] of spans)for(let t=begin;t<=end;t++){
+   const n=f.a*t*t+f.b*t+f.c;if(n<2||n>maxN)continue;const p=coord(mode,n);
+   if(p.x<rect.xmin||p.x>rect.xmax||p.y<rect.ymin||p.y>rect.ymax)continue;
+   xs.push(p.x);ys.push(p.y);ps.push(isPrime(n)?1:0);if(xs.length>=12000)flush();
+  }
+  flush();
+ }
+ self.onmessage=e=>{
+  const d=e.data;try{
+   tStart=performance.now();const {mode,rect,maxN,formula,formulaRect,arms,armOrigin}=d;
+   if(formula)formulaTerms(mode,formula,formulaRect||rect,maxN);
+   if(arms)armTerms(mode,arms,armOrigin,formulaRect||rect,maxN);
+   if(mode==='tri')triangle(rect,maxN,mode);else buildPolar(rect,mode,maxN);
+   self.postMessage({type:'done',elapsed:performance.now()-tStart});
+  }catch(err){self.postMessage({type:'error',message:String(err?.stack||err)})}
+ };
+}
+// ===== end extended main-view module =====
+
+function render(){if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
+const showSquareGrid=scale>=15;
+if(showSquareGrid){const gridPath=new Path2D(),hs=scale*.48;for(let y=ymin;y<=ymax;y++){const sy=H/2-(y-camY)*scale;for(let x=xmin;x<=xmax;x++){const n=ulamNumber(x,y);if(n<1||n>MAX_N)continue;const sx=W/2+(x-camX)*scale;gridPath.rect(sx-hs,sy-hs,hs*2,hs*2);}}ctx.strokeStyle='rgba(150,180,235,.68)';ctx.lineWidth=1.15;ctx.stroke(gridPath)}
 const hasVisiblePrimeData=visiblePrimeDataReady(xmin,xmax,ymin,ymax);
 if(hasVisiblePrimeData){
 const columnMajor=Math.abs(camX)>Math.abs(camY);
@@ -2465,7 +3835,7 @@ function drawCredit(){
 }
 
 function numberClass(n){if(n===1)return{label:tr('neither'),cls:'neither'};const p=cacheHasNumber(n)?isPrime(n):isPrimeExactSingle(n);if(p){if(activeFormula&&inSequence(n,activeFormula))return{label:tr('activePrime'),cls:'activePrime'};return{label:tr('prime'),cls:'prime'}}return{label:tr('composite'),cls:'composite'}}
-function updateHover(clientX,clientY){if(latticeMode==='hex')return hexUpdateHover(clientX,clientY);if(!ready){hoverTip.style.display='none';return}const r=cv.getBoundingClientRect(),mx=clientX-r.left,my=clientY-r.top;if(mx<0||my<0||mx>r.width||my>r.height){hoverTip.style.display='none';return}const x=Math.round(camX+(mx-W/2)/scale),y=Math.round(camY-(my-H/2)/scale);if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R){hoverTip.style.display='none';return}const n=ulamNumber(x,y);if(n<1||n>MAX_N){hoverTip.style.display='none';return}const c=numberClass(n);hoverTip.innerHTML=`<b>${n.toLocaleString()}</b> · <span class="${c.cls}">${c.label}</span><br><span style="color:#9eabc0">(${x.toLocaleString()}, ${y.toLocaleString()})</span>`;hoverTip.style.display='block';const tw=hoverTip.offsetWidth,th=hoverTip.offsetHeight,pad=12;let left=mx+14,top=my+14;if(left+tw+pad>W)left=mx-tw-14;if(top+th+pad>H)top=my-th-14;hoverTip.style.left=Math.max(6,left)+'px';hoverTip.style.top=Math.max(6,top)+'px'}
+function updateHover(clientX,clientY){if(isExtraMode())return extraUpdateHover(clientX,clientY);if(latticeMode==='hex')return hexUpdateHover(clientX,clientY);if(!ready){hoverTip.style.display='none';return}const r=cv.getBoundingClientRect(),mx=clientX-r.left,my=clientY-r.top;if(mx<0||my<0||mx>r.width||my>r.height){hoverTip.style.display='none';return}const x=Math.round(camX+(mx-W/2)/scale),y=Math.round(camY-(my-H/2)/scale);if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R){hoverTip.style.display='none';return}const n=ulamNumber(x,y);if(n<1||n>MAX_N){hoverTip.style.display='none';return}const c=numberClass(n);hoverTip.innerHTML=`<b>${n.toLocaleString()}</b> · <span class="${c.cls}">${c.label}</span><br><span style="color:#9eabc0">(${x.toLocaleString()}, ${y.toLocaleString()})</span>`;hoverTip.style.display='block';const tw=hoverTip.offsetWidth,th=hoverTip.offsetHeight,pad=12;let left=mx+14,top=my+14;if(left+tw+pad>W)left=mx-tw-14;if(top+th+pad>H)top=my-th-14;hoverTip.style.left=Math.max(6,left)+'px';hoverTip.style.top=Math.max(6,top)+'px'}
 function formatZoomFactor(){
   const z=scale/START_SCALE;
   let s=z>=10?z.toFixed(1):z.toFixed(2);
@@ -2550,6 +3920,7 @@ function finishPointer(e,cancelled=false){
   }
   pinchState=null;drag=false;
   if(!cancelled&&wasSingle&&!moved&&!gestureWasPinch&&ready){
+    if(isExtraMode()){extraSelectScreen(p.x,p.y);if(e.pointerType==='mouse')updateHover(e.clientX,e.clientY);return}
     const pick=latticeMode==='hex'?(()=>{const h=hexAtPixel(p.x,p.y);return hexRound(h.x,h.y)})():{x:Math.round(camX+(p.x-W/2)/scale),y:Math.round(camY-(p.y-H/2)/scale)};
     if(validXY(pick.x,pick.y))selectPoint(pick.x,pick.y);
   }
@@ -2568,11 +3939,12 @@ function setMiniZoomIndex(next){
 }
 miniZoomIn.onclick=e=>{e.stopPropagation();setMiniZoomIndex(miniZoomIndex+1)};
 miniZoomOut.onclick=e=>{e.stopPropagation();setMiniZoomIndex(miniZoomIndex-1)};
-miniCv.addEventListener('click',e=>{if(!showMinimap||!ready||!miniSide)return;const r=miniCv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,v=miniViewport();if(latticeMode==='hex'){
+miniCv.addEventListener('click',e=>{if(!showMinimap||!ready||!miniSide)return;const r=miniCv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,v=miniViewport();if(isExtraMode()){const px=mx/r.width*miniSide,py=my/r.height*miniSide;camX=v.cx+((px/miniSide)*2-1)*v.r;camY=v.cy+(1-(py/miniSide)*2)*v.r;
+}else if(latticeMode==='hex'){
   const p=hexFromMinimap(mx/r.width*miniSide,my/r.height*miniSide,v);camX=p.x;camY=p.y;
 }else{camX=v.cx+((mx/r.width)*2-1)*v.r;camY=v.cy+(1-(my/r.height)*2)*v.r}clamp();sched(0)});
 
-function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready)selectPoint(c.x,c.y,0);else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
+function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
 function updateRangeUI(){document.title='Ulam Spiral';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
@@ -2585,7 +3957,6 @@ function showFallbackActions(failedTarget){
   }
   fallbackActions.style.display='flex';
 }
-function showProgress(target){hideFallbackActions();progressTitle.textContent='Building prime sieve…';barIn.style.width='0%';ptext.textContent='0%';progressWrap.style.display='flex'}
 /* Local prime cache engine, 2026-10-07. B+D safety patch: global bitmap LRU; legacy saved statistics background worker.
    The 1T world is NOT stored as one global bitset. Instead, the current
    viewport is mapped to a radial Ulam-shell band. That shell band is a single
@@ -3171,7 +4542,7 @@ function localSieveSettings(blocking=false,workBytes=0){
   return{workers,segmentBytes};
 }
 function queueLocalCacheEnsure(delay=140){
-  if(latticeMode==='hex')return;
+  if(latticeMode!=='square')return;
   if(!ready||!W||!H)return;clearTimeout(localCacheTimer);localCacheTimer=setTimeout(ensureLocalPrimeCache,delay);
 }
 function startLocalCacheBuild(target,covered){
@@ -3205,7 +4576,7 @@ function startLocalCacheBuild(target,covered){
   }).catch(error=>{if(token!==sieveToken||error.name==='AbortError')return;localPrimePreview=null;sieveWorker=null;localBuildTarget=null;localCacheBlocking=false;console.error('[local prime cache]',error);requestRender()});
 }
 function ensureLocalPrimeCache(){
-  if(latticeMode==='hex')return;
+  if(latticeMode!=='square')return;
   if(!ready||!W||!H)return;
   if(ensureBranchPrimeCache())return;
   if(ensureCornerPrimeCache())return;
@@ -3447,8 +4818,8 @@ async function preloadStartupAccelerator(){
 async function setRange(target){
   if(sieveWorker){++sieveToken;sieveWorker.terminate();sieveWorker=null}localBuildTarget=null;
   stopSavedStatsBackfill();++startupAccelToken;if(branchSieveTask){branchSieveTask.terminate();branchSieveTask=null}if(cornerSieveTask){cornerSieveTask.terminate();cornerSieveTask=null}resetLocalSievePool();resetBranchSievePool();resetPointAnalyzeWorkerPool();recentPrimeCaches=[];recentBranchPrimeCaches=[];recentCornerPrimeCaches=[];branchPrimeCache=null;branchPrimePreview=null;branchBuildTarget=null;cornerPrimeCache=null;cornerPrimePreview=null;cornerBuildTarget=null;branchAdaptiveModes=null;MAX_N=target;MAX_R=radiusFor(target);updateRangeUI();formulaStatCache.clear();localPrimeCache={low:0,high:0,firstOdd:1,oddCount:0,bits:null,rLo:0,rHi:-1,bytes:0};localPrimePreview=null;
-  ready=false;initBasePrimeData();initQuickFormulaRows();HEX_R=hexRadiusFor(MAX_N);hexCancelBuild();hexCache=null;hexHistory=[];clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);
+  extraCancelBuild();resetExtraWorkerPool();ready=false;initBasePrimeData();initQuickFormulaRows();HEX_R=hexRadiusFor(MAX_N);hexCancelBuild();resetHexWorkerPool();hexCache=null;hexHistory=[];clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);
 }
-initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();try{if(localStorage.getItem('ULAM_LATTICE_MODE')==='hex')latticeMode='hex'}catch(_){}updateShapeUI();refreshSearchABForLattice();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
+initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();try{const mode=localStorage.getItem('ULAM_LATTICE_MODE');if(['square','hex','tri','sacks'].includes(mode)||(mode==='vogel'&&ENABLE_VOGEL_MODE))latticeMode=mode}catch(_){}updateShapeUI();refreshSearchABForLattice();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
 })();
 </script></body></html>
