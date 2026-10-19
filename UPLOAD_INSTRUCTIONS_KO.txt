@@ -1,0 +1,27 @@
+Ulam Spiral & Prime-Generating Quadratic Explorer v1.2.26 — GitHub CI 수정 안내
+
+문제 원인:
+ - 이전 scripts/verify_release.py의 버전 v1.1.1 고정
+ - 삭제된 shapeSquare/shapeHex/shapeToggle UI 컨트롤 검사
+ - `Release: vX.Y.Z` 뒤에 BETA 설명이 붙으면 실패
+ - 버전 번호 없는 정식 HTML과 index.html 불일치
+
+이번 ZIP의 업로드 대상:
+ 1. index.html                           (저장소 루트, 기존 파일 교체)
+ 2. Ulam Spiral & Prime-Generating Quadratic Explorer.html  (루트, 기존 파일 교체)
+ 3. Ulam Spiral & Prime-Generating Quadratic Explorer v1.2.26.html (루트, 추가/교체)
+ 4. scripts/verify_release.py            (기존 scripts/ 내 파일 교체)
+
+GitHub 웹으로 작업한다면 HTML 3개는 Add file > Upload files 로 업로드하고,
+scripts/verify_release.py는 해당 파일을 연 뒤 Edit(연필)로 새 코드 전체를 붙여넣으면 된다.
+루트에 verify_release.py 를 추가하면 경로가 틀리니 주의한다.
+
+보조 파일: checksums_v1.2.26.sha256 (이번 HTML 3개만 대상으로 만든 별도 기록)
+기존 checksums.sha256에는 다른 파일들의 해시가 있을 수 있으므로 임의로 덮어쓰지 않았다.
+만약 verify.yml이 구형 checksums.sha256까지 검증한다면 별도 갱신 필요.
+
+검증:
+ python3 scripts/verify_release.py --require-node
+ sha256sum -c checksums_v1.2.26.sha256
+
+원본 애플리케이션 HTML 코드는 1바이트도 수정하지 않았다.
