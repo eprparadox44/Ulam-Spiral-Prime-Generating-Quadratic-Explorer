@@ -1,3 +1,7 @@
-# GitHub Actions verification: index.html and the official unversioned HTML file
-# must be byte-for-byte identical. Do not rename only one of them.
-# Upload the whole set to the repository root and keep existing scripts/workflows.
+v1.3.0 update files for the existing repository (current public version v1.2.26).
+1. Extract this ZIP at the root of an existing repository checkout and overwrite matching paths.
+2. Preserve the v1.2.26 and older versioned HTML files (not included in this overlay).
+3. Include .github/workflows/verify.yml and tests/ when copying.
+4. Run: python3 scripts/verify_release.py --require-node && bash tests/run_all.sh
+5. Commit/push; confirm GitHub Actions and Pages functionality before tagging v1.3.0.
+See PUBLISHING.ko.md. No GitHub upload was performed during package preparation.

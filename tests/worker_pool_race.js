@@ -1,84 +1,11 @@
 #!/usr/bin/env node
-/* Deterministic Worker-initialization race regression test, no browser required.
-   Delays the cold Worker's ready event while the warm Worker completes the job.
-   Verifies that the cold Worker is never reused before it is ready. */
+/* Cold Worker readiness race. Same contract as the GitHub 1.2.26 regression,
+   but executed against the supplied 1.3.3 standalone HTML. */
 'use strict';
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
-const assert = require('node:assert/strict');
-
-const root = path.resolve(__dirname, '..');
-const htmlPath = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'index.html');
-const html = fs.readFileSync(htmlPath, 'utf8');
-const script = html.match(/<script(?:\s+[^>]*)?>([\s\S]*?)<\/script\s*>/i)?.[1];
-assert(script, 'embedded script missing');
-function getFunction(name, nextName) {
-  const start = script.indexOf(`function ${name}(`);
-  const end = script.indexOf(`function ${nextName}(`, start);
-  assert(start >= 0 && end > start, `${name} extraction failed`);
-  return script.slice(start, end);
-}
-function contextFor(type) {
-  let created = [], nextId = 0;
-  class FakeWorker {
-    constructor() { this.id = nextId++; this.ready = false; this.terminated = false; this.onmessage = null; this.onerror = null; created.push(this); }
-    postMessage(d) {
-      if (this.terminated) throw new Error('postMessage to terminated Worker');
-      if (d.type === 'init') {
-        // A cold Worker can still be performing asynchronous WASM initialization.
-        setTimeout(() => {
-          if (this.terminated) return;
-          this.ready = true;
-          this.onmessage?.({data: {type: 'ready'}});
-        }, 125);
-      } else if (d.type === 'job') {
-        setImmediate(() => {
-          if (this.terminated) return;
-          if (!this.ready) { this.onmessage?.({data: {type:'error',message:'job before ready'}}); return; }
-          const vertical = d.branch === 'right' || d.branch === 'left';
-          const innerLen = vertical ? d.ymax - d.ymin + 1 : d.xmax - d.xmin + 1;
-          const lineBytes = Math.ceil(innerLen / 8);
-          const buffer = new Uint8Array(lineBytes * d.outerCount).buffer;
-          this.onmessage?.({data: {type:'stripe', outerOffset:d.outerOffset, outerCount:d.outerCount, lineBytes, buffer, computeMs:0}});
-        });
-      } else throw Error('Unexpected FakeWorker message: ' + d.type);
-    }
-    terminate() { this.terminated = true; this.onmessage = null; this.onerror = null; }
-  }
-  const warm = new FakeWorker(); warm.ready = true;
-  const idle = [warm];
-  const context = {
-    Worker: FakeWorker,
-    performance, setTimeout,
-    Math, Uint8Array, Promise, Error, console: {info() {}},
-    window: {}, camX:101, camY:101, MAX_N:1000000000000,
-    idleBranchSieveWorkers: idle, basePrimes:[2,3,5,7,11],
-    branchPoolCap: () => 4, branchWorkerCap: () => 4,
-    branchBucketForJob: () => ({mode: 1, threshold:16384}),
-    ensureBranchWorkerURL: () => 'fake-worker', branchSievePoolURL: 'fake-worker',
-    branchKey: (x,y) => Math.abs(x) > Math.abs(y) ? (x>0?'right':'left') : (y>0?'bottom':'top')
-  };
-  vm.createContext(context);
-  vm.runInContext(type==='corner' ? getFunction('createCornerUnifiedTask','startCornerCacheBuild') : getFunction('createBranchPrimeRect','branchSieveSettings'),context);
-  return {context, idle, created};
-}
-async function run(type) {
-  const {context, idle, created} = contextFor(type);
-  const target=type==='corner' ? {
-    xmin:99,xmax:103,ymin:99,ymax:103,branches:['right','bottom'],high:1000000000000
-  } : {xmin:100,xmax:115,ymin:0,ymax:7,branch:'right',high:1000000000000};
-  const opts = type==='corner' ? {workers:2, stripeLines:8} : {workers:2, stripeLines:4};
-  const build=()=>type==='corner'?context.createCornerUnifiedTask(target,opts):context.createBranchPrimeRect(target,opts);
-  const first = build(); await first.promise;
-  // One initialized Worker finished all jobs; one cold Worker never became ready.
-  assert(created.length>=2, `No cold worker created in ${type}`);
-  assert(!created[1].ready, `Cold Worker was unexpectedly already ready in ${type}`);
-  assert(created[1].terminated, `Cold Worker must be terminated during cleanup in ${type}`);
-  assert(idle.every(w=>w.ready), `Unready Worker returned to idle pool in ${type}`);
-  const second = build(); await second.promise;
-  assert(idle.every(w=>w.ready), `Unready Worker reused in second ${type} run`);
-  for (const w of created) w.terminate();
-  process.stdout.write(`PASS: ${type} cold-worker race, cleanup and subsequent reuse\n`);
-}
-(async()=>{await run('corner');await run('branch')})().catch(err=>{console.error('FAIL:',err.stack);process.exitCode=1});
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const src=fs.readFileSync(process.argv[2]||path.resolve(__dirname,'../Ulam_Spiral_v1.3.4_POINT_SEQUENCE_DEDUP_BETA.html'),'utf8').match(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script\s*>/i)?.[1];assert(src);
+function between(a,b){const x=src.indexOf(`function ${a}(`),y=src.indexOf(`function ${b}(`,x);assert(x>=0&&y>x,a);return src.slice(x,y)}
+function make(kind){const created=[];class FakeWorker{constructor(){this.ready=false;this.terminated=false;created.push(this)}postMessage(d){if(this.terminated)throw Error('post to terminated worker');if(d.type==='init'){setTimeout(()=>{if(!this.terminated){this.ready=true;this.onmessage?.({data:{type:'ready'}})}},125)}else if(d.type==='job'){setImmediate(()=>{if(this.terminated)return;if(!this.ready){this.onmessage?.({data:{type:'error',message:'job before ready'}});return}const vertical=d.branch==='right'||d.branch==='left';const inner=vertical?d.ymax-d.ymin+1:d.xmax-d.xmin+1;const lineBytes=Math.ceil(inner/8);this.onmessage?.({data:{type:'stripe',outerOffset:d.outerOffset,outerCount:d.outerCount,lineBytes,buffer:new Uint8Array(lineBytes*d.outerCount).buffer,computeMs:0}})})}else throw Error('unexpected '+d.type)}terminate(){this.terminated=true;this.onmessage=null;this.onerror=null}}
+const warm=new FakeWorker();warm.ready=true;const idle=[warm];const c={Worker:FakeWorker,performance,setTimeout,Math,Uint8Array,Promise,Error,console:{info(){}},window:{},camX:101,camY:101,MAX_N:1e12,idleBranchSieveWorkers:idle,basePrimes:[2,3,5,7,11],branchPoolCap:()=>4,branchWorkerCap:()=>4,branchBucketForJob:()=>({mode:1,threshold:16384}),ensureBranchWorkerURL:()=> 'fake',branchSievePoolURL:'fake',branchKey:(x,y)=>Math.abs(x)>Math.abs(y)?(x>0?'right':'left'):(y>0?'bottom':'top')};vm.createContext(c);vm.runInContext(kind==='corner'?between('createCornerUnifiedTask','startCornerCacheBuild'):between('createBranchPrimeRect','branchSieveSettings'),c);return {c,created,idle}}
+async function run(kind){const {c,created,idle}=make(kind);const target=kind==='corner'?{xmin:99,xmax:103,ymin:99,ymax:103,branches:['right','bottom'],high:1e12}:{xmin:100,xmax:115,ymin:0,ymax:7,branch:'right',high:1e12};const opts=kind==='corner'?{workers:2,stripeLines:8}:{workers:2,stripeLines:4};const build=()=>kind==='corner'?c.createCornerUnifiedTask(target,opts):c.createBranchPrimeRect(target,opts);await build().promise;assert(created.length>=2);assert(!created[1].ready);assert(created[1].terminated);assert(idle.every(w=>w.ready));await build().promise;assert(idle.every(w=>w.ready));created.forEach(w=>w.terminate());console.log('PASS:',kind,'cold Worker and subsequent reuse')}
+(async()=>{await run('corner');await run('branch')})().catch(e=>{console.error(e.stack);process.exitCode=1});
