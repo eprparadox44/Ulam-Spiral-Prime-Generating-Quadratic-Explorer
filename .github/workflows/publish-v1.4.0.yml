@@ -1,0 +1,42 @@
+name: Publish official v1.4.0 release (one-time)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v1.4.0.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the official v1.4.0 contents
+        uses: actions/checkout@v4
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate v1.4.0 standalone files
+        run: |
+          python3 scripts/verify_release.py --require-node
+          sha256sum -c checksums_v1.4.0.sha256
+      - name: Create release and attach standalone HTML
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view v1.4.0 >/dev/null 2>&1; then
+            echo 'v1.4.0 release already exists; skipping.'
+          else
+            gh release create v1.4.0 \
+              'Ulam Spiral & Prime-Generating Quadratic Explorer v1.4.0.html' \
+              'checksums_v1.4.0.sha256' \
+              --target 14cbfc5ac4f5656294bb136566c1bbcfdbdb1ee7 \
+              --title 'v1.4.0 — 100 Trillion Ulam & Quadratic Explorer' \
+              --notes-file RELEASE_NOTES_v1.4.0.md \
+              --latest
+          fi
