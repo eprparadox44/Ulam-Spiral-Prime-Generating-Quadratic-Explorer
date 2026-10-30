@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-30 — v1.4.0 (100T stable release)
+
+- Promoted OPT16 to the official v1.4.0 standalone HTML (100 trillion).
+- Accelerated distant Square sides and corners with full-range/hybrid WASM, cache and redraw improvements.
+- Improved selected-point prime-statistics accuracy and speed using modulo-2 parity fixes and symmetry/odd-class reductions.
+- Enabled density-conditioned formula overlays in all five minimaps; expanded non-Klauber c search to ±70 million.
+- Retained older public HTML distributions and their release notes.
+
+
 ## 2026-10-28 — v1.3.0 (first v1.3 GitHub publication)
 
 - Klauber Triangle mode: geometry-aware quadratic exploration, long-line filter, large constant-term search.

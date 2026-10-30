@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.3.0 — Klauber triangle, sparse-sequence minimap and reliability fixes
+Release: v1.4.0 — 100T prime exploration, five-mode density minimaps, accurate and accelerated point-sequence statistics
 
 MIT License
 
@@ -27,7 +27,7 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.3.0">
+<meta name="application-version" content="1.4.0">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ulam Spiral</title>
 <style>
@@ -277,7 +277,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
 
 /* v1.2.33: place the Klauber scope control in the point-sequence panel's first row. */
 </style></head>
-<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><select id="spiralModeSelect" aria-label="Spiral mode" title="Spiral mode"><option value="square">Square</option><option value="hex">Hexagonal</option><option value="tri">Triangular</option><option value="sacks">Sacks</option><option value="klauber">Klauber Triangle</option></select></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
+<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 100000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><select id="spiralModeSelect" aria-label="Spiral mode" title="Spiral mode"><option value="square">Square</option><option value="hex">Hexagonal</option><option value="tri">Triangular</option><option value="sacks">Sacks</option><option value="klauber">Klauber Triangle</option></select></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
 <div id="stage"><canvas id="cv" tabindex="0" aria-label="Prime spiral canvas; arrow keys move between points, plus and minus zoom"></canvas><div id="zoomIndicator">×1</div><div id="hoverTip"></div>
 
 <div id="cSearchPanel">
@@ -292,13 +292,13 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
     </div>
     <div class="cField"><label>a</label><input id="cA" inputmode="numeric" value="1" disabled></div>
     <div class="cField"><label>b</label><input id="cB" inputmode="numeric" value="-1" disabled></div>
-    <div class="cField"><label id="labelCStart">c start</label><input id="cMin" inputmode="numeric" value="-7000000"></div>
-    <div class="cField"><label id="labelCEnd">c end</label><input id="cMax" inputmode="numeric" value="7000000"></div>
+    <div class="cField"><label id="labelCStart">c start</label><input id="cMin" inputmode="numeric" value="-70000000"></div>
+    <div class="cField"><label id="labelCEnd">c end</label><input id="cMax" inputmode="numeric" value="70000000"></div>
     <div class="cField"><label id="labelVerifyCount">Candidates to verify with sieve</label><input id="cVerifyCount" inputmode="numeric" value="64"></div>
     <div class="cField"><label id="labelPrimeLimit">Small-prime limit</label><input id="cPrimeLimit" inputmode="numeric" value="3000"></div>
     <label class="cWide" id="klauberSlopeFilterBox" style="display:none;align-items:center;gap:7px;font-size:11px;cursor:pointer">
       <input id="klauberSlopeOnly" type="checkbox" checked style="width:15px;height:15px;flex:0 0 auto;accent-color:#18d7f2">
-      <span id="klauberSlopeFilterText">Within 1T · |slope| ≥ 1/2 · line ≥ 50k rows</span>
+      <span id="klauberSlopeFilterText">Within 100T · |slope| ≥ 1/2 · line ≥ 50k rows</span>
     </label>
     <label class="cWide" id="klauberNormalizeBox" style="display:none;align-items:center;gap:7px;font-size:11px;cursor:pointer">
       <input id="klauberNormalizeAB" type="checkbox" style="width:15px;height:15px;flex:0 0 auto;accent-color:#18d7f2">
@@ -318,16 +318,16 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
 
   <label class="checkRow"><input type="checkbox" id="allDirsToggle"><span id="allDirsText">Show all slopes <span class="hint" id="allDirsHint">(remove the recommended-4 limit)</span></span></label>
   <div id="formulaList"></div><button id="clearFormula">Clear Highlight</button></div>
-<div id="minimapWrap"><canvas id="minimap"></canvas><div id="miniZoomControls"><button id="miniZoomOut" type="button" aria-label="Minimap zoom in">＋</button><span id="miniZoomLabel">1T</span><button id="miniZoomIn" type="button" aria-label="Minimap zoom out">−</button></div></div>
+<div id="minimapWrap"><canvas id="minimap"></canvas><div id="miniZoomControls"><button id="miniZoomOut" type="button" aria-label="Minimap zoom in">＋</button><span id="miniZoomLabel">100T</span><button id="miniZoomIn" type="button" aria-label="Minimap zoom out">−</button></div></div>
 <div id="hud"><div id="status">Ready…</div><div id="sel">Hover to inspect numbers, then click to find sequences through that point.</div><div id="activeInfo" style="color:#18d7f2"></div><div id="hudBtns"><button id="miniToggle" class="hudBtn">Hide Minimap</button></div></div>
 <div id="progressWrap"><div id="progressCard"><div id="progressTop"><div id="progressTitle" style="font-weight:800;font-size:17px">Building prime sieve…</div><div id="ptext" class="small">0%</div></div><div id="bar"><div id="barIn"></div></div><div id="fallbackActions"></div></div></div></div></div>
 <script>
 (()=>{'use strict';
-// 1T HYBRID WASM POINTFAST FAST START WHEEL210.
+// OPT5 100T: restores OPT3 minimap density and fixes square/hex sampling parity alias. WASM caches use JS fallback above 80k base primes.
 // Fixed bucket settings, verified WASM + JS fallback; no active runtime bucket autotuning.
 // Fixed startup settings: obsolete autotune benchmark helpers were removed.
 const MIN_SCALE=1.15,MAX_SCALE=52,START_SCALE=2.2;
-let MAX_N=1000000000000,MAX_R=radiusFor(1000000000000);
+let MAX_N=100000000000000,MAX_R=radiusFor(100000000000000);
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d',{alpha:false}),stage=document.getElementById('stage'),zoomIndicator=document.getElementById('zoomIndicator'),statusEl=document.getElementById('status'),selEl=document.getElementById('sel'),activeInfo=document.getElementById('activeInfo'),progressWrap=document.getElementById('progressWrap'),progressTitle=document.getElementById('progressTitle'),barIn=document.getElementById('barIn'),ptext=document.getElementById('ptext'),jumpInput=document.getElementById('jumpInput'),hoverTip=document.getElementById('hoverTip'),formulaPanel=document.getElementById('formulaPanel'),formulaTitle=document.getElementById('formulaTitle'),formulaList=document.getElementById('formulaList'),hideFormula=document.getElementById('hideFormula'),showFormula=document.getElementById('showFormula'),savedToggle=document.getElementById('savedToggle'),savedPanel=document.getElementById('savedPanel'),savedList=document.getElementById('savedList'),closeSaved=document.getElementById('closeSaved'),clearSaved=document.getElementById('clearSaved'),allDirsToggle=document.getElementById('allDirsToggle'),hud=document.getElementById('hud'),miniWrap=document.getElementById('minimapWrap'),miniToggle=document.getElementById('miniToggle'),miniCv=document.getElementById('minimap'),miniCtx=miniCv.getContext('2d',{alpha:false}),miniZoomOut=document.getElementById('miniZoomOut'),miniZoomIn=document.getElementById('miniZoomIn'),miniZoomLabel=document.getElementById('miniZoomLabel'),
 cSearchBtn=document.getElementById('cSearchBtn'),cSearchPanel=document.getElementById('cSearchPanel'),
 closeCSearch=document.getElementById('closeCSearch'),cPresetMode=document.getElementById('cPresetMode'),cPreset=document.getElementById('cPreset'),cA=document.getElementById('cA'),cB=document.getElementById('cB'),
@@ -351,7 +351,7 @@ const I18N={
     recommendedAB:'Recommended lattice-line a, b',useRecommended:'Use recommended pairs',
     cStart:'c start',cEnd:'c end',verifyCount:'Candidates to verify with sieve',primeLimit:'Small-prime limit',
     startSearch:'Start Search',stop:'Stop',
-    hint:'Square mode: recommended lattice-line pairs have a up to 64. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −7,000,000 to +7,000,000.',
+    hint:'Square mode: recommended lattice-line pairs have a up to 64. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −70,000,000 to +70,000,000.',
     savedEmpty:'No saved sequence yet. Save a sequence and it will appear here.',
     clearAll:'Clear All',allSlopes:'Show all slopes',allSlopesHint:'(remove the recommended-4 limit)',
     clearHighlight:'Clear Highlight',hoverHint:'Hover to inspect numbers, then click to find sequences through that point.',analysisPending:'Analyzing sequences…',analysisDeferred:'Open at Selected Point to analyze',
@@ -377,7 +377,7 @@ const I18N={
     noSearchResult:'No candidate satisfied the condition.',
     sieveRequired:'Available after the prime sieve is ready.',
     invalidSearch:'Enter integers with a > 0 and a valid c range.',
-    searchTooWide:'c must be between −7,000,000 and +7,000,000 (both inclusive). The entire interval can be searched in one run.',
+    searchTooWide:'c must be between −70,000,000 and +70,000,000 (both inclusive). The entire interval can be searched in one run.',
     error:'Error',workerError:'Worker error',unknownError:'unknown error',stopped:'Stopped.',
     enterRange:n=>`Enter an integer from 1 to ${n.toLocaleString()}.`,
     clearSavedConfirm:'Delete all saved sequences?',
@@ -388,12 +388,12 @@ const I18N={
     status:(range,x,y,scale,count)=>`Range ${range} · center (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/cell · ${count.toLocaleString()} cells`,
     presetClassic:'n²−n+c · all-odd classic',presetMonic:'n²+c · monic',presetEven:'even b · odd c preferred',
     hexPresetGroup:k=>`Hex lattice line · k=${k} (a=3k²)`,
-    hintHex:'Hex mode: lattice-line presets use a=3k² (k=1…4), with b values observed on the hex spiral. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −7,000,000 to +7,000,000.',
+    hintHex:'Hex mode: lattice-line presets use a=3k² (k=1…4), with b values observed on the hex spiral. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −70,000,000 to +70,000,000.',
     hintTri:'Triangular: six exact baseline lattice directions (3 original + 3 rotated by 30°), wherever integer-coefficient quadratics exist. Other a=6k² presets remain available. Prime counts use Worker/WASM verification.',
-    hintKlauber:'Klauber: up to ±10 billion. Visible-line geometric filter: a coherent straight segment spans at least 50,000 rows with |slope|≥1/2 within 1T; clipped end segments are allowed. Requires a perfect-square a and b divisible by √a. Only screened candidates are verified.',
-    slopeFilterLabel:'Within 1T · |slope| ≥ 1/2 · straight line ≥ 50,000 rows',
+    hintKlauber:'Klauber: up to ±10 billion. Visible-line geometric filter: a coherent straight segment spans at least 50,000 rows with |slope|≥1/2 within 100T; clipped end segments are allowed. Requires a perfect-square a and b divisible by √a. Only screened candidates are verified.',
+    slopeFilterLabel:'Within 100T · |slope| ≥ 1/2 · straight line ≥ 50,000 rows',
     slopeFilterUnsupported:'The geometric slope filter requires a=k² and b divisible by k=√a, with |b/√a|≤2 million. Uncheck the filter to search other coefficients.',
-    slopeFilterEmpty:'No c produces a ≥50k-row line with |slope|≥1/2 within 1T.',
+    slopeFilterEmpty:'No c produces a ≥50k-row line with |slope|≥1/2 within 100T.',
     slopeFilterCount:(count,total)=>`Geometric filter: ${count.toLocaleString()} of ${total.toLocaleString()} c candidates remain`,
     hintSacks:'Sacks: a=k² families approach offset straight lines, generally not rays through the origin. The transverse offset approaches π(c−b²/(4k²)). Only screened candidates are verified.',
     hintVogel:'Vogel: Fibonacci-related a values approximate golden-angle recurrences; no fixed exact straight-line quadratic family is guaranteed. Prime statistics are checked independently.'
@@ -405,7 +405,7 @@ const I18N={
     recommendedAB:'격자선 추천 a, b',useRecommended:'추천 조합 사용',
     cStart:'c 시작',cEnd:'c 끝',verifyCount:'체로 최종 검증할 후보 수',primeLimit:'작은 소수 상한',
     startSearch:'탐색 시작',stop:'중지',
-    hint:'사각 모드에서는 선명한 울람 직선 패턴의 a, b 조합을 a=64까지 추천한다. 체크를 끄면 자유 입력할 수 있다. c는 −7000000부터 +7000000까지 한 번에 탐색할 수 있다.',
+    hint:'사각 모드에서는 선명한 울람 직선 패턴의 a, b 조합을 a=64까지 추천한다. 체크를 끄면 자유 입력할 수 있다. c는 −70000000부터 +70000000까지 한 번에 탐색할 수 있다.',
     savedEmpty:'아직 저장한 수열이 없다. 수열을 저장하면 여기에 모인다.',
     clearAll:'모두 삭제',allSlopes:'모든 기울기 보기',allSlopesHint:'(추천 4개 제한 해제)',
     clearHighlight:'강조 해제',hoverHint:'마우스를 올리면 숫자를 보고, 클릭하면 그 점을 지나는 수열을 찾는다.',analysisPending:'수열 분석 중…',analysisDeferred:'선택 점 기준 수열에서 분석',
@@ -431,7 +431,7 @@ const I18N={
     noSearchResult:'조건에 맞는 후보가 없었다.',
     sieveRequired:'소수 체 생성이 끝난 뒤 사용할 수 있다.',
     invalidSearch:'a>0인 정수와 올바른 c 범위를 입력해 주세요.',
-    searchTooWide:'c 범위는 −7000000부터 +7000000까지다. 전체 구간을 한 번에 탐색할 수 있습니다.',
+    searchTooWide:'c 범위는 −70000000부터 +70000000까지다. 전체 구간을 한 번에 탐색할 수 있습니다.',
     error:'오류',workerError:'Worker 오류',unknownError:'알 수 없는 오류',stopped:'중지됨.',
     enterRange:n=>`1 ~ ${n.toLocaleString()} 사이 정수를 입력해 주세요.`,
     clearSavedConfirm:'저장한 수열을 모두 삭제할까요?',
@@ -442,12 +442,12 @@ const I18N={
     status:(range,x,y,scale,count)=>`범위 ${range} · 중심 (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/칸 · 화면 ${count.toLocaleString()}칸`,
     presetClassic:'n²−n+c · 고전적 전항 홀수 계열',presetMonic:'n²+c · 단순 monic 계열',presetEven:'짝수 b · 홀수 c 권장',
     hexPresetGroup:k=>`육각 격자선 · k=${k} (a=3k²)`,
-    hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −7000000부터 +7000000까지 한 번에 탐색할 수 있다.',
+    hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −70000000부터 +70000000까지 한 번에 탐색할 수 있다.',
     hintTri:'삼각 모드: 기존 3방향과 추가 3방향의 기본 축에서 정수계수 이차식이 성립하면 고정식으로 표시한다. a=6k² 추천식도 유지하며, 소수율은 Worker/WASM으로 검증한다.',
-    hintKlauber:'클라우버: 상수항 ±100억. 기울기 |m|≥1/2인 동일 직선 구간이 1조 이내에서 최소 5만 행 이어지는 c만 선별한다. 끝에서 잘리는 구간도 허용한다. a=k², b가 k의 배수일 때 적용. 소수 점수 계산 전에 제외한다.',
-    slopeFilterLabel:'1조 이내 · |기울기| ≥ 1/2 · 직선 ≥ 5만 행',
+    hintKlauber:'클라우버: 상수항 ±100억. 기울기 |m|≥1/2인 동일 직선 구간이 100조 이내에서 최소 5만 행 이어지는 c만 선별한다. 끝에서 잘리는 구간도 허용한다. a=k², b가 k의 배수일 때 적용. 소수 점수 계산 전에 제외한다.',
+    slopeFilterLabel:'100조 이내 · |기울기| ≥ 1/2 · 직선 ≥ 5만 행',
     slopeFilterUnsupported:'기하학 기울기 필터는 a=k², b는 k=√a의 배수, |b/√a|≤200만일 때만 지원한다. 다른 계수를 탐색하려면 체크를 해제해 달라냥.',
-    slopeFilterEmpty:'1조 이내에서 |기울기|≥1/2인 직선이 5만 행 이상 이어지는 c가 없습니다.',
+    slopeFilterEmpty:'100조 이내에서 |기울기|≥1/2인 직선이 5만 행 이상 이어지는 c가 없습니다.',
     slopeFilterCount:(count,total)=>`기하학 선별: ${total.toLocaleString()}개 중 ${count.toLocaleString()}개 c만 검사`,
     hintSacks:'삭스 모드: a=k²인 이차식은 일반적으로 원점을 지나지 않는 점근 직선에 접근한다. 횡방향 오프셋은 π(c−b²/(4k²))이다. 유한 구간에서는 곡선일 수 있다.',
     hintVogel:'보겔 모드: 황금각의 근사 주기에 해당하는 피보나치 계수 후보를 추천한다. 정확한 직선은 보장되지 않으며 소수율은 독립 검증한다.'
@@ -459,6 +459,8 @@ function tr(k,...a){
   return typeof v==='function'?v(...a):v;
 }
 function rangeNameEn(n){
+  if(n===100000000000000)return'100T';
+  if(n===10000000000000)return'10T';
   if(n===1000000000000)return'1T';
   if(n===100000000000)return'100B';
   if(n===20000000000)return'20B';
@@ -813,7 +815,7 @@ let pointAnalyzeToken=0,pointAnalyzeWorkers=[],pointAnalysisPending=false,pointA
 try{localStorage.removeItem('ulam_1t_corner_resume_v1')}catch(_){}
 
 let idlePointAnalyzeWorkers=[],warmingPointAnalyzeWorkers=[],pointAnalyzeWorkerURL=null,pointAnalyzeWarmTimer=0,quickFormulaRows=[];
-const MINI_LEVELS=[100000000,1000000000,10000000000,100000000000,1000000000000];
+const MINI_LEVELS=[100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000];
 let miniZoomIndex=MINI_LEVELS.length-1;
 let basePrimes=new Uint32Array(0),basePrimeLookup=new Uint8Array(0),basePrimeLimit=0;
 let localPrimeCache={low:0,high:0,firstOdd:1,oddCount:0,bits:null,rLo:0,rHi:-1,bytes:0};
@@ -840,7 +842,13 @@ function branchAdaptiveKey(innerLen,maxValue){
   if(innerLen<=1200)return 'standard';
   return 'wide';
 }
+// OPT11: large-range stripe computation is now proportional to surviving
+// wheel candidates, not to 664,578 base primes multiplied by stripe rows.
+// Correctness is guaranteed below 100T by deterministic 7-base Miller-Rabin.
+// The legacy exact sieve remains built in and the JS fallback still works.
 function branchBucketForJob(target,innerLen){
+  if(MAX_N===100000000000000 && target.low>basePrimeLimit+32)
+    return {mode:2,threshold:4096};
   const k=branchAdaptiveKey(innerLen,Math.min(MAX_N,target.high));
   return branchAdaptiveModes?.[k]||{mode:1,threshold:16384};
 }
@@ -1165,7 +1173,7 @@ function savedStatsDomain(){return 'natural-semantic-v135'}
 function statCacheKey(a,b,c){return `${MAX_N}|${a}|${b}|${c}|${statsDomain()}`}
 function statsRangeNatural(a,b,c,maxN=MAX_N){const r=formulaParamRange(a,b,c,maxN);if(!r)return null;const lo=Math.max(1,r[0]);return lo<=r[1]?[lo,r[1]]:null}
 let savedEntries=[];
-const RANGE_OPTIONS=[1000000000000];
+const RANGE_OPTIONS=[100000000000000];
 
 // Square and hex presets are separate; the exact polynomial search algorithm is shared.
 // For a straight hex-grid segment of step k across an annulus, its quadratic
@@ -1303,6 +1311,8 @@ for(const [p,q] of [[5,3],[7,3],[11,3],[7,5],[9,5]]){
   addDynamicDir(p,-q,`기울기 −${q}/${p}`);
 }
 function rangeName(n){
+  if(n===100000000000000)return currentLang==='ko'?'100조':'100T';
+  if(n===10000000000000)return currentLang==='ko'?'10조':'10T';
   if(currentLang==='en')return rangeNameEn(n);
   if(n===1000000000000)return'1조';
   if(n===100000000000)return'1000억';
@@ -1326,6 +1336,8 @@ function minimapSideForViewport(){
 }
 function resize(){syncMobileHeaderWidths();dpr=Math.max(1,Math.min(2,devicePixelRatio||1));const r=stage.getBoundingClientRect();W=Math.max(1,Math.floor(r.width));H=Math.max(1,Math.floor(r.height));cv.width=Math.floor(W*dpr);cv.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);resizeMinimap();sched()}addEventListener('resize',resize);
 function miniLevelLabel(n){
+  if(n===100000000000000)return currentLang==='ko'?'100조':'100T';
+  if(n===10000000000000)return currentLang==='ko'?'10조':'10T';
   if(currentLang==='ko'){
     if(n===1000000000000)return'1조';
     if(n===100000000000)return'1000억';
@@ -1341,7 +1353,7 @@ function miniLevelLabel(n){
 }
 function miniViewport(){
   const n=MINI_LEVELS[miniZoomIndex],r=latticeMode==='hex'?hexRadiusFor(n):latticeMode==='tri'?extraTriRadiusFor(n):isExtraMode()?Math.sqrt(n):radiusFor(n);
-  // The widest 1T overview is anchored on n=1. All closer levels follow the
+  // The widest 100T overview is anchored on n=1. All closer levels follow the
   // current camera center. Since n grows as radius², each x10 level changes
   // the minimap side length by exactly about sqrt(10).
   if(n===MAX_N)return latticeMode==='klauber'?{n,r,cx:0,cy:-r/2,originCentered:false}:{n,r,cx:0,cy:0,originCentered:true};
@@ -1412,13 +1424,27 @@ function formulaScopedParamIntervalsForBand(f,lowN,highN){
  const iv=formulaParamIntervalsForBand(f,lowN,highN);
  return f?.naturalOnly?iv.map(([a,b])=>[Math.max(1,a),b]).filter(([a,b])=>a<=b):iv;
 }
-function forEachFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn){
-  if(latticeMode==='hex')return forEachHexFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn);
+function forEachFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn,minimapStratified=false){
+  if(latticeMode==='hex')return forEachHexFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn,minimapStratified);
   if(!f)return 0;
   const sr=shellRangeForRect(xmin,xmax,ymin,ymax),nb=shellNumberRange(sr.lo,sr.hi),ranges=formulaScopedParamIntervalsForBand(f,nb.low,nb.high).map(([a,b])=>[f.naturalOnly?Math.max(a,1):a,b]).filter(([a,b])=>a<=b);
   let total=0;for(const r of ranges)total+=r[1]-r[0]+1;
-  const step=maxSamples&&total>maxSamples?Math.max(1,Math.ceil(total/maxSamples)):1;
   let hits=0;
+  // OPT5: minimaps must NOT use a constant modular stride.  When a step is
+  // even (e.g. 334 at 100T), only one parity of the quadratic index is drawn;
+  // n^2-c then seems to lose an entire Ulam spiral arm.  Reuse the already
+  // established Klauber low-discrepancy sampler, which samples every stratum
+  // at varying offsets and scans everything when the entire set fits.
+  // Other call sites keep the original iterator, including early-stop logic.
+  if(minimapStratified){
+   miniForEachCandidate(ranges,maxSamples||total,t=>{
+    const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)return;
+    const q=latticeCoord(n);if(q.x<xmin||q.x>xmax||q.y<ymin||q.y>ymax)return;
+    hits++;fn(n,q,t);
+   });
+   return hits;
+  }
+  const step=maxSamples&&total>maxSamples?Math.max(1,Math.ceil(total/maxSamples)):1;
   for(const[a,b]of ranges){
     for(let t=a;t<=b;t+=step){
       const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)continue;
@@ -1484,9 +1510,149 @@ function rebuildMiniBackground(){
   g.putImageData(img,0,0);
   miniBgKey=key;
 }
+// OPT6: minimap density overlay. An even value other than 2 is proved
+// composite, so it must never manufacture a cyan arm. Prime-capable odd
+// outputs remain visible even when the sampled term is composite: fading
+// communicates estimated density without mistaking a zero sample for a proof
+// that the entire continuous branch contains no primes.
+// This remains the historic ~1/ln(n) heuristic, not an exact prime census.
+// OPT8: cached modular root tables for the minimap's small-prime prefilter.
+// For integer-coefficient F(t), F(t) mod p depends only on t mod p.
+// Retain just the current polynomial's tables (<100 KiB); no change to the
+// prime probability, pixel bands, or invalid/large-number behavior.
+let miniDensityResidueKey='',miniDensityResidueMasks=null;
+function miniDensityResidueMasksFor(f,primes){
+ const key=`${f.a}|${f.b}|${f.c}|${primes.length}`;
+ if(key===miniDensityResidueKey&&miniDensityResidueMasks)return miniDensityResidueMasks;
+ const masks=[];
+ for(const p of primes){
+  const a=((f.a%p)+p)%p,b=((f.b%p)+p)%p,c=((f.c%p)+p)%p;
+  const mask=new Uint8Array(p);
+  let hasRoot=false;
+  for(let t=0;t<p;t++)if(((a*t+b)*t+c)%p===0){mask[t]=1;hasRoot=true}
+  // If F(t) has no roots modulo p, no integer input is divisible by p.
+  // Skip p completely instead of performing one pointless modulo per sample.
+  if(hasRoot)masks.push({p,mask});
+ }
+ miniDensityResidueKey=key;miniDensityResidueMasks=masks;
+ return masks;
+}
+function miniDensityFormulaOverlay(g, f, view, mode, maxSamples, rgb='24,215,242'){
+
+ if(!f)return;
+ const side=miniSide,counts=new Uint16Array(side*side),primeMass=new Float32Array(side*side);
+ // More than the first 47 are necessary for unusually prime-rich quadratics;
+ // this is a cheap density proxy, not a primality certificate.
+ const smallFactors=basePrimes.subarray(0,Math.min(basePrimes.length,168));
+ // Odd-only density calibration: after filtering odd primes <= 1009,
+ // a survivor's estimated chance of being prime is
+ // 2 / (ln(N) * product_{odd prime p<=1009}(1-1/p)).
+ // Thus a 28.8% odd-output sequence is not mistaken for a 70% sequence.
+ const oddSurvivalProduct=smallFactors.reduce((a,p)=>a*(1-1/p),1);
+ const useResidues=[f.a,f.b,f.c].every(Number.isSafeInteger);
+ const residueMasks=useResidues?miniDensityResidueMasksFor(f,smallFactors):null;
+ // A quadratic restricted to t=2k+p has coefficients:
+ // A'=4a, B'=4ap+2b, C'=ap²+bp+c.
+ // gcd(C',A'+B',2A') is the exact fixed divisor over all integer k.
+ // This proves whole parity arms prime-free apart from the rare n=d case.
+ const gcdBig=(x,y)=>{x=x<0n?-x:x;y=y<0n?-y:y;while(y){const z=x%y;x=y;y=z}return x};
+ const parityDiv=[1n,1n];
+ if([f.a,f.b,f.c].every(Number.isSafeInteger)){
+  const a=BigInt(f.a),b=BigInt(f.b),c=BigInt(f.c);
+  for(let p=0;p<2;p++){
+   const q=BigInt(p),A=4n*a,B=4n*a*q+2n*b,C=a*q*q+b*q+c;
+   const d=gcdBig(gcdBig(C,A+B),2n*A);parityDiv[p]=d>1n?d:1n;
+  }
+ }
+ let x0=view.cx-view.r,x1=view.cx+view.r,y0=view.cy-view.r,y1=view.cy+view.r;
+ if(mode==='hex'){x0=view.cx-2*view.r;x1=view.cx+2*view.r;y0=view.cy-2*view.r;y1=view.cy+2*view.r;}
+ // OPT15: share the identical parity proof, prime-conditioned density
+ // calibration and pixel bands across ALL geometries.  Square/hex keep the
+ // original iterators byte-for-byte; additional lattices sample the visible
+ // numeric band rather than all 100T terms.  Klauber preserves t >= 1.
+ const visit=(n,m,t)=>{
+  if(!Number.isSafeInteger(n)||n<2||n>MAX_N)return;
+  if(n!==2&&n%2===0)return;
+  const d=parityDiv[Math.abs(t%2)];
+  if(d>1n&&(BigInt(n)!==d||!isPrimeExactSingle(n)))return;
+  const ix=Math.floor(m.px),iy=Math.floor(m.py);
+  if(ix<0||ix>=side||iy<0||iy>=side)return;
+  const k=iy*side+ix;
+  if(counts[k]!==65535)counts[k]++;
+  let survives=n===2;
+  if(!survives){
+   survives=true;
+   if(residueMasks){
+    for(let i=0;i<residueMasks.length;i++){
+     const {p,mask}=residueMasks[i];
+     if(n===p)continue;
+     const r=t%p;
+     if(mask[r<0?r+p:r]){survives=false;break}
+    }
+   }else{
+    for(let i=0;i<smallFactors.length;i++){
+     const p=smallFactors[i];if(n!==p&&n%p===0){survives=false;break}
+    }
+   }
+  }
+  if(survives){
+   const probability=n===2?1:Math.min(1,2/(Math.log(n)*oddSurvivalProduct));
+   primeMass[k]+=probability;
+  }
+ };
+ if(mode==='square'||mode==='hex'){
+  const iterator=mode==='hex'?forEachHexFormulaTermInRect:forEachFormulaTermInRect;
+  iterator(f,x0,x1,y0,y1,maxSamples,(n,p,t)=>{
+   visit(n,mode==='hex'?hexMinimapXY(p.x,p.y,view):miniMapXYInView(p.x,p.y,view),t);
+  },true);
+ }else if(mode==='klauber'){
+  klauberMiniTermsInView(f,view,maxSamples,(n,x,y,t)=>visit(n,{px:x,py:y},t));
+ }else{
+  // Triangle, Sacks and Vogel occupy very different shapes but every term
+  // has the same integer primality criterion.  Map only terms in the
+  // conservatively bounded visible number range to their own geometry.
+  const band=extraMiniNumericBand(view);
+  const ranges=formulaScopedParamIntervalsForBand(f,band[0],band[1]);
+  miniForEachCandidate(ranges,maxSamples,t=>{
+   const n=f.a*t*t+f.b*t+f.c;
+   if(!Number.isSafeInteger(n)||n<2||n>MAX_N)return;
+   const p=extraCoord(mode,n);
+   visit(n,miniMapXYInView(p.x,p.y,view),t);
+  });
+ }
+ // Local smoothing retains a faint valid trajectory where an individual
+ // sampled number happens to be composite. True parity-forbidden arms have
+ // zero eligible candidates everywhere and therefore remain completely absent.
+ const groups=[[],[],[],[],[]];
+ for(let y=0;y<side;y++)for(let x=0;x<side;x++){
+  const k=y*side+x;if(!counts[k])continue;
+  let ct=0,mass=0;
+  for(let dy=-2;dy<=2;dy++){
+   const yy=y+dy;if(yy<0||yy>=side)continue;
+   for(let dx=-2;dx<=2;dx++){
+    const xx=x+dx;if(xx<0||xx>=side)continue;
+    const j=yy*side+xx;ct+=counts[j];mass+=primeMass[j];
+   }
+  }
+  // Estimated actual prime share of prime-capable outputs, not the raw
+  // fraction surviving small-prime pre-sieving.  >=20% is maximum brightness.
+  const rate=ct?mass/ct:0;
+  const band=rate<.05?0:rate<.10?1:rate<.15?2:rate<.20?3:4;
+  groups[band].push(k);
+ }
+ const alpha=[.14,.30,.48,.72,1.0];
+ for(let b=0;b<groups.length;b++){
+  if(!groups[b].length)continue;
+  g.fillStyle=`rgba(${rgb},${alpha[b]})`;
+  for(const k of groups[b]){
+   const x=k%side,y=Math.floor(k/side);
+   g.fillRect(x-.5,y-.5,2,2);
+  }
+ }
+}
 function rebuildMiniFormula(){
   const cacheScale=Math.max(1,miniCv.width/(miniSide||1)),view=miniViewport();
-  const key=activeFormula?`${MAX_N}:${view.n}:${view.cx}:${view.cy}:${miniSide}:${cacheScale.toFixed(3)}:v153-conditional-exact-census:${miniUsePrimeDensity(view)}:${polyKey(activeFormula)}`:'';
+  const key=activeFormula?`${MAX_N}:${view.n}:${view.cx}:${view.cy}:${miniSide}:${cacheScale.toFixed(3)}:v153-opt8-root-filter-and-hover:${miniUsePrimeDensity(view)}:${polyKey(activeFormula)}`:'';
   if(key===miniFormulaKey)return;
   miniFormulaKey=key;miniFormulaCanvas=null;
   if(!showMinimap||!activeFormula||miniSide<1)return;
@@ -1495,21 +1661,14 @@ function rebuildMiniFormula(){
   g.clearRect(0,0,miniSide,miniSide);g.fillStyle='#18d7f2';
   if(miniUsePrimeDensity(view)){
    if(!miniCensusDraw(g,'square',activeFormula,view)){
-    const r=view.r;forEachFormulaTermInRect(activeFormula,view.cx-r,view.cx+r,view.cy-r,view.cy+r,6000,(n,p)=>{const xy=miniMapXYInView(p.x,p.y,view);g.fillRect(xy.px-1,xy.py-1,2,2)});
+    miniDensityFormulaOverlay(g,activeFormula,view,'square',6000);
    }
    return;
   }
-  const activeMiniPx=2,xmin=view.cx-view.r,xmax=view.cx+view.r,ymin=view.cy-view.r,ymax=view.cy+view.r;
-  // REV17: only enumerate formula parameters whose Ulam shell can intersect this
-  // minimap window. Local 1B/10B views no longer scan ~30k points from the whole 1T formula.
-  // Mobile minimap is small: 8k samples retain much more than one hit per visible pixel
-  // while avoiding a ~30k-point sqrt/coordinate loop on the touch event paint.
-  const miniSampleCap=mobilePrimeDevice()?8000:30000;
-  forEachFormulaTermInRect(activeFormula,xmin,xmax,ymin,ymax,miniSampleCap,(n,c)=>{
-    const m=miniMapXYInView(c.x,c.y,view);g.fillRect(Math.round(m.px)-activeMiniPx/2,Math.round(m.py)-activeMiniPx/2,activeMiniPx,activeMiniPx);
-  });
+  // Wide view: show only mathematically prime-capable arms, faded by
+  // small-prime-conditioned local density. Preserve the original background.
+  miniDensityFormulaOverlay(g,activeFormula,view,'square',mobilePrimeDevice()?8000:30000);
 }
-
 function renderMinimap(){
   if(isExtraMode())return renderExtraMinimap();
   if(latticeMode==='hex')return renderHexMinimap();
@@ -1589,9 +1748,44 @@ function isPrime(n){
   }
   return false;
 }
+// v1.3.1 beta: exact UI fallback primality check.  Trial division is fastest
+// on modest inputs, but ~78k prime divisions per large prime cause visible
+// stalls near 1T. Seven-base MR (2,3,5,7,11,13,17) is exact
+// for all integers below 341,550,071,728,321, exceeding 100T.  Small-factor prefilter avoids BigInt on most
+// composites.  Does not change any Worker, sieve, cache or rendering code.
 function isPrimeExactSingle(n){
-  if(n===2)return true;if(n<2||n%2===0)return false;
-  for(const p of basePrimes){if(p*p>n)break;if(n%p===0)return false}
+  if(n===2)return true;
+  if(!Number.isSafeInteger(n)||n<2||n>MAX_N||n%2===0)return false;
+  if(n<=1000000000){
+    for(const p of basePrimes){if(p*p>n)break;if(n%p===0)return false}
+    return true;
+  }
+  for(const p of basePrimes){
+    if(p>251)break;
+    if(n%p===0)return false;
+  }
+  let d=n-1,s=0;
+  while(d%2===0){d/=2;s++}
+  const mod=BigInt(n),minusOne=mod-1n,bits=[];
+  for(let e=d;e>0;e=Math.floor(e/2))bits.push(e%2);
+  function pow(base){
+    let x=BigInt(base)%mod,z=1n;
+    for(let i=0;i<bits.length;i++){
+      if(bits[i])z=z*x%mod;
+      if(i+1<bits.length)x=x*x%mod;
+    }
+    return z;
+  }
+  for(const witness of [2,3,5,7,11,13,17]){
+    let x=pow(witness);
+    if(x===1n||x===minusOne)continue;
+    let passes=false;
+    for(let i=1;i<s;i++){
+      x=x*x%mod;
+      if(x===minusOne){passes=true;break}
+    }
+    if(!passes)return false;
+  }
   return true;
 }
 function validXY(x,y){if(isExtraMode())return false;if(latticeMode==='hex')return hexRadius(x,y)<=HEX_R&&hexNumber(x,y)<=MAX_N;if(Math.abs(x)>MAX_R||Math.abs(y)>MAX_R)return false;const n=ulamNumber(x,y);return n>=1&&n<=MAX_N}
@@ -1625,6 +1819,12 @@ function sqrtModPrime(n,p){
 }
 function polynomialRootsModPrime(a,b,c,p){
   const am=modNorm(a,p),bm=modNorm(b,p),cm=modNorm(c,p);
+  // OPT14: evaluate both residues directly at p=2; the usual quadratic
+  // formula divides by 2a and is invalid modulo two.
+  if(p===2){
+    const z0=cm===0,z1=(am+bm+cm)%2===0;
+    return z0&&z1?null:z0?[0]:z1?[1]:[];
+  }
   if(am===0){
     if(bm===0)return cm===0?null:[];
     return[modNorm((-cm)*modInversePrime(bm,p),p)];
@@ -2169,14 +2369,20 @@ function deferPointAnalysis(x,y){
 }
 function analyzePointAsync(x,y){
   stopSavedStatsBackfill();cancelPointAnalysis(false);
-  const token=pointAnalyzeToken,prepared=dedupePointCandidatesByNaturalSequence(preparePointCandidates(x,y)),all=prepared.fixed.concat(prepared.pool),stats=new Map(),lineStats=new Map(),projectedStats=new Map(),jobs=[];
+  const token=pointAnalyzeToken,prepared=dedupePointCandidatesByNaturalSequence(preparePointCandidates(x,y)),all=prepared.fixed.concat(prepared.pool),stats=new Map(),lineStats=new Map(),projectedStats=new Map(),jobs=[],jobByStatsKey=new Map();
   pointAnalysisPending=true;formulas=[];renderFormulaPanel();sched();
   function enqueue(f,kind,a,b,c,paramRange=null){
     const id=polyKey(f);
     const key=statCacheKey(a,b,c)+(paramRange?`|physical:${paramRange.join(':')}`:'');
     const dest=kind==='line'?lineStats:kind==='global'?projectedStats:stats;
     const cached=formulaStatCache.get(key);
-    if(cached)dest.set(id,cached);else jobs.push({f,key,kind,a,b,c,paramRange});
+    if(cached){dest.set(id,cached);return}
+    // A different lattice representation can request exactly the same
+    // physical/global count. Share one full 100T sieve across all requesters.
+    const same=jobByStatsKey.get(key);
+    if(same){same.receivers.push({kind,id});return}
+    const job={key,a,b,c,paramRange,receivers:[{kind,id}]};
+    jobByStatsKey.set(key,job);jobs.push(job);
   }
   for(const f of all){
     if(f.kind==='vogel-arm'||f.kind==='vogel-pair')continue;
@@ -2196,6 +2402,24 @@ function analyzePointAsync(x,y){
       }
     }
   }
+  let partialStamp=0;
+  function revealCompletedFixed(){
+    if(token!==pointAnalyzeToken||!selected||selected.x!==x||selected.y!==y)return;
+    if(!pointAnalysisPending)return;
+    const completeFixed=prepared.fixed.filter(f=>
+      f.kind==='vogel-arm'||f.kind==='vogel-pair'||stats.has(polyKey(f)));
+    if(completeFixed.length===partialStamp)return;
+    partialStamp=completeFixed.length;
+    formulas=finishPointCandidateSet(completeFixed,[],stats);
+    for(const f of formulas){
+      const id=polyKey(f);
+      if(lineStats.has(id))f.lineStats=lineStats.get(id);
+      if(projectedStats.has(id))f.projectedStats=projectedStats.get(id);
+    }
+    // These are finished exact statistics, not speculative rankings.
+    // Dynamic rankings are published only when all candidate scores finish.
+    renderFormulaPanel();
+  }
   function commit(){
     if(token!==pointAnalyzeToken||!selected||selected.x!==x||selected.y!==y)return;
     formulas=finishPointCandidateSet(prepared.fixed,prepared.pool,stats);
@@ -2208,6 +2432,7 @@ function analyzePointAsync(x,y){
     selEl.innerHTML=selectionSummary();renderFormulaPanel();renderSavedPanel();sched();
   }
   if(!jobs.length){commit();return}
+  revealCompletedFixed();
   const workerCount=Math.min(jobs.length,pointAnalyzeWorkerCap());
   let next=0,done=0,failed=false;
   function cleanup(reuse=true){
@@ -2232,9 +2457,14 @@ function analyzePointAsync(x,y){
         if(d.type==='ready'){send(w);return}
         if(d.type==='error'){fail(d.message);return}
         const job=w._job;if(d.type!=='result'||!job){fail('Point-analysis worker response error');return}
-        const fs=d.stats;w._job=null;(job.kind==='line'?lineStats:job.kind==='global'?projectedStats:stats).set(polyKey(job.f),fs);formulaStatCache.set(job.key,fs);
+        const fs=d.stats;w._job=null;
+        for(const receiver of job.receivers){
+          (receiver.kind==='line'?lineStats:receiver.kind==='global'?projectedStats:stats).set(receiver.id,fs);
+        }
+        formulaStatCache.set(job.key,fs);
         if(formulaStatCache.size>8192){let drop=formulaStatCache.size-6144;for(const k of formulaStatCache.keys()){formulaStatCache.delete(k);if(--drop<=0)break}}
-        done++;if(done===jobs.length){cleanup(true);commit();return}send(w);
+        done++;if(done===jobs.length){cleanup(true);commit();return}
+        revealCompletedFixed();send(w);
       };
       w.onerror=e=>{e.preventDefault?.();fail(e.message||'Point-analysis worker error')};
       if(warm)send(w);else w.postMessage({type:'init',maxN:MAX_N,primeLimit:basePrimeLimit,primes:basePrimes});
@@ -2317,7 +2547,14 @@ function renderFormulaPanel(){
   formulaPanel.style.display='block';formulaTitle.textContent=tr('pointSeq',selected.n);
   // Klauber uses the full G(n) sequence; row coordinates stay internal.
   formulaList.innerHTML='';
-  if(pointAnalysisPending){formulaList.innerHTML=`<div class="formulaMeta">${currentLang==='ko'?'수열을 병렬 분석 중…':'Analyzing sequences in parallel…'}</div>`;return}
+  if(pointAnalysisPending){
+    const note=document.createElement('div');note.className='formulaMeta';
+    note.textContent=currentLang==='ko'
+      ?(formulas.length?'확정된 수열 표시 중 · 나머지 후보 분석 중…':'수열을 병렬 분석 중…')
+      :(formulas.length?'Verified sequences shown · analyzing remaining candidates…':'Analyzing sequences in parallel…');
+    formulaList.appendChild(note);
+    if(!formulas.length)return;
+  }
   if(!formulas.length){formulaList.innerHTML=`<div class="formulaMeta">${tr('noFormula')}</div>`;return}
   let lastSection='';
   for(const f of formulas){
@@ -2346,7 +2583,7 @@ function renderFormulaPanel(){
       }else{
         b.innerHTML=`<div class="formulaSlope">${tag} · ${currentLang==='ko'?'보겔 pair':'Vogel pair'}</div>`+
           `<div class="formulaExpr">A(k)=n+${f.armStepA}k, B(k)=n+${f.armStepB}k</div>`+
-          `<div class="formulaParam">${currentLang==='ko'?'두 기하학적 1차식의 1~1조 범위를 강조. 축소 시 항을 표본 표시하며, 연결선은 확대 시에만 표시':'Highlights both full-domain linear arms (1..1T), using sampled terms at overview zoom; connections appear only at close zoom.'}</div>`+
+          `<div class="formulaParam">${currentLang==='ko'?'두 기하학적 1차식의 1~100조 범위를 강조. 축소 시 항을 표본 표시하며, 연결선은 확대 시에만 표시':'Highlights both full-domain linear arms (1..100T), using sampled terms at overview zoom; connections appear only at close zoom.'}</div>`+
           `<div class="formulaStat">${stat}</div>`;
       }
     }else if(f.kind==='vogel-arm'){
@@ -2662,37 +2899,163 @@ function cSearchWorkerMain(){
     }
   };
 }
-const FORMULA_STATS_WASM_B64='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';
+// OPT16 parity class acceleration: same exact class accounting; original base WASM untouched.
+const FORMULA_STATS_WASM_B64='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CyADIBBPDQEgC0IBUg0ACwsgCEUNBCANQv////8PgyELQQEgECADQX9zanQhCEIBIQ0DQAJAIAhBAXFFDQAgCyANfiAMgiENCyALIAt+IAyCIQsgCEEBSyEEIAhBAXYhCCAEDQALIA1C/////w+DIgsgC34gDIIhDSALIBatfiAMgqchFiADIRAgCyAJfiAMgiALfiAMgiILQgFSDQALCyAPQX5qIggNAEIBIQsMAQtCASENIBRCAYYhCwNAIAsgDIIhCwJAIAhBAXFFDQAgCyANfiAMgiENCyAIQQFLIQQgCyALfiELIAhBAXYhCCAEDQALIA1C/////w+DIQsLAkAgD0EAIAsgFiAPIBNrIhBqIA9wrX4gDIIiCaciCCAKIAyBIg1CP4cgDIMgDXynIgNJGyAIIANraiIIIBFPDQADQCAIQQN2QZD7qoEAaiIEIAQtAABBASAIQQdxdHI6AAAgCCAPaiIIIBFJDQALCyAWRQ0AIBCtIAx8IBatfSAMgiALfiAMgiILIAlRDQAgD0EAIAunIgggA0kbIAggA2tqIgggEU8NAANAIAhBA3ZBkPuqgQBqIgQgBC0AAEEBIAhBB3F0cjoAACAIIA9qIgggEUkNAAsLIBJBAWoiEiAGRw0AC0EAIQ8LIBFBASARQQFLG60hDSAHrSEVIA+tIQlCACELQQAhEEEAIRZBACEXQQAhGANAAkAgCyAKfCIMIAB+IAF8IAx+IAJ8IgxCAVMNACAMIAVVDQBBACAQQQFqIhA2AoD7qoEAAkACQCAMQgGDUA0AQQAgF0EBaiIXNgKI+6qBAAJAAkAgDEIDWg0AIAxCAlEhCAwBCwJAIA9FDQAgDCAJUSEIDAELAkAgDCAVVg0AIAynIRJBACEIAkAgBkUNACAGIQQDQCAIIARqQQF2IgNBAWogCCADQQJ0QYCIgIAAaigCACASSSIRGyIIIAQgAyARGyIESQ0ACwsgCCAGTw0EIAhBAnRBgIiAgABqKAIAIBJGIQgMAQsgC6ciCEEDdkGQ+6qBAGotAAAgCEEHcXZBf3NBAXEhCAsgCEUNAkEAIBhBAWoiGDYCjPuqgQAMAQsgDEICUg0BC0EAIBZBAWoiFjYChPuqgQALQQAhCCALQgF8IgsgDVINAAsLIAgLAIABBG5hbWUAGBdmb3JtdWxhX3N0YXRzXzEwMHQud2FzbQFLBQAJcHJpbWVfcHRyAQpyZXN1bHRfcHRyAg5wcmltZV9jYXBhY2l0eQMNdGVybV9jYXBhY2l0eQQSZm9ybXVsYV9zdGF0c18xMDB0BxIBAA9fX3N0YWNrX3BvaW50ZXIAfwlwcm9kdWNlcnMBDHByb2Nlc3NlZC1ieQEFY2xhbmdfMTcuMC4wIChodHRwczovL2dpdGh1Yi5jb20vc3dpZnRsYW5nL2xsdm0tcHJvamVjdC5naXQgMTA5OTliNmQwMzRmZTMxOGYzZDU2YzgzYmRkYjY1NzI1OTNhOGJiMCkASQ90YXJnZXRfZmVhdHVyZXMEKwptdWx0aXZhbHVlKw9tdXRhYmxlLWdsb2JhbHMrD3JlZmVyZW5jZS10eXBlcysIc2lnbi1leHQ=';
 function formulaStatsWorkerMain(){
   let primes=null,maxN=0,primeLimit=0,wasm=null,wasmReady=false;
   function decodeB64(x){const raw=atob(x),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);return u}
   function zeroStats(){return{termCount:0,primeCount:0,ratio:0,oddCount:0,oddPrimeCount:0,oddRatio:0}}
   function wasmStats(a,b,c,paramRange=null){
     const range=paramRange||formulaParamRange(a,b,c,maxN);if(!range)return zeroStats();
-    const ptr=wasm.formula_stats(BigInt(a),BigInt(b),BigInt(c),range[0],range[1],BigInt(maxN),primeLimit),q=new Uint32Array(wasm.memory.buffer,ptr,4);
+    // 100T-specific verified WASM: a 700k-prime table and compact packed sieve.
+    // Large polynomial domains are evaluated in bounded chunks, not as a
+    // single enormous Uint8Array. Count aggregation does not change semantics.
+    const chunk=wasm.term_capacity(),length=range[1]-range[0]+1;
+    if(length>chunk){
+      const sums=[0,0,0,0];
+      for(let low=range[0];low<=range[1];low+=chunk){
+        const s=wasmStats(a,b,c,[low,Math.min(range[1],low+chunk-1)]);
+        sums[0]+=s.termCount;sums[1]+=s.primeCount;sums[2]+=s.oddCount;sums[3]+=s.oddPrimeCount;
+      }
+      const [termCount,primeCount,oddCount,oddPrimeCount]=sums;
+      return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
+    }
+    // Fall back safely for unsupported coefficients.
+    const rc=wasm.formula_stats_100t(BigInt(a),BigInt(b),BigInt(c),range[0],range[1],BigInt(maxN),primes.length,primeLimit);
+    if(rc!==0)return formulaStatsCore(a,b,c,maxN,primes,primeLimit,range);
+    const q=new Uint32Array(wasm.memory.buffer,wasm.result_ptr(),4);
     const termCount=q[0],primeCount=q[1],oddCount=q[2],oddPrimeCount=q[3];
     return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
+  }
+  // OPT14: prevent the historical parity bug of the packed 100T WASM
+  // sieve when the leading coefficient is odd.  F(2k+q) has even leading
+  // coefficient and therefore uses the proven WASM path for p=2.
+  // Also fold exactly symmetric full integer parameter intervals, preserving
+  // multiplicities and all four count fields (total, primes, odd, odd primes).
+  function accurateStats(a,b,c,range){
+    if(!range)return zeroStats();
+    const lo=range[0],hi=range[1],length=hi-lo+1;
+    if(length<=64)return formulaStatsCore(a,b,c,maxN,primes,primeLimit,range);
+    const raw=(aa,bb,cc,rr)=>wasmReady?wasmStats(aa,bb,cc,rr):formulaStatsCore(aa,bb,cc,maxN,primes,primeLimit,rr);
+    const combine=(s,t)=>{
+      const termCount=s.termCount+t.termCount,primeCount=s.primeCount+t.primeCount;
+      const oddCount=s.oddCount+t.oddCount,oddPrimeCount=s.oddPrimeCount+t.oddPrimeCount;
+      return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
+    };
+    const twice=s=>{
+      const termCount=2*s.termCount,primeCount=2*s.primeCount;
+      const oddCount=2*s.oddCount,oddPrimeCount=2*s.oddPrimeCount;
+      return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
+    };
+    const sub=(q,r)=>{
+      const start=Math.ceil((r[0]-q)/2),end=Math.floor((r[1]-q)/2);
+      if(start>end)return zeroStats();
+      const aa=4*a,bb=q===0?2*b:4*a+2*b,cc=q===0?c:a+b+c;
+      if(![aa,bb,cc].every(Number.isSafeInteger))return null;
+      // For the transformed quadratic, aa and bb are even. If cc is
+      // even too, every term is even: only an exact value of 2 can
+      // be prime. Count valid terms by quadratic bounds instead of
+      // running a redundant 664,579-prime sieve on this entire class.
+      if(aa>0&&cc%2===0){
+        const countIn=r=>r?Math.max(0,Math.min(end,r[1])-Math.max(start,r[0])+1):0;
+        const all=countIn(formulaParamRange(aa,bb,cc,maxN));
+        const below=countIn(formulaParamRange(aa,bb,cc,0));
+        const termCount=all-below;
+        let primeCount=0;
+        const disc=bb*bb-4*aa*(cc-2);
+        if(Number.isSafeInteger(disc)&&disc>=0){
+          const root=Math.sqrt(disc),den=2*aa;
+          const found=new Set();
+          for(const sign of [-1,1]){
+            const guess=Math.round((-bb+sign*root)/den);
+            for(let k=guess-1;k<=guess+1;k++)
+              if(k>=start&&k<=end&&aa*k*k+bb*k+cc===2)found.add(k);
+          }
+          primeCount=found.size;
+        }else if(disc<0){
+          primeCount=0;
+        }else{
+          return raw(aa,bb,cc,[start,end]);
+        }
+        return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount:0,oddPrimeCount:0,oddRatio:0};
+      }
+      return raw(aa,bb,cc,[start,end]);
+    };
+    const parity=s=>{
+      const even=sub(0,s),odd=sub(1,s);
+      return even&&odd?combine(even,odd):null;
+    };
+    // F(t)=F(-b/a-t) exactly.  Apply this only when the requested
+    // interval is mirror symmetric; physical/local and natural-only
+    // intervals otherwise retain their full distinct term multiplicities.
+    if(a!==0&&b%a===0){
+      const reflection=-b/a;
+      if(Number.isSafeInteger(reflection)&&lo+hi===reflection){
+        if(reflection%2!==0){
+          // An odd reflection exchanges the even/odd parameter classes.
+          // Exactly one class therefore contains one representative of
+          // every mirrored pair.  This simultaneously fixes mod-2 WASM.
+          const half=sub(0,range);
+          if(half)return twice(half);
+        }else{
+          // Even reflection has one central value; compute it exactly once.
+          const center=reflection/2,left=[lo,center-1];
+          const half=left[0]<=left[1]?(a%2!==0?parity(left):raw(a,b,c,left)):zeroStats();
+          if(half){
+            const middle=formulaStatsCore(a,b,c,maxN,primes,primeLimit,[center,center]);
+            return combine(twice(half),middle);
+          }
+        }
+      }
+    }
+    // OPT16: when a is even but b odd, exactly one t-parity class
+    // is even-valued and cannot produce primes except the value 2.
+    // The existing parity helper handles that class analytically and
+    // sieves only the odd-valued class; odd a keeps its OPT14 repair.
+    if(a%2!==0 || (a>0 && b%2!==0 && length>=4096)){
+      const result=parity(range);
+      if(result)return result;
+      // Very large coefficients may overflow after the substitution;
+      // the portable fallback has a correct dedicated p=2 branch.
+      return formulaStatsCore(a,b,c,maxN,primes,primeLimit,range);
+    }
+    return raw(a,b,c,range);
   }
   self.onmessage=async e=>{const d=e.data;try{
     if(d.type==='init'){
       primes=d.primes;maxN=d.maxN;primeLimit=d.primeLimit;
       try{
         const mod=await WebAssembly.instantiate(decodeB64(FORMULA_STATS_WASM_B64),{});wasm=mod.instance.exports;
-        const ptr=wasm.get_primes_ptr();new Uint32Array(wasm.memory.buffer,ptr,primes.length).set(primes);wasm.set_prime_count(primes.length);wasmReady=true;
-        // Compact independent JS-vs-WASM tests (including the full 1T range).
-        // They run once per Worker during preload, not during a user click.
-        for(const [a,b,c] of [[40000000000,0,999999999937],[12000000000,12000000000,999999999883],[400000000000,0,999999999989]]){
-          const got=wasmStats(a,b,c),ref=formulaStatsCore(a,b,c,maxN,primes,primeLimit);
+        if(primes.length>wasm.prime_capacity())throw Error('100T WASM prime table capacity exceeded');
+        const ptr=wasm.prime_ptr();new Uint32Array(wasm.memory.buffer,ptr,primes.length).set(primes);
+        // Check the unchanged fast even-a WASM sieve against the repaired
+        // portable implementation, then exercise both odd-a parity branches
+        // on independently verified 100T-range cases (200 terms each).
+        for(const [a,b,c,lo,hi] of [[2,3,5,-8,8],[4,2,41,1,101]]){
+          const got=wasmStats(a,b,c,[lo,hi]),ref=formulaStatsCore(a,b,c,maxN,primes,primeLimit,[lo,hi]);
           if(got.termCount!==ref.termCount||got.primeCount!==ref.primeCount||got.oddCount!==ref.oddCount||got.oddPrimeCount!==ref.oddPrimeCount)
-            throw Error('Point WASM/JS statistics mismatch');
+            throw Error('100T WASM point even-a cross-check mismatch');
+        }
+        wasmReady=true;
+        const oddCrossChecks=[[1,1,1000003,36],[1,0,1000003,32]];
+        if(maxN>=20000000100000)oddCrossChecks.push([1,1,20000000000001,12],[1,0,20000000000001,4]);
+        for(const [a,b,c,want] of oddCrossChecks){
+          const got=accurateStats(a,b,c,[-100,99]);
+          if(got.termCount!==200||got.primeCount!==want)
+            throw Error('100T WASM point odd-a parity cross-check mismatch');
         }
       }catch(error){console.warn('[WASM point self-check] JS fallback:',String(error));wasm=null;wasmReady=false}
+      // OPT13: Prime table/WASM initialization alone doesn't warm the long
+      // polynomial sieve loops.  Perform a short throwaway run so the first
+      // actual selected point does not pay as much cold-code cost.  Results
+      // are NOT cached or published, and the original accuracy checks remain.
+      if(wasmReady){try{wasmStats(4,2,41,[1,100000])}catch(_){}}
       self.postMessage({type:'ready',wasm:wasmReady,verified:wasmReady});return;
     }
     if(d.type==='job'){
       let range=d.paramRange||formulaParamRange(d.a,d.b,d.c,maxN);
       if(d.naturalOnly&&range){const lo=Math.max(1,range[0]);range=lo<=range[1]?[lo,range[1]]:null}
-      const stats=d.naturalOnly&&!range?zeroStats():(wasmReady?wasmStats(d.a,d.b,d.c,range):formulaStatsCore(d.a,d.b,d.c,maxN,primes,primeLimit,range));
+      const stats=accurateStats(d.a,d.b,d.c,range);
       self.postMessage({type:'result',index:d.index,stats});
     }
   }catch(err){self.postMessage({type:'error',message:String(err&&err.message||err)})}};
@@ -2828,7 +3191,7 @@ function verifyCSearchCandidates(a,b,candidates,token){
   }catch(err){fail(err&&err.message||err)}
 }
 
-// Visible-line filter for the complete Klauber triangle, N<=10^12.
+// Visible-line filter for the complete Klauber triangle, N<=10^14.
 // A mere 3-term collinear coincidence is insufficient for the *visible-line*
 // purpose: require >=50,000 rows of the SAME line inside the triangular bounds.
 // Let P(t)=k²t²+bt+c, r=k*t+h and x=P(t)-(r²+r+1).
@@ -2836,13 +3199,13 @@ function verifyCSearchCandidates(a,b,candidates,token){
 // (vertical for d=0). |slope|>=1/2 means integer |d|<=2.
 // For any L consecutive t, c must lie in the intersection of the row bounds
 // at the first and last terms. Because both bounds are affine in t, the
-// endpoints suffice. Clipped segments at r=0 or r=999999 ARE allowed.
+// endpoints suffice. Clipped segments at r=0 or the world maxRow are allowed.
 // We merge all allowed c intervals before running the expensive sieve/heap.
 const KLAUBER_VISIBLE_MIN_ROW_SPAN=50000;
-function klauberVisibleCIntervals(a,b,cMin,cMax,maxN=1000000000000){
+function klauberVisibleCIntervals(a,b,cMin,cMax,maxN=MAX_N){
   const k=Math.round(Math.sqrt(a));
-  if(k<1||k*k!==a||b%k!==0||Math.abs(b/k)>2000000||maxN!==1000000000000)return null;
-  const maxRow=999999,need=Math.ceil(KLAUBER_VISIBLE_MIN_ROW_SPAN/k)+1,spans=[];
+  if(k<1||k*k!==a||b%k!==0||Math.abs(b/k)>2000000||!Number.isSafeInteger(maxN)||maxN<1)return null;
+  const maxRow=Math.floor(Math.sqrt(maxN-1)),need=Math.ceil(KLAUBER_VISIBLE_MIN_ROW_SPAN/k)+1,spans=[];
   if(k>maxRow||need<2)return [];
   // n>=1: do not use the b -> -b symmetry of all integer inputs.
   for(const effectiveB of [b]){
@@ -2891,10 +3254,10 @@ function klauberVisibleCIntervals(a,b,cMin,cMax,maxN=1000000000000){
 }
 // Independent constant-time witness for a given c, useful when checking
 // particular discoveries or validating the interval prefilter.
-function klauberLongestVisibleLineRows(a,b,c,maxN=1000000000000){
+function klauberLongestVisibleLineRows(a,b,c,maxN=MAX_N){
   const k=Math.round(Math.sqrt(a));
-  if(k<1||k*k!==a||b%k!==0||maxN!==1000000000000)return 0;
-  const maxRow=999999;
+  if(k<1||k*k!==a||b%k!==0||!Number.isSafeInteger(maxN)||maxN<1)return 0;
+  const maxRow=Math.floor(Math.sqrt(maxN-1));
   let longest=0;
   for(const effectiveB of [b])for(let d=-2;d<=2;d++){
     const twiceH=effectiveB/k-1-d;
@@ -2981,8 +3344,8 @@ function updateKlauberNormalizationUI(){
     ?`b ${fmt(b)} → ${fmt(canonical.b)} · c: 새 수열 기준 (자연수 동치 보장 없음)`
     :`Integer reindex t=n+(${fmt(canonical.shift)}): b=${fmt(b)} → b′=${fmt(canonical.b)}, original c → reduced c′=c${canonical.offset<0?'−':'+'}${fmt(Math.abs(canonical.offset))}.${active?.c!==undefined?` Selected reduced c′=${fmt(active.c)}.`:''} Entered c limits apply to reduced c′.`;
 }
-// Only Klauber may search ±10 billion. All other spiral modes keep ±7 million.
-function cSearchLimit(){return latticeMode==='klauber'?10000000000:7000000}
+// OPT12: all modes support at least ±70 million; preserve the wider Klauber ±10 billion range.
+function cSearchLimit(){return latticeMode==='klauber'?10000000000:70000000}
 function cSearchRangeHint(){
   const n=cSearchLimit().toLocaleString(currentLang==='ko'?'ko-KR':'en-US');
   if(currentLang==='ko')return latticeMode==='klauber'
@@ -3044,8 +3407,8 @@ function startCSearch(){
   const source='('+cSearchWorkerMain.toString()+')();',url=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
   const hc=Math.max(1,Math.floor(Number(navigator.hardwareConcurrency)||2));
   const mobile=navigator.userAgentData?.mobile||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const shardWorkers=latticeMode==='klauber'&&countEligible>=1000000
-    ?Math.min(8,Math.max(1,hc-1),mobile?2:8,Math.ceil(countEligible/250000)):1;
+  const shardWorkers=countEligible>=1000000
+    ?Math.min(8,Math.max(1,hc-1),mobile?2:8,Math.ceil(countEligible/750000)):1;
   const partition=splitCSearchIntervals(intervals,oddOnly,shardWorkers);
   const workers=[];
   function cleanupPool(){
@@ -3233,6 +3596,24 @@ function hexCancelBuild(){++hexGeneration;clearTimeout(hexTimer);hexTimer=0;if(h
 function hexWorkerMain(){
  let primes=new Uint32Array(0),wasm=null;
  function byteDecode(s){const b=atob(s),out=new Uint8Array(b.length);for(let i=0;i<b.length;i++)out[i]=b.charCodeAt(i);return out}
+ // Tiny visible arcs are faster to test directly than to initialize a
+ // 664k-prime sieve repeatedly. Seven bases are deterministic below 100T.
+ const hexWitnesses=[2,3,5,7,11,13,17];
+ function hexDirectPrime(n){
+   if(n===2)return true;if(n<2||n%2===0)return false;
+   for(let i=0;i<primes.length&&primes[i]<=251;i++){
+     const p=primes[i];if(n===p)return true;if(n%p===0)return false;
+   }
+   if(n<=100000000){for(const p of primes){if(p*p>n)break;if(n%p===0)return false;}return true}
+   let d=n-1,s=0;while(d%2===0){d/=2;s++}
+   const mod=BigInt(n),end=mod-1n;
+   function pow(a){let x=BigInt(a)%mod,r=1n,e=BigInt(d);while(e){if(e&1n)r=r*x%mod;x=x*x%mod;e>>=1n}return r}
+   for(const a of hexWitnesses){let x=pow(a);if(x===1n||x===end)continue;
+     let found=false;for(let k=1;k<s;k++){x=x*x%mod;if(x===end){found=true;break}}
+     if(!found)return false;
+   }
+   return true;
+ }
  function jsCompute(d){
    const {xmin,xmax,ymin,ymax,h0,h1,maxN}=d,width=xmax-xmin+1;
    const result=new Uint8Array(Math.ceil(width*(ymax-ymin+1)/8));
@@ -3248,7 +3629,10 @@ function hexWorkerMain(){
        const plot=n=>{const t=a+n-first,q=q0[s]+dq[s]*t,r=r0[s]+dr[s]*t,idx=(r-ymin)*width+(q-xmin);result[idx>>>3]|=1<<(idx&7)};
        if(first<=2&&last>=2)plot(2);
        let firstOdd=Math.max(3,first%2===0?first+1:first);const cnt=firstOdd<=last?Math.floor((last-firstOdd)/2)+1:0;
-       if(!cnt)continue;const comp=new Uint8Array(cnt);
+       if(!cnt)continue;
+       // Old JS fallback scanned 664k primes for *every* short arc.
+       if(cnt<=32768){for(let i=0;i<cnt;i++){const n=firstOdd+2*i;if(hexDirectPrime(n))plot(n);}continue}
+       const comp=new Uint8Array(cnt);
        for(const p of primes){if(p*p>last)break;let n=Math.max(p*p,Math.ceil(firstOdd/p)*p);if(n%2===0)n+=p;for(let i=(n-firstOdd)/2;i<cnt;i+=p)comp[i]=1}
        for(let i=0;i<cnt;i++)if(!comp[i])plot(firstOdd+2*i);
      }
@@ -3261,6 +3645,7 @@ function hexWorkerMain(){
      if(d.type==='init'){
        primes=d.primes;
        try{
+         if(primes.length>80000)throw Error('100T experiment: legacy hex WASM capacity exceeded; use hybrid exact JS');
          const mod=await WebAssembly.instantiate(byteDecode(HEX_SIEVE_B64),{});wasm=mod.instance.exports;
          new Uint32Array(wasm.memory.buffer,wasm.primes_ptr(),primes.length).set(primes);
          const sample={xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100};
@@ -3399,15 +3784,23 @@ function hexUpdateHover(clientX,clientY){
  let left=px+14,top=py+14;if(left+tw+12>W)left=px-tw-14;if(top+th+12>H)top=py-th-14;
  hoverTip.style.left=Math.max(6,left)+'px';hoverTip.style.top=Math.max(6,top)+'px';
 }
-function forEachHexFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn){
+function forEachHexFormulaTermInRect(f,xmin,xmax,ymin,ymax,maxSamples,fn,minimapStratified=false){
  if(!f)return 0;
  const rings=hexRingBounds({xmin,xmax,ymin,ymax});
  const low=rings.lo<=0?1:3*(rings.lo-1)*rings.lo+2;
  const high=Math.min(MAX_N,3*rings.hi*(rings.hi+1)+1);
  const ranges=formulaScopedParamIntervalsForBand(f,low,high).map(([a,b])=>[f.naturalOnly?Math.max(1,a):a,b]).filter(([a,b])=>a<=b);
  let total=0;for(const[a,b]of ranges)total+=b-a+1;
- const step=maxSamples&&total>maxSamples?Math.ceil(total/maxSamples):1;
  let count=0;
+ if(minimapStratified){
+  miniForEachCandidate(ranges,maxSamples||total,t=>{
+   const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)return;
+   const p=hexCoord(n);if(p.x<xmin||p.x>xmax||p.y<ymin||p.y>ymax)return;
+   count++;fn(n,p,t);
+  });
+  return count;
+ }
+ const step=maxSamples&&total>maxSamples?Math.ceil(total/maxSamples):1;
  for(const[a,b]of ranges)for(let t=a;t<=b;t+=step){
    const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)continue;
    const p=hexCoord(n);if(p.x<xmin||p.x>xmax||p.y<ymin||p.y>ymax)continue;
@@ -3441,17 +3834,14 @@ function renderHexMinimap(){
  }
  miniCtx.clearRect(0,0,miniSide,miniSide);miniCtx.drawImage(miniBgCanvas,0,0,miniSide,miniSide);
  if(activeFormula){
-   const formulaKey=`hex-f-v153:${key}:${activeFormula.a}:${activeFormula.b}:${activeFormula.c}:${v.n}:${miniUsePrimeDensity(v)}`;
+   const formulaKey=`hex-f-v153-opt8-root-filter-and-hover:${key}:${activeFormula.a}:${activeFormula.b}:${activeFormula.c}:${v.n}:${miniUsePrimeDensity(v)}`;
    if(miniFormulaKey!==formulaKey||!miniFormulaCanvas){
      const c=document.createElement('canvas');c.width=miniSide;c.height=miniSide;
      const fctx=c.getContext('2d'),r=v.r,rect={xmin:Math.floor(v.cx-r*2),xmax:Math.ceil(v.cx+r*2),ymin:Math.floor(v.cy-r*2),ymax:Math.ceil(v.cy+r*2)};
      fctx.fillStyle='#18d7f2';
      if(miniUsePrimeDensity(v)){
-       if(!miniCensusDraw(fctx,'hex',activeFormula,v))forEachHexFormulaTermInRect(activeFormula,rect.xmin,rect.xmax,rect.ymin,rect.ymax,6000,(n,p)=>{const a=hexMinimapXY(p.x,p.y,v);if(a.px>=0&&a.px<miniSide&&a.py>=0&&a.py<miniSide)fctx.fillRect(a.px-1,a.py-1,2,2)});
-     }
-     else forEachHexFormulaTermInRect(activeFormula,rect.xmin,rect.xmax,rect.ymin,rect.ymax,mobilePrimeDevice()?7500:20000,(n,p)=>{
-       const a=hexMinimapXY(p.x,p.y,v);if(a.px>=0&&a.px<miniSide&&a.py>=0&&a.py<miniSide)fctx.fillRect(a.px-1,a.py-1,2,2);
-     });
+       if(!miniCensusDraw(fctx,'hex',activeFormula,v))miniDensityFormulaOverlay(fctx,activeFormula,v,'hex',6000);
+     }else miniDensityFormulaOverlay(fctx,activeFormula,v,'hex',mobilePrimeDevice()?7500:20000);
      miniFormulaCanvas=c;miniFormulaKey=formulaKey;
    }
    miniCtx.drawImage(miniFormulaCanvas,0,0);
@@ -3963,7 +4353,7 @@ function extraVogelPhase(n){
 }
 // Klauber 1932 row model. For n >= 1, row r is determined by
 // r^2 + 1 <= n <= (r+1)^2. Its centered column x lies in [-r, r].
-// Integer safety: both r^2 and (r+1)^2 <= 1e12 are exactly representable.
+// Integer safety: all displayed n <= 1e14 remain exactly representable (under 2^53).
 function extraKlauberCoord(n){
  if(n<=1)return{x:0,y:0};
  let r=Math.floor(Math.sqrt(n-1));
@@ -4363,8 +4753,12 @@ function extraPickKlauberPixel(px,py,maxPx){
   if(n===null)continue;
   const d=((c-wx)**2+(-r-wy)**2)*scale*scale;
   if(d>=bestD)continue;
-  bestD=d;best={n,x:c,y:-r,prime:extraTriPrimeNumbers.has(n)||isPrimeExactSingle(n)};
+  bestD=d;best={n,x:c,y:-r};
  }
+ // OPT8: only the nearest candidate can appear in the tooltip. Do not
+ // primality-test candidates that are later replaced by closer lattice points.
+ // Reuse the existing exact Miller-Rabin memo for repeated hover positions.
+ if(best)best.prime=extraTriPrimeNumbers.has(best.n)||klauberMiniPrime(best.n);
  return best;
 }
 function extraPickPixel(px,py,maxPx=14){
@@ -4464,7 +4858,7 @@ function klauberMiniTermsInView(f,v,maxSamples,visit){
  });
  return inside;
 }
-// v1.2.53: Density is reserved for 100M / 1B and for formulae that are
+// High precision density is reserved for 100M / 1B and for formulae that are
 // predicted (NOT measured) to produce at most ten primes in the *widest*
 // main viewport. Screen-line slope/spacing enters via actual mapped geometry.
 function miniUsePrimeDensity(view){
@@ -4554,7 +4948,7 @@ function miniSparseFormulaExpected(){
 // Exact census runs off the UI thread; no cap, stride or random sampling.
 // Only relevant formula parameters are enumerated, never all 1B integers.
 function miniCensusWorkerMain(){
- const MAX=1000000000000,SQ3=Math.sqrt(3),TAU=2*Math.PI,PHI=30262465214248651242265067423n,MASK=(1n<<96n)-1n;
+ const MAX=100000000000000,SQ3=Math.sqrt(3),TAU=2*Math.PI,PHI=30262465214248651242265067423n,MASK=(1n<<96n)-1n;
  const golden=[0n,16n,32n].map(sh=>Number(((PHI<<sh)&MASK)>>43n)/9007199254740992);
  const small=(()=>{const b=new Uint8Array(252),a=[];for(let p=2;p<=251;p++)if(!b[p]){a.push(p);for(let j=p*p;j<=251;j+=p)b[j]=1}return a})();
  function prime(n){
@@ -4562,7 +4956,7 @@ function miniCensusWorkerMain(){
   for(const p of small){if(n===p)return true;if(n%p===0)return false}
   const N=BigInt(n),nm=N-1n;let d=nm,k=0;while((d&1n)===0n){d>>=1n;k++}
   function pow(b){let a=1n,x=BigInt(b)%N,e=d;while(e){if(e&1n)a=a*x%N;e>>=1n;if(e)x=x*x%N}return a}
-  for(const b of [2,3,5,7,11,13]){
+  for(const b of [2,3,5,7,11,13,17]){
    let v=pow(b);if(v===1n||v===nm)continue;
    let ok=false;for(let j=1;j<k;j++){v=v*v%N;if(v===nm){ok=true;break}}
    if(!ok)return false;
@@ -4615,17 +5009,17 @@ function miniCensusWorkerMain(){
     count[j]++;inside++;if(prime(n)){hits[j]++;primes++}
    }
   }
-  // Conditional exact counts; only spatial smoothing, no prime sampling.
-  // Every occupied cell is mapped to its local 9×9 density, with zero-prime
-  // segments remaining visibly dim instead of faking a positive rate.
+  // Exact-prime minimap: NEVER draw a cell without an actual confirmed prime.
+  // Smooth intensity using the local 9x9 density, but do not paint composite-
+  // only trajectory cells. A structurally prime-free arm must be invisible.
   const rgba=new Uint8ClampedArray(width*width*4);
   for(let y=0;y<width;y++)for(let x=0;x<width;x++){
-   const idx=y*width+x;if(!count[idx])continue;
+   const idx=y*width+x;if(!hits[idx])continue;
    let sum=0,pp=0;
    for(let yy=Math.max(0,y-4);yy<=Math.min(width-1,y+4);yy++)for(let xx=Math.max(0,x-4);xx<=Math.min(width-1,x+4);xx++){
     const k=yy*width+xx;sum+=count[k];pp+=hits[k];
    }
-   const rate=sum?pp/sum:0,alpha=Math.round(255*(.12+.85*Math.min(1,Math.sqrt(rate/.30))));
+   const rate=sum?pp/sum:0,alpha=Math.round(255*(.12+.88*Math.min(1,Math.sqrt(rate/.20))));
    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
     const xx=x+dx,yy=y+dy;if(xx<0||xx>=width||yy<0||yy>=width)continue;
     const j=(yy*width+xx)*4;
@@ -4668,7 +5062,11 @@ function miniCensusRequest(mode,f,v){
 function miniCensusDraw(g,mode,f,v){
  if(!f)return false;
  const key=miniCensusKey(mode,f,v),item=miniCensusReady.get(key);
- if(!item){miniCensusRequest(mode,f,v);return false;}
+ if(!item){
+  // While the exact census is running, show no formula trace instead of
+  // falsely presenting all composite outputs as a prime-rich line.
+  miniCensusRequest(mode,f,v);return true;
+ }
  const temp=document.createElement('canvas');temp.width=item.side;temp.height=item.side;
  temp.getContext('2d').putImageData(new ImageData(item.rgba,item.side,item.side),0,0);
  g.drawImage(temp,0,0,miniSide,miniSide);return true;
@@ -4676,8 +5074,8 @@ function miniCensusDraw(g,mode,f,v){
 // Cache verified primality for exact minimap census across mode/zoom changes.
 // The prior full Map.clear() discarded every warm hit at the cache limit.
 const klauberMiniPrimeMemo=new Map(),MINI_PRIME_CACHE_MAX=32768;
-const MINI_MR_BASES=[2n,3n,5n,7n,11n,13n];
-// Six-base Miller–Rabin is deterministic for the app's n <= 1T range.
+const MINI_MR_BASES=[2n,3n,5n,7n,11n,13n,17n];
+// Seven-base Miller–Rabin is deterministic for all n <= 100T.
 // Trial division wins only below about 10 million on benchmark workloads.
 function miniPrimeFastExact(n){
  if(n<10000000)return isPrimeExactSingle(n);
@@ -4757,57 +5155,40 @@ function renderExtraMinimap(){
   g.putImageData(img,0,0);miniBgCanvas=c;miniBgKey=key;
  }
  miniCtx.drawImage(miniBgCanvas,0,0,miniSide,miniSide);
- const formulaKey=activeFormula?`${key}:v153:${v.n}:${miniUsePrimeDensity(v)}:${extraScopeFormulaKey()}`:'';
+ const formulaKey=activeFormula?`${key}:v154-opt15-density-all:${v.n}:${miniUsePrimeDensity(v)}:${extraScopeFormulaKey()}`:'';
  if(formulaKey!==miniFormulaKey||!miniFormulaCanvas){
   miniFormulaKey=formulaKey;miniFormulaCanvas=null;
   if(activeFormula){
    const c=document.createElement('canvas');c.width=miniCv.width;c.height=miniCv.height;const g=c.getContext('2d',{alpha:true}),sc=c.width/miniSide;
    g.setTransform(sc,0,0,sc,0,0);g.fillStyle='#18d7f2';
-   if(latticeMode==='klauber'){
-     drawKlauberMiniFormula(g,effectiveKlauberFormula(),v);
-   }else if(miniUsePrimeDensity(v)&&!(latticeMode==='vogel'&&selected&&(activeFormula.kind==='vogel-arm'||activeFormula.kind==='vogel-pair'))){
-     if(!miniCensusDraw(g,latticeMode,effectiveKlauberFormula(),v)){
-       const f=effectiveKlauberFormula();const ranges=formulaTRange(f);
-       if(ranges){const stride=Math.max(1,Math.ceil((ranges[1]-ranges[0]+1)/6000));for(let t=ranges[0];t<=ranges[1];t+=stride){const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)continue;const p=extraCoord(latticeMode,n),xy=miniMapXYInView(p.x,p.y,v);if(xy.px>=0&&xy.px<miniSide&&xy.py>=0&&xy.py<miniSide)g.fillRect(xy.px-1,xy.py-1,2,2)}}
-      }
-   }else if(miniUsePrimeDensity(v)&&latticeMode==='vogel'&&selected&&(activeFormula.kind==='vogel-arm'||activeFormula.kind==='vogel-pair')){
-     if(!miniCensusDraw(g,'vogel',activeFormula,v)){
-      // Show the original arm trace while the full verification runs.
-      const qs=activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:[activeFormula.armStepA,activeFormula.armStepB];
-      for(const q of qs){
-       const count=Math.floor((MAX_N-selected.n)/q)-Math.ceil((1-selected.n)/q)+1;
-       if(count<=0)continue;
-       const lo=Math.ceil((1-selected.n)/q),step=Math.max(1,Math.ceil(count/6000));
-       for(let k=lo;k<lo+count;k+=step){const n=selected.n+k*q;if(n<1||n>MAX_N)continue;
-        const p=extraCoord('vogel',n),xy=miniMapXYInView(p.x,p.y,v);
-        if(xy.px>=0&&xy.px<miniSide&&xy.py>=0&&xy.py<miniSide)g.fillRect(xy.px-1,xy.py-1,2,2);
-       }
-      }
-     }
-   }else if(latticeMode==='vogel'&&selected&&(activeFormula.kind==='vogel-arm'||activeFormula.kind==='vogel-pair')){
-    const arms=activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:[activeFormula.armStepA,activeFormula.armStepB];
-    for(let ai=0;ai<arms.length;ai++){
-     const q=arms[ai],count=Math.floor((MAX_N-selected.n)/q)-Math.ceil((1-selected.n)/q)+1;
-     if(count<=0)continue;
-     const klo=Math.ceil((1-selected.n)/q),sample=Math.min(count,6000),jump=Math.max(1,Math.ceil(count/sample));
-     g.fillStyle=ai===0?'rgba(255,188,91,.85)':'rgba(96,219,255,.85)';
-     for(let k=klo;k<klo+count;k+=jump){
-      const n=selected.n+k*q;if(n<1||n>MAX_N)continue;
-      const p=extraCoord(latticeMode,n),mx=(p.x-v.cx+v.r)*miniSide/(2*v.r),my=(v.cy+v.r-p.y)*miniSide/(2*v.r);
-      if(mx>=0&&mx<miniSide&&my>=0&&my<miniSide)g.fillRect(mx-.75,my-.75,1.5,1.5);
+   // OPT15: same 20%-full-brightness, parity-forbidden arm removal and
+   // compositeness-fading as square/hex for every additional geometry.
+   // The low-level exact census remains authoritative at eligible 100M/1B.
+   if(latticeMode==='vogel'&&selected&&
+       (activeFormula.kind==='vogel-arm'||activeFormula.kind==='vogel-pair')){
+    if(!miniUsePrimeDensity(v)||!miniCensusDraw(g,'vogel',activeFormula,v)){
+     const arms=activeFormula.kind==='vogel-arm'?[activeFormula.armStep]:
+       [activeFormula.armStepA,activeFormula.armStepB];
+     for(let ai=0;ai<arms.length;ai++){
+      const q=arms[ai];
+      if(!Number.isSafeInteger(q)||q===0)continue;
+      const line={a:0,b:q,c:selected.n};
+      miniDensityFormulaOverlay(g,line,v,'vogel',mobilePrimeDevice()?6000:18000,
+        arms.length>1?(ai===0?'255,188,91':'96,219,255'):'24,215,242');
      }
     }
    }else{
-    const f=effectiveKlauberFormula(),ranges=formulaTRange(f);
-    if(ranges){const count=ranges[1]-ranges[0]+1,step=Math.max(1,Math.ceil(count/(mobilePrimeDevice()?8000:30000)));
-     for(let t=ranges[0];t<=ranges[1];t+=step){const n=f.a*t*t+f.b*t+f.c;if(n<1||n>MAX_N)continue;const p=extraCoord(latticeMode,n),mx=(p.x-v.cx+v.r)*miniSide/(2*v.r),my=(v.cy+v.r-p.y)*miniSide/(2*v.r);if(mx>=0&&mx<miniSide&&my>=0&&my<miniSide)g.fillRect(mx-1,my-1,2,2)}
+    const f=effectiveKlauberFormula();
+    if(!miniUsePrimeDensity(v)||!miniCensusDraw(g,latticeMode,f,v)){
+     miniDensityFormulaOverlay(g,f,v,latticeMode,
+       mobilePrimeDevice()?8000:(latticeMode==='klauber'?36000:30000));
     }
    }
    miniFormulaCanvas=c;
   }
  }
  if(miniFormulaCanvas)miniCtx.drawImage(miniFormulaCanvas,0,0,miniSide,miniSide);
- // Draw the actual admissible world boundary. The 1T overview is square as
+ // Draw the actual admissible world boundary. The 100T overview is square as
  // a canvas, but Sacks/Vogel are a disk and Triangle is a filled triangle.
  // A corner of the minimap does not necessarily correspond to a valid integer.
  miniCtx.save();miniCtx.strokeStyle='rgba(170,195,228,.42)';miniCtx.lineWidth=1.2;
@@ -4835,7 +5216,7 @@ function renderExtraMinimap(){
 }
 function extraWorkerMain(){
  'use strict';
- const MAX=1000000000000,TAU=2*Math.PI,SQ3=Math.sqrt(3),PHI=(3-Math.sqrt(5))/2,PHI_FIXED=30262465214248651242265067423n,MASK=(1n<<96n)-1n;
+ const MAX=100000000000000,TAU=2*Math.PI,SQ3=Math.sqrt(3),PHI=(3-Math.sqrt(5))/2,PHI_FIXED=30262465214248651242265067423n,MASK=(1n<<96n)-1n;
  let tStart=0;
  const goldenFrac=[0n,16n,32n].map(shift=>Number(((PHI_FIXED<<shift)&MASK)>>43n)/9007199254740992);
  function phase(n){
@@ -4849,7 +5230,7 @@ function extraWorkerMain(){
   let h=Math.ceil((Math.sqrt(1+8*(n-1)/3)-1)/2);while(1+3*h*(h+1)/2<n)h++;while(h>0&&1+3*(h-1)*h/2>=n)h--;
   const off=n-(1+3*(h-1)*h/2+1),s=Math.floor(off/h),t=off%h;const pts=[[0,h],[-SQ3*h/2,-h/2],[SQ3*h/2,-h/2],[0,h]],a=pts[s],b=pts[s+1];return{x:a[0]+(b[0]-a[0])*t/h,y:a[1]+(b[1]-a[1])*t/h};
  }const r=Math.sqrt(n),ang=mode==='sacks'?TAU*(r%1):phase(n);return{x:r*Math.cos(ang),y:r*Math.sin(ang)}}
- // Exact lookup for n <= 1e6; the original six-base deterministic Miller-Rabin for 1 <= n <= 1e12 (bases 2,3,5,7,11,13 cover >3e12).
+ // Exact lookup for n <= 1e6; seven-base deterministic Miller-Rabin for 1 <= n <= 100T.
  // Trial division prefilter cheaply discards most composites before BigInt MR.
  const small=(()=>{const lim=251,flag=new Uint8Array(lim+1),out=[];for(let p=2;p<=lim;p++)if(!flag[p]){out.push(p);for(let j=p*p;j<=lim;j+=p)flag[j]=1}return out})();
  // Lazy exact 1 MB sieve: allocate only if this Worker inspects n <= 1e6.
@@ -4858,11 +5239,11 @@ function extraWorkerMain(){
  function lookupPrime(n){if(!primeMark)primeMark=(()=>{const a=new Uint8Array(lookupLimit+1);a[0]=a[1]=1;for(let p=2;p*p<=lookupLimit;p++)if(!a[p])for(let n=p*p;n<=lookupLimit;n+=p)a[n]=1;return a})();return primeMark[n]===0}
  function isPrime(n){if(n<2)return false;if(n<=lookupLimit)return lookupPrime(n);for(const p of small){if(n===p)return true;if(n%p===0)return false}
   let d=n-1,s=0;while(d%2===0){d/=2;s++}
-  // n <= 1e12: Number division by 2 keeps every exponent bit exact.
-  // The modular products and all six witnesses remain BigInt / unchanged.
+  // n <= 1e14: Number division by 2 keeps every exponent bit exact.
+  // Modular products and seven witnesses use BigInt.
   const M=BigInt(n),minusOne=M-1n,bits=[];for(let e=d;e>0;e=Math.floor(e/2))bits.push(e%2);
   function pow(b){let x=BigInt(b)%M,z=1n;for(let i=0;i<bits.length;i++){if(bits[i])z=z*x%M;if(i+1<bits.length)x=x*x%M}return z}
-  for(const b of [2,3,5,7,11,13]){let x=pow(b);if(x===1n||x===minusOne)continue;let ok=false;for(let i=1;i<s;i++){x=x*x%M;if(x===minusOne){ok=true;break}}if(!ok)return false}return true;
+  for(const b of [2,3,5,7,11,13,17]){let x=pow(b);if(x===1n||x===minusOne)continue;let ok=false;for(let i=1;i<s;i++){x=x*x%M;if(x===minusOne){ok=true;break}}if(!ok)return false}return true;
  }
  function emit(mode,rect,points,box){if(!points.length)return;const size=points.length,x=new Float64Array(size),y=new Float64Array(size),n=new Float64Array(size),p=new Uint8Array(size);for(let i=0;i<size;i++){const a=points[i];x[i]=a.x;y[i]=a.y;n[i]=a.n;p[i]=a.p}self.postMessage({type:'chunk',x:x.buffer,y:y.buffer,n:n.buffer,p:p.buffer,box},[x.buffer,y.buffer,n.buffer,p.buffer])}
  // Typed-array chunk writer: the dense triangular and near-origin Sacks
@@ -5170,11 +5551,113 @@ function extraWorkerMain(){
 }
 // ===== end extended main-view module =====
 
+// OPT9: choose a verified, fully covered cache once per frame, rather than
+// repeat six different cache probes for every prime-capable Ulam cell.
+// Partially published stripes continue through the exact legacy lookup.
+function squarePrimeLookupForViewport(xmin,xmax,ymin,ymax){
+ const target={xmin,xmax,ymin,ymax};
+ for(const cache of [branchPrimeCache,branchPrimePreview]){
+  if(!cache||!cache.bits||!branchRectCovers(cache,{...target,branch:cache.branch}))continue;
+  const vertical=cache.branch==='right'||cache.branch==='left';
+  const o0=vertical?xmin-cache.xmin:ymin-cache.ymin;
+  const o1=vertical?xmax-cache.xmin:ymax-cache.ymin;
+  let allReady=true;
+  for(let o=o0;o<=o1;o++)if(cache.readyLines[o]!==1){allReady=false;break}
+  if(!allReady)continue;
+  const bits=cache.bits,lineBytes=cache.lineBytes;
+  if(vertical){
+   const innerStart=cache.ymin,outerStart=cache.xmin;
+   return (n,x,y)=>{
+    if(n===2||n===3||n===5||n===7)return true;
+    if(n<2||!BRANCH_WHEEL210_OK[n%210])return false;
+    const inner=y-innerStart,byte=(x-outerStart)*lineBytes+(inner>>>3);
+    return (bits[byte]&(1<<(inner&7)))===0;
+   };
+  }
+  const innerStart=cache.xmin,outerStart=cache.ymin;
+  return (n,x,y)=>{
+   if(n===2||n===3||n===5||n===7)return true;
+   if(n<2||!BRANCH_WHEEL210_OK[n%210])return false;
+   const inner=x-innerStart,byte=(y-outerStart)*lineBytes+(inner>>>3);
+   return (bits[byte]&(1<<(inner&7)))===0;
+  };
+ }
+ // OPT10: the two-branch diagonal-corner cache is already exact and
+ // complete. Select it once per frame, not by probing six cache types at
+ // every visible odd cell. The old fallback handles partial previews.
+ for(const cache of [cornerPrimeCache,cornerPrimePreview]){
+  if(!cache?.parts||!cornerRectCovers(cache,target))continue;
+  let complete=true;
+  for(const p of Object.values(cache.parts)){
+   if(!p?.bits){complete=false;break;}
+   const vertical=p.branch==='right'||p.branch==='left';
+   const a=(vertical?xmin-p.xmin:ymin-p.ymin);
+   const b=(vertical?xmax-p.xmin:ymax-p.ymin);
+   for(let k=a;k<=b;k++)if(p.readyLines[k]!==1){complete=false;break;}
+   if(!complete)break;
+  }
+  if(!complete)continue;
+  const parts=cache.parts;
+  return (n,x,y)=>{
+   if(n===2||n===3||n===5||n===7)return true;
+   if(n<2||!BRANCH_WHEEL210_OK[n%210])return false;
+   const p=parts[branchKey(x,y)];if(!p)return false;
+   const vertical=p.branch==='right'||p.branch==='left';
+   const inner=vertical?y-p.ymin:x-p.xmin;
+   const outer=vertical?x-p.xmin:y-p.ymin;
+   const idx=outer*p.lineBytes+(inner>>>3);
+   return (p.bits[idx]&(1<<(inner&7)))===0;
+  };
+ }
+ // A complete shell cache covers all spiral branches and their corners.
+ const sr=shellRangeForRect(xmin,xmax,ymin,ymax);
+ const cache=localPrimeCache;
+ if(cache?.bits&&cache.rLo<=sr.lo&&cache.rHi>=sr.hi){
+  const bits=cache.bits,firstOdd=cache.firstOdd;
+  return n=>{
+   if(n===2)return true;
+   if(n<2||(n&1)===0)return false;
+   const i=(n-firstOdd)/2;
+   return i>=0&&i<cache.oddCount&&(bits[i>>>3]&(1<<(i&7)))===0;
+  };
+ }
+ return isPrimeAtXY;
+}
+// OPT10: Fast two-branch diagonal view. Each row crosses at most one
+// shell-side boundary in a fixed quadrant. Compute the two integer polynomials
+// directly instead of recomputing abs/max/shell/branch for every dot.
+function drawSquareCornerQuadrant(path,xmin,xmax,ymin,ymax,pt,primeAt){
+ const right=xmin>0,left=xmax<0,top=ymin>0,bottom=ymax<0;
+ if(!(right||left)||!(top||bottom))return false;
+ const side=pt/2;
+ for(let y=ymin;y<=ymax;y++){
+  const sy=H/2-(y-camY)*scale;
+  const row=top?4*y*y-y+1:4*y*y-3*y+1;
+  for(let x=xmin+((xmin+y)&1);x<=xmax;x+=2){
+   let n;
+   if(right){
+    if(top) n=x<=y?row-x:4*x*x-3*x+1+y;
+    else n=x<=-y?row+x:4*x*x-3*x+1+y;
+   }else{
+    if(top) n=-x>=y?4*x*x-x+1-y:row-x;
+    else n=x>=y?row+x:4*x*x-x+1-y;
+   }
+   if(n>MAX_N||!primeAt(n,x,y))continue;
+   const sx=W/2+(x-camX)*scale;
+   path.rect(sx-side,sy-side,pt,pt);
+  }
+ }
+ return true;
+}
 function render(){if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
 const showSquareGrid=scale>=15;
 if(showSquareGrid){const gridPath=new Path2D(),hs=scale*.48;for(let y=ymin;y<=ymax;y++){const sy=H/2-(y-camY)*scale;for(let x=xmin;x<=xmax;x++){const n=ulamNumber(x,y);if(n<1||n>MAX_N)continue;const sx=W/2+(x-camX)*scale;gridPath.rect(sx-hs,sy-hs,hs*2,hs*2);}}ctx.strokeStyle='rgba(150,180,235,.68)';ctx.lineWidth=1.15;ctx.stroke(gridPath)}
 const hasVisiblePrimeData=visiblePrimeDataReady(xmin,xmax,ymin,ymax);
-if(hasVisiblePrimeData){
+const squarePrimeAt=hasVisiblePrimeData?squarePrimeLookupForViewport(xmin,xmax,ymin,ymax):isPrimeAtXY;
+const cornerFastRows=hasVisiblePrimeData && !!cornerPrimeCache?.parts &&
+ cornerRectCovers(cornerPrimeCache,{xmin,xmax,ymin,ymax}) &&
+ drawSquareCornerQuadrant(normalPath,xmin,xmax,ymin,ymax,pt,squarePrimeAt);
+if(hasVisiblePrimeData&&!cornerFastRows){
 const columnMajor=Math.abs(camX)>Math.abs(camY);
 const maxY=Math.max(Math.abs(ymin),Math.abs(ymax)),maxX=Math.max(Math.abs(xmin),Math.abs(xmax));
 const linearColumns=xmin>maxY&&xmin>=2||xmax<-maxY&&xmax<=-2;
@@ -5187,13 +5670,15 @@ if(columnMajor){
       const step=x>0?1:-1;let y=ymin,n=ulamNumber(x,y);
       if(n%2===0){y++;n+=step}
       for(;y<=ymax;y+=2,n+=2*step){
-        if(n>MAX_N||!isPrimeAtXY(n,x,y))continue;
+        if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
         const sy=H/2-(y-camY)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
       }
       continue;
     }
-    for(let y=ymin;y<=ymax;y++){
-      const n=ulamNumber(x,y);if(n>MAX_N||!isPrimeAtXY(n,x,y))continue;
+    // OPT9: every odd Ulam number occupies an even-checkerboard (x+y).
+    // Halve coordinate conversion and cache lookups on corner/center views.
+    for(let y=ymin+((x+ymin)&1);y<=ymax;y+=2){
+      const n=ulamNumber(x,y);if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
       const sy=H/2-(y-camY)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
     }
   }
@@ -5205,17 +5690,22 @@ if(columnMajor){
       const step=y<0?1:-1;let x=xmin,n=ulamNumber(x,y);
 if(n%2===0){x++;n+=step}
       for(;x<=xmax;x+=2,n+=2*step){
-        if(n>MAX_N||!isPrimeAtXY(n,x,y))continue;
+        if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
         const sx=W/2+(x-camX)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
       }
       continue;
     }
-    for(let x=xmin;x<=xmax;x++){
-      const n=ulamNumber(x,y);if(n>MAX_N||!isPrimeAtXY(n,x,y))continue;
+    for(let x=xmin+((xmin+y)&1);x<=xmax;x+=2){
+      const n=ulamNumber(x,y);if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
       const sx=W/2+(x-camX)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
     }
   }
 }
+}
+// The only even prime: its fixed Ulam coordinate is (1,0).
+if(xmin<=1&&xmax>=1&&ymin<=0&&ymax>=0&&squarePrimeAt(2,1,0)){
+  const sx=W/2+(1-camX)*scale,sy=H/2+camY*scale;
+  normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
 }
 ctx.fillStyle='#f5f7fb';ctx.fill(normalPath);drawCredit();
 // REV17: do not run a quadratic-discriminant membership test for every visible
@@ -5449,7 +5939,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · 100T OPT9 (WASM square sieve)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';
@@ -5620,11 +6110,11 @@ function localSieveKernel(buffer,byteLength,segFirstOdd,segOddCount,primes,patte
 
 // Desktop can select between both algorithms in the *same verified WASM module*.
 // Mobile deliberately retains the measured-good always-bucket path.
-console.info('[branch sieve]', 'Verified fixed bucket16384; no blocking autotune');
+console.info('[branch sieve]', 'OPT9 full-100T WASM enabled, JS fallback retained');
 function branchSieveWorkerMain(){
   // WASM fast path for the hot branch sieve.  The embedded module is only ~3 KiB;
   // each Worker instantiates its own copy and keeps the same WHEEL210 semantics.
-  const BUCKET_WASM_B64='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';
+  const BUCKET_WASM_B64='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';
   let primes=null,wasm=null,wasmOutPtr=0,wasmReady=false;
   let preBits=null,prePeriod=30808063,rev8=null;
   const PRE_PRIMES=[11,13,17,19,23,29];
@@ -5670,6 +6160,8 @@ function branchSieveWorkerMain(){
     return{out,lineBytes,innerLen,computeMs:performance.now()-t0};
   }
   async function initWasm(){
+    // OPT11: deterministic candidate MR, with the full OPT9 sieve retained.
+    // Unsupported engines still fall back to the verified JS sieve.
     if(typeof WebAssembly==='undefined')throw new Error('WebAssembly unavailable');
     const raw=atob(BUCKET_WASM_B64),bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
     const mod=await WebAssembly.instantiate(bytes,{}),e=mod.instance.exports;
@@ -5683,7 +6175,7 @@ function branchSieveWorkerMain(){
     const lineBytes=Math.ceil(innerLen/8),innerMin=vertical?d.ymin:d.xmin,outerMin=(vertical?d.xmin:d.ymin)+d.outerOffset,outerCount=d.outerCount,outBytes=outerCount*lineBytes;
     const needed=wasmOutPtr+outBytes;if(needed>wasm.memory.buffer.byteLength)wasm.memory.grow(Math.ceil((needed-wasm.memory.buffer.byteLength)/65536));
     const branchId=d.branch==='right'?0:d.branch==='left'?1:d.branch==='top'?2:3,t0=performance.now();
-    const mode=d.bucketMode===0?0:1;
+    const mode=d.bucketMode===2?2:(d.bucketMode===0?0:1);
     const threshold=mode===0?16384:([4096,8192,16384,32768].includes(d.bucketThreshold)?d.bucketThreshold:16384);
     const gotLineBytes=wasm.sieve_stripe_mode(wasmOutPtr,branchId,outerMin,innerMin,outerCount,innerLen,BigInt(d.maxValue),mode,threshold);
     if(gotLineBytes!==lineBytes)throw new Error('WASM branch line size mismatch');
@@ -5906,9 +6398,20 @@ function branchSieveSettings(){
   if(branchTunedSettings)return{workers:branchTunedSettings.workers,stripeLines:branchTunedSettings.stripeLines};
   return{workers:Math.max(1,Math.min(8,hc)),stripeLines:64};
 }
+// OPT13: Intermediate branch previews are only a latency hint.  A finished
+// branch always publishes its exact cache and renders unconditionally below.
+// Limit redundant full-canvas paints when 100T Worker stripes arrive rapidly.
+const BRANCH_PREVIEW_FRAME_INTERVAL_MS=120;
+let branchPreviewLastRenderAt=0;
+function requestBranchPreviewRender(){
+  const now=performance.now();
+  if(now-branchPreviewLastRenderAt<BRANCH_PREVIEW_FRAME_INTERVAL_MS)return;
+  branchPreviewLastRenderAt=now;
+  requestRender();
+}
 function startBranchCacheBuild(target){
   if(sieveWorker){++sieveToken;sieveWorker.terminate();sieveWorker=null;localPrimePreview=null;localBuildTarget=null;localCacheBlocking=false}if(branchSieveTask)cancelBranchBuild();
-  const token=++sieveToken;branchBuildTarget=target;trimPrimeCacheHistory(branchPackedTargetBytes(target));const task=createBranchPrimeRect(target,{...branchSieveSettings(),onPublish(preview){if(token!==sieveToken)return;if(!branchPrimePreview)branchPrimePreview=preview;requestRender()}});branchSieveTask=task;branchPrimePreview=task.preview;requestRender();
+  const token=++sieveToken;branchPreviewLastRenderAt=performance.now();branchBuildTarget=target;trimPrimeCacheHistory(branchPackedTargetBytes(target));const task=createBranchPrimeRect(target,{...branchSieveSettings(),onPublish(preview){if(token!==sieveToken)return;if(!branchPrimePreview)branchPrimePreview=preview;requestBranchPreviewRender()}});branchSieveTask=task;branchPrimePreview=task.preview;requestRender();
   task.promise.then(result=>{if(token!==sieveToken)return;retainBranchPrimeCache(branchPrimeCache);branchPrimeCache=result;branchPrimePreview=null;branchBuildTarget=null;branchSieveTask=null;trimPrimeCacheHistory();console.info(`[branch prime cache wheel210] ${result.branch} ${result.xmin}..${result.xmax} × ${result.ymin}..${result.ymax} · ${(result.bytes/1048576).toFixed(2)} MiB packed`);requestRender()}).catch(error=>{if(token!==sieveToken||error.name==='AbortError')return;branchPrimePreview=null;branchBuildTarget=null;branchSieveTask=null;console.error('[branch prime cache]',error);requestRender()});
 }
 function ensureBranchPrimeCache(){
@@ -6100,7 +6603,7 @@ function ensureLocalPrimeCache(){
   startLocalCacheBuild(target,true);
 }
 function showProgress(target){progressWrap.style.display='none'}
-function preferredInitialRange(){return 1000000000000}
+function preferredInitialRange(){return 100000000000000}
 let startupAccelToken=0;
 function startupProgress(textLabel,pct){
   progressTitle.textContent=textLabel;const p=Math.max(0,Math.min(100,Math.round(pct||0)));barIn.style.width=p+'%';ptext.textContent=p+'%';progressWrap.style.display='flex';

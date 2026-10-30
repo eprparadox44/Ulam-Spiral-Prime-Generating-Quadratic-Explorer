@@ -61,7 +61,7 @@ def main():
           '<html' in html and doc.style_count>=1 and len(doc.inline_scripts)==1 and
           not doc.external_scripts and not doc.stylesheet_links)
     check('product title',PROJECT_TITLE in html)
-    check('1T navigation', 'MAX_N=1000000000000' in html and 'id="jumpInput"' in html)
+    check('100T navigation', 'MAX_N=100000000000000' in html and 'id="jumpInput"' in html)
     check('corner preview throttle',bool(re.search(r'CORNER_PREVIEW_FRAME_INTERVAL_MS\s*=\s*160\b',html)))
     check('startup at 1','Startup always begins at Ulam number 1' in html)
     check('all five visible spiral modes',all(f'value="{mode}"' in html for mode in
@@ -69,18 +69,18 @@ def main():
     check('hexagonal and triangular formulas preserved', 'EXTRA_TRI_BASE_DIRS' in html and 'hexLineFormula(' in html)
     check('pinned triangular formulas preserved', 'extraTriDeduplicateConstants' in html and 'if(f.pinned)continue' in html and 'fixed.filter(f=>f.pinned||' in html)
     check('quadratic presets preserved', all(x in html for x in ['SEARCH_AB_PRESETS_HEX','SEARCH_AB_PRESETS_SQUARE','SEARCH_AB_PRESETS_TRI','SEARCH_AB_PRESETS_SACKS']))
-    check('existing +/-7M search defaults preserved', 'id="cMin" inputmode="numeric" value="-7000000"' in html and 'id="cMax" inputmode="numeric" value="7000000"' in html)
+    check('existing +/-70M search defaults preserved', 'id="cMin" inputmode="numeric" value="-70000000"' in html and 'id="cMax" inputmode="numeric" value="70000000"' in html)
     check('Vogel internal path preserved', 'ENABLE_VOGEL_MODE' in html and 'vogelArmCandidates' in html and 'vogelPairCandidates' in html)
     check('saved formulas preserved','ulam_saved_formulas_v1' in html)
     check('Klauber natural-index and geometry functions preserved',all(x in html for x in
         ('extraKlauberNumber(', 'klauberProjectFormula(', 'klauberSlopeOnly', 'klauberMiniTermsInView(')))
-    check('minimap levels and exact density functions preserved', 'const MINI_LEVELS=[100000000,1000000000,10000000000,100000000000,1000000000000]' in html and
+    check('minimap levels and exact density functions preserved', 'const MINI_LEVELS=[100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000]' in html and
         all(s in html for s in ['function miniUsePrimeDensity(', 'function miniCensusSources(', 'function miniSparseFormulaExpected(']))
     check('density only eligible at 100M or 1B', 'view.n!==100000000 && view.n!==1000000000' in html)
     check('no diagnostic UI',all(f'id="{n}"' not in html for n in ('debugPanel','diagnosticPanel','testDiagnostics')))
     check('MIT license retained','MIT License' in html and 'Permission is hereby granted' in html)
-    manifest=root/'checksums_v1.3.0.sha256'
-    if version=='v1.3.0' and manifest.is_file():
+    manifest=root/f'checksums_{version}.sha256'
+    if manifest.is_file():
         check('SHA-256 manifest matches all three HTML files', all(f'{hashlib.sha256((root / fn).read_bytes()).hexdigest()}  {fn}' in manifest.read_text(encoding='utf-8') for fn in ('index.html',OFFICIAL_NAME,PROJECT_TITLE+' '+version+'.html')))
     node=shutil.which('node')
     if args.require_node:check('Node.js available',bool(node))
