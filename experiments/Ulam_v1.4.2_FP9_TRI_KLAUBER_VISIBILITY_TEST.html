@@ -470,6 +470,17 @@ function rangeNameEn(n){
   return n.toLocaleString();
 }
 function localizeSlopeLabel(label){
+  // FP9 lattice recommendations must retain their geometric slope labels
+  // (also when the interface language changes).
+  const triGeom=/^(?:삼각 기울기 |Tri slope )(.+)$/.exec(label||'');
+  if(triGeom){
+    const everyTwo=/(?: · 2칸 간격| · every 2nd cell)$/.test(triGeom[1]);
+    const slope=triGeom[1].replace(/ · (?:2칸 간격|every 2nd cell)$/,'');
+    return (currentLang==='ko'?'삼각 기울기 ':'Tri slope ')+slope+
+      (everyTwo?(currentLang==='ko'?' · 2칸 간격':' · every 2nd cell'):'');
+  }
+  const klauberGeom=/^(?:클라우버 기울기 |Klauber slope )([+−]1\/\d+)$/.exec(label||'');
+  if(klauberGeom)return (currentLang==='ko'?'클라우버 기울기 ':'Klauber slope ')+klauberGeom[1];
   // Translate newly generated Sacks labels even if the language is switched
   // after the point-analysis Worker has returned (no recomputation required).
   const sacksSlope=/^(?:Basic slope|기본 기울기) (0|∞|\+1|−1)/.exec(label||'');
