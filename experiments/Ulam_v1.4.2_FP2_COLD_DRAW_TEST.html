@@ -5772,6 +5772,20 @@ function squarePrimeLookupForViewport(xmin,xmax,ymin,ymax){
 function drawSquareCornerQuadrant(path,xmin,xmax,ymin,ymax,pt,primeAt){
  const right=xmin>0,left=xmax<0,top=ymin>0,bottom=ymax<0;
  if(!(right||left)||!(top||bottom))return false;
+ // Bottom-left's original branchy loop is faster on our standalone V8
+ // microbenchmark; retain it until device-level evidence warrants a change.
+ if(left&&bottom){
+  const side=pt/2;
+  for(let y=ymin;y<=ymax;y++){
+   const sy=H/2-(y-camY)*scale,row=4*y*y-3*y+1;
+   for(let x=xmin+((xmin+y)&1);x<=xmax;x+=2){
+    const n=x>=y?row+x:4*x*x-x+1-y;
+    if(n>MAX_N||!primeAt(n,x,y))continue;
+    const sx=W/2+(x-camX)*scale;path.rect(sx-side,sy-side,pt,pt);
+   }
+  }
+  return true;
+ }
  const side=pt/2,px0=W/2-camX*scale;
  for(let y=ymin;y<=ymax;y++){
   const sy=H/2-(y-camY)*scale,row=top?4*y*y-y+1:4*y*y-3*y+1;
