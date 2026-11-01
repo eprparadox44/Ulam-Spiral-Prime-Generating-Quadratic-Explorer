@@ -46,5 +46,11 @@ jobs:
           set -euo pipefail
           gh release view v1.4.3 --json tagName,name,isDraft,isPrerelease,assets
           mkdir -p "$RUNNER_TEMP/v143_release"
-          gh release download v1.4.3 -p 'Ulam Spiral & Prime-Generating Quadratic Explorer v1.4.3.html' --dir "$RUNNER_TEMP/v143_release"
-          cmp -s 'Ulam Spiral & Prime-Generating Quadratic Explorer v1.4.3.html' "$RUNNER_TEMP/v143_release/Ulam Spiral & Prime-Generating Quadratic Explorer v1.4.3.html"
+          # GitHub converts spaces to dots in attached asset filenames.
+          gh release download v1.4.3 -p '*.html' --dir "$RUNNER_TEMP/v143_release"
+          test "$(find "$RUNNER_TEMP/v143_release" -type f -name '*.html' | wc -l)" -eq 1
+          expected="$(sha256sum 'Ulam Spiral & Prime-Generating Quadratic Explorer v1.4.3.html' | cut -d' ' -f1)"
+          actual="$(sha256sum "$RUNNER_TEMP/v143_release/"*.html | cut -d' ' -f1)"
+          test "$expected" = "$actual"
+          gh release download v1.4.3 -p checksums_v1.4.3.sha256 --dir "$RUNNER_TEMP/v143_release"
+          cmp -s checksums_v1.4.3.sha256 "$RUNNER_TEMP/v143_release/checksums_v1.4.3.sha256"
