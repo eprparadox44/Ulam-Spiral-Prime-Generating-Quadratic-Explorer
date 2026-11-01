@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.4.2 — 100T prime exploration, five-mode density minimaps, accurate and accelerated point-sequence statistics
+Release: v1.4.3 — 100T optimized five-mode prime exploration and geometric quadratic recommendations
 
 MIT License
 
@@ -27,9 +27,9 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.4.2">
+<meta name="application-version" content="1.4.3">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral · v1.4.2 (100T)</title>
+<title>Ulam Spiral · v1.4.3 (100T)</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
@@ -470,6 +470,17 @@ function rangeNameEn(n){
   return n.toLocaleString();
 }
 function localizeSlopeLabel(label){
+  // FP9 lattice recommendations must retain their geometric slope labels
+  // (also when the interface language changes).
+  const triGeom=/^(?:삼각 기울기 |Tri slope )(.+)$/.exec(label||'');
+  if(triGeom){
+    const everyTwo=/(?: · 2칸 간격| · every 2nd cell)$/.test(triGeom[1]);
+    const slope=triGeom[1].replace(/ · (?:2칸 간격|every 2nd cell)$/,'');
+    return (currentLang==='ko'?'삼각 기울기 ':'Tri slope ')+slope+
+      (everyTwo?(currentLang==='ko'?' · 2칸 간격':' · every 2nd cell'):'');
+  }
+  const klauberGeom=/^(?:클라우버 기울기 |Klauber slope )([+−]1\/\d+)$/.exec(label||'');
+  if(klauberGeom)return (currentLang==='ko'?'클라우버 기울기 ':'Klauber slope ')+klauberGeom[1];
   // Translate newly generated Sacks labels even if the language is switched
   // after the point-analysis Worker has returned (no recomputation required).
   const sacksSlope=/^(?:Basic slope|기본 기울기) (0|∞|\+1|−1)/.exec(label||'');
@@ -2316,10 +2327,28 @@ function quickFormulaScore(a,b,c,limit=3000){
   }
   return score;
 }
+// FP7: visibility is a recommendation *tie-in*, not a bonus for already
+// pinned/fixed baseline formulas. Real square/hex geometric directions only.
+// All other modes retain their existing fixed, special-arm, and polynomial
+// recommendation ordering; their placeholder (dx,dy) must not be interpreted
+// as measured geometric spacing.
 function pointVisibilityBonus(f){
-  const ax=Math.abs(f.dx),ay=Math.abs(f.dy),mn=Math.min(ax,ay),mx=Math.max(ax,ay);if(!mn||mx<=1)return 0;
-  if(mn===1){const k=mx,base=(k%2===1)?12/(k+1):6/(k+2);return 1.5*base}
-  return 9/(Math.hypot(ax,ay)+1);
+  if(!f||f.kind!=='dynamic')return 0;
+  // Extra-mode coefficient presets have placeholder directions: never score
+  // them as geometric lines. Only exact lattice-verified candidates qualify.
+  const extraGeom=latticeMode==='tri'||latticeMode==='klauber';
+  if(extraGeom&&!f.geomVerified)return 0;
+  if(!extraGeom&&latticeMode!=='square'&&latticeMode!=='hex')return 0;
+  const dx=f.dx,dy=f.dy;
+  if(!Number.isSafeInteger(dx)||!Number.isSafeInteger(dy)||(!dx&&!dy)||
+     !Number.isSafeInteger(f.a)||!Number.isSafeInteger(f.b))return 0;
+  const d2=(latticeMode==='hex'||latticeMode==='tri')
+    ?dx*dx+dx*dy+dy*dy:dx*dx+dy*dy;
+  if(d2<=0)return 0;
+  const alternating=(f.a+f.b)%2!==0;
+  // Alternation doubles the physical spacing; D>=5 then has no bonus.
+  if(alternating?d2>=25:d2>100)return 0;
+  return 13/(Math.sqrt(d2)*(alternating?2:1));
 }
 function preparePointCandidates(x,y){
   if(isExtraMode())return extraPointCandidates(selected?.n||extraApproxNumber(x,y));
@@ -2413,6 +2442,9 @@ function deferPointAnalysis(x,y){
   requestAnimationFrame(()=>setTimeout(begin,0));
 }
 function analyzePointAsync(x,y){
+  const fp6Start=FP6_STATS_PROFILE?performance.now():0;
+  let fp6WorkerJobs=0,fp6WorkerTotal=0,fp6WorkerMax=0;
+  const fp6PointJobTimes=[];
   stopSavedStatsBackfill();cancelPointAnalysis(false);
   const token=pointAnalyzeToken,prepared=dedupePointCandidatesByNaturalSequence(preparePointCandidates(x,y)),all=prepared.fixed.concat(prepared.pool),stats=new Map(),lineStats=new Map(),projectedStats=new Map(),jobs=[],jobByStatsKey=new Map();
   pointAnalysisPending=true;formulas=[];renderFormulaPanel();sched();
@@ -2475,6 +2507,14 @@ function analyzePointAsync(x,y){
     }
     pointAnalysisPending=false;pointAnalysisDoneKey=pointSelectionKey(x,y);
     selEl.innerHTML=selectionSummary();renderFormulaPanel();renderSavedPanel();sched();
+    if(FP6_STATS_PROFILE){
+      const result={point:selected?.n,overallMs:performance.now()-fp6Start,
+        jobs:fp6WorkerJobs,totalWorkerCpuMs:fp6WorkerTotal,
+        maxSingleJobMs:fp6WorkerMax,workerCount:Math.min(jobs.length,pointAnalyzeWorkerCap()),
+        slowest:fp6PointJobTimes.sort((a,b)=>b.ms-a.ms).slice(0,8)};
+      window.__ulamFP6Profile.point.push(result);
+      console.info('[FP6 point profile]',result);
+    }
   }
   if(!jobs.length){commit();return}
   revealCompletedFixed();
@@ -2515,7 +2555,7 @@ function analyzePointAsync(x,y){
     schedulePointAnalyzeWarmup(80);
   }
   function fail(message){if(failed||token!==pointAnalyzeToken)return;failed=true;cleanup(false);pointAnalysisPending=false;formulaList.innerHTML=`<div class="formulaMeta">${escapeHTML(String(message))}</div>`;sched()}
-  function send(w){if(token!==pointAnalyzeToken||failed)return;if(next>=jobs.length){w._busy=false;return}const job=jobs[next++];w._busy=true;w._job=job;w.postMessage({type:'job',index:next-1,a:job.a,b:job.b,c:job.c,paramRange:job.paramRange,naturalOnly:latticeMode==='klauber'})}
+  function send(w){if(token!==pointAnalyzeToken||failed)return;if(next>=jobs.length){w._busy=false;return}const job=jobs[next++];w._busy=true;w._job=job;w.postMessage({type:'job',index:next-1,a:job.a,b:job.b,c:job.c,paramRange:job.paramRange,naturalOnly:latticeMode==='klauber',profile:FP6_STATS_PROFILE})}
   try{
     pointAnalyzeWorkers=[];
     for(let i=0;i<workerCount;i++){
@@ -2527,6 +2567,10 @@ function analyzePointAsync(x,y){
         if(d.type==='error'){fail(d.message);return}
         const job=w._job;if(d.type!=='result'||!job){fail('Point-analysis worker response error');return}
         const fs=d.stats;w._job=null;
+        if(FP6_STATS_PROFILE&&Number.isFinite(d.workMs)){
+          fp6WorkerJobs++;fp6WorkerTotal+=d.workMs;fp6WorkerMax=Math.max(fp6WorkerMax,d.workMs);
+          fp6PointJobTimes.push({a:job.a,b:job.b,c:job.c,ms:d.workMs});
+        }
         for(const receiver of job.receivers){
           (receiver.kind==='line'?lineStats:receiver.kind==='global'?projectedStats:stats).set(receiver.id,fs);
         }
@@ -2784,6 +2828,9 @@ function sched(cacheDelay=140){
   requestRender();
 }
 
+// FP6 optional point-worker timing, disabled unless ?statsProfile=1.
+const FP6_STATS_PROFILE=new URLSearchParams(location.search).get('statsProfile')==='1';
+window.__ulamFP6Profile={point:[],search:[],activeSearch:null};
 function cSearchWorkerMain(){
   function primesUpTo(limit){
     const mark=new Uint8Array(limit+1),out=[];
@@ -2851,6 +2898,18 @@ function cSearchWorkerMain(){
   function topFromRange(lo,hi,infos,cap,token,oddCOnly,progressBase=0,progressTotal=0){
     const start=oddCOnly&&lo%2===0?lo+1:lo,step=oddCOnly?2:1;
     const total=start<=hi?Math.floor((hi-start)/step)+1:0,heap=[];
+    // FP6: for small c ranges, scoring existing candidates directly is
+    // cheaper than initializing the 15,015-residue large-range wheel.
+    // Uses the exact same scoreC(), prime order, heap and strict tie policy.
+    if(total<=4096){
+      for(let j=0;j<total;j++){
+        const c=start+j*step,score=scoreC(c,infos);
+        if(heap.length<cap||score>heap[0].score)heapPush(heap,{c,score},cap);
+      }
+      self.postMessage({type:'progress',token,phase:1,
+        done:progressBase+total,total:progressTotal||total});
+      return heap.sort((a,b)=>b.score-a.score);
+    }
     const tables=infos.map(z=>{
       const values=new Float64Array(z.p);
       for(let r=0;r<z.p;r++)values[r]=scoreC(r,[z]);
@@ -3140,8 +3199,10 @@ function formulaStatsWorkerMain(){
     if(d.type==='job'){
       let range=d.paramRange||formulaParamRange(d.a,d.b,d.c,maxN);
       if(d.naturalOnly&&range){const lo=Math.max(1,range[0]);range=lo<=range[1]?[lo,range[1]]:null}
+      const fp6Start=d.profile?performance.now():0;
       const stats=accurateStats(d.a,d.b,d.c,range);
-      self.postMessage({type:'result',index:d.index,stats});
+      self.postMessage({type:'result',index:d.index,stats,
+        ...(d.profile?{workMs:performance.now()-fp6Start}:{})});
     }
   }catch(err){self.postMessage({type:'error',message:String(err&&err.message||err)})}};
 }
@@ -3228,6 +3289,18 @@ function renderCSearchResults(rows){
 }
 function finishCSearchVerification(rows,token){
   if(token!==cSearchToken)return;
+  if(FP6_STATS_PROFILE){
+    const p=window.__ulamFP6Profile.activeSearch;
+    if(p?.token===token){
+      const totalMs=performance.now()-p.started;
+      const result={a:p.a,b:p.b,cMin:p.lo,cMax:p.hi,totalMs,
+        prefilterMs:p.prefilterMs,verificationMs:totalMs-p.prefilterMs,
+        candidates:p.candidates,resultCount:rows.length};
+      window.__ulamFP6Profile.search.push(result);
+      window.__ulamFP6Profile.activeSearch=null;
+      console.info('[FP6 c-search profile]',result);
+    }
+  }
   if(cVerifyWorkers.length){for(const w of cVerifyWorkers)try{w.terminate()}catch(_){}cVerifyWorkers=[]}
   rows.sort((u,v)=>v.oddRatio-u.oddRatio||v.oddPrimeCount-u.oddPrimeCount||v.ratio-u.ratio);
   renderCSearchResults(rows);
@@ -3481,6 +3554,10 @@ function startCSearch(){
   const countEligible=splitCSearchIntervals(intervals,oddOnly,1).total;
   stopCSearchRun();
   const token=++cSearchToken;
+  if(FP6_STATS_PROFILE){
+    window.__ulamFP6Profile.activeSearch={token,started:performance.now(),a,b,lo,hi,
+      candidates:null,prefilterMs:null};
+  }
   lastCSearchRows=[];cResults.innerHTML='';runCSearch.disabled=true;stopCSearch.disabled=false;
   cSearchStatus.textContent=geometryFilter?tr('slopeFilterCount',countEligible,span):tr('prefilterStart',lo,hi,span);
   if(!countEligible){
@@ -3515,6 +3592,10 @@ function startCSearch(){
   cSearchPool=workers;cSearchWorker=workers[0];
   const handleDone=candidates=>{
     if(token!==cSearchToken)return;
+    if(FP6_STATS_PROFILE){
+      const p=window.__ulamFP6Profile.activeSearch;
+      if(p?.token===token){p.prefilterMs=performance.now()-p.started;p.candidates=candidates.length;}
+    }
     cleanupPool();
     cSearchStatus.textContent=tr('prefilterDone',candidates.length);
     verifyCSearchCandidates(a,b,candidates,token);
@@ -4154,8 +4235,10 @@ function extraTriBranch(i,j){
  if(-i-2*j===h&&-h<j&&j<=0)return 1;
  return 2;
 }
-function extraTriLineFormula(n,dir,stride=1){
- const ij=extraTriIJ(n),branch=extraTriBranch(ij.i,ij.j);
+function extraTriLineFormula(n,dir,stride=1,knownAnchor=null){
+ // FP10: share immutable selected-point coordinates between directions.
+ const ij=knownAnchor?knownAnchor.ij:extraTriIJ(n);
+ const branch=knownAnchor?knownAnchor.branch:extraTriBranch(ij.i,ij.j);
  if(branch<0)return null;
  const dx=dir.dx*stride,dy=dir.dy*stride;
  const value=t=>extraTriNumberFromIJ(ij.i+dx*t,ij.j+dy*t);
@@ -4276,6 +4359,84 @@ function extraKlauberPointCandidates(n,seen){
  }
  return rows;
 }
+// FP10: exact O(1) endpoints for Klauber line candidates.
+// Intersection of |d*r+e|<=r, r>=0, and the 100T row bound.
+// Only the last partial row can exceed MAX_N; no per-direction binary search.
+function extraKlauberLineFormulaFast(n,dir,at){
+ const p=at||extraKlauberCoord(n),r0=-p.y,c0=p.x,d=dir.d,e=c0-d*r0;
+ let minRow=0,maxRow=Math.floor(Math.sqrt(MAX_N-1));
+ const le=(a,b)=>{
+  if(a>0)maxRow=Math.min(maxRow,Math.floor(b/a));
+  else if(a<0)minRow=Math.max(minRow,Math.ceil(b/a));
+  else if(0>b)maxRow=-1;
+ };
+ const ge=(a,b)=>{
+  if(a>0)minRow=Math.max(minRow,Math.ceil(b/a));
+  else if(a<0)maxRow=Math.min(maxRow,Math.floor(b/a));
+  else if(0<b)maxRow=-1;
+ };
+ le(d-1,-e);ge(d+1,-e);
+ if(maxRow<minRow||r0<minRow||r0>maxRow)return null;
+ const a=1,b=1+d,c=1+e;
+ if(maxRow*maxRow+b*maxRow+c>MAX_N)maxRow--;
+ const span=maxRow-minRow+1;
+ if(span<3||fixedDivisor(a,b,c))return null;
+ return{a,b,c,dx:dir.dx,dy:dir.dy,
+   label:currentLang==='ko'?`클라우버 ${dir.ko}`:`Klauber ${dir.en}`,
+   kind:'fixed',localSpan:span,
+   klauberSegment:{minRow,maxRow,d,intercept:e}};
+}
+
+// FP9: measured directions for additional Tri / Klauber recommendations.
+// All original fixed baseline and coefficient-preset candidates are preserved.
+// FP10: compute geometric direction eligibility once, not per point.
+const EXTRA_TRI_GEOM_DIRS=DYNAMIC_DIRS.filter(d=>{
+ const fixed=EXTRA_TRI_BASE_DIRS.some(b=>b.dx===d.dx&&b.dy===d.dy);
+ return !fixed&&d.dx*d.dx+d.dx*d.dy+d.dy*d.dy<=100;
+}).map(d=>({dir:d,baseD2:d.dx*d.dx+d.dx*d.dy+d.dy*d.dy}));
+const EXTRA_KLAUBER_GEOM_DIRS=[-8,-6,-4,-3,3,4,6,8].map(d=>{
+ const slope=(d<0?'+':'−')+'1/'+Math.abs(d);
+ return{d,dx:d,dy:-1,ko:'기울기 '+slope,en:'slope '+slope};
+});
+function extraGeometricPointCandidates(n,seen){
+ if(latticeMode!=='tri'&&latticeMode!=='klauber')return[];
+ const pool=[];
+ if(latticeMode==='tri'){
+  // One n->IJ conversion instead of up to 2x per direction.
+  const ij=extraTriIJ(n),anchor={ij,branch:extraTriBranch(ij.i,ij.j)};
+  for(const {dir,baseD2} of EXTRA_TRI_GEOM_DIRS){
+   const f=extraTriLineFormula(n,dir,1,anchor)||
+     // A 2-cell fit cannot qualify when its real distance is already >10.
+     (baseD2<=25?extraTriLineFormula(n,dir,2,anchor):null);
+   if(!f)continue;
+   const candidate={...f,kind:'dynamic',geomVerified:true,
+     label:(currentLang==='ko'?'삼각 기울기 ':'Tri slope ')+dir.label.replace(/^기울기 /,'')+
+       (f.triLatticeStride===2?(currentLang==='ko'?' · 2칸 간격':' · every 2nd cell'):'')};
+   if(pointVisibilityBonus(candidate)<=0)continue;
+   const key=polyKey(candidate);
+   if(seen.has(key)||!extraFormulaContainsN(n,candidate,false))continue;
+   candidate.quickScore=quickFormulaScore(candidate.a,candidate.b,candidate.c);
+   if(candidate.quickScore<=-1e50)continue;
+   seen.add(key);pool.push(candidate);
+  }
+ }else{
+  const anchor=extraKlauberCoord(n);
+  for(const dir of EXTRA_KLAUBER_GEOM_DIRS){
+   const f=extraKlauberLineFormulaFast(n,dir,anchor);
+   if(!f)continue;
+   const candidate={...f,kind:'dynamic',geomVerified:true};
+   if(pointVisibilityBonus(candidate)<=0)continue;
+   const key=polyKey(candidate);
+   if(seen.has(key)||!extraFormulaContainsN(n,candidate,true))continue;
+   candidate.quickScore=quickFormulaScore(candidate.a,candidate.b,candidate.c);
+   if(candidate.quickScore<=-1e50)continue;
+   seen.add(key);pool.push(candidate);
+  }
+ }
+ pool.sort((a,b)=>(b.quickScore+pointVisibilityBonus(b)*0.12)-
+                  (a.quickScore+pointVisibilityBonus(a)*0.12));
+ return showAllDirections?pool:pool.slice(0,latticeMode==='tri'?10:8);
+}
 function extraPointCandidates(n){
  if(!Number.isSafeInteger(n)||n<1)return{fixed:[],pool:[]};
  const presets=searchABPresets(),fixed=[],pool=[],seen=new Set();
@@ -4331,6 +4492,7 @@ for(const t of (latticeMode==='klauber'?[...new Set([Math.max(1,seed),Math.max(1
    if(i<2&&t===seed)fixed.push(f);else pool.push(f);
   }
  }
+ if(latticeMode==='tri'||latticeMode==='klauber')pool.push(...extraGeometricPointCandidates(n,seen));
  if(latticeMode==='tri')return extraTriDeduplicateConstants(fixed,pool);
  return{fixed,pool};
 }
@@ -5762,30 +5924,116 @@ function squarePrimeLookupForViewport(xmin,xmax,ymin,ymax){
    return i>=0&&i<cache.oddCount&&(bits[i>>>3]&(1<<(i&7)))===0;
   };
  }
+ // FP5: The cold first draw often runs against *partially published*
+ // prime stripes. Avoid checking six unrelated caches on every visible dot.
+ // Fully ready viewports retain the unchanged fast callback above.
+ return squarePartialPrimeLookupForViewport(target);
+}
+// FP5 exact progressive callback. Unknown stripes always use the original
+// fallback, so publication timing and partial-screen correctness are retained.
+function squarePartialPrimeLookupForViewport(rect){
+ for(const cache of [branchPrimeCache,branchPrimePreview]){
+  if(!cache?.bits||!branchRectCovers(cache,{...rect,branch:cache.branch}))continue;
+  const vertical=cache.branch==='right'||cache.branch==='left';
+  const lines=cache.readyLines,bits=cache.bits,lineBytes=cache.lineBytes;
+  const x0=cache.xmin,y0=cache.ymin;
+  if(vertical)return(n,x,y)=>{
+   if(n===2||n===3||n===5||n===7)return true;
+   if(n<2||!BRANCH_WHEEL210_OK[n%210])return false;
+   const outer=x-x0;
+   if(lines[outer]!==1)return isPrimeAtXY(n,x,y);
+   const inner=y-y0,byte=outer*lineBytes+(inner>>>3);
+   return(bits[byte]&(1<<(inner&7)))===0;
+  };
+  return(n,x,y)=>{
+   if(n===2||n===3||n===5||n===7)return true;
+   if(n<2||!BRANCH_WHEEL210_OK[n%210])return false;
+   const outer=y-y0;
+   if(lines[outer]!==1)return isPrimeAtXY(n,x,y);
+   const inner=x-x0,byte=outer*lineBytes+(inner>>>3);
+   return(bits[byte]&(1<<(inner&7)))===0;
+  };
+ }
+ // A corner viewport can straddle two branch caches. For a published
+ // stripe, go directly to its packed bit; for an unpublished stripe, leave
+ // the original full cache precedence intact.
+ for(const cache of [cornerPrimeCache,cornerPrimePreview]){
+  if(!cache?.parts||!cornerRectCovers(cache,rect))continue;
+  const parts=cache.parts;
+  return(n,x,y)=>{
+   if(n===2||n===3||n===5||n===7)return true;
+   if(n<2||!BRANCH_WHEEL210_OK[n%210])return false;
+   const p=parts[branchKey(x,y)];
+   if(!p?.bits||x<p.xmin||x>p.xmax||y<p.ymin||y>p.ymax)
+    return isPrimeAtXY(n,x,y);
+   const vertical=p.branch==='right'||p.branch==='left';
+   const outer=vertical?x-p.xmin:y-p.ymin;
+   if(p.readyLines[outer]!==1)return isPrimeAtXY(n,x,y);
+   const inner=vertical?y-p.ymin:x-p.xmin;
+   const byte=outer*p.lineBytes+(inner>>>3);
+   return(p.bits[byte]&(1<<(inner&7)))===0;
+  };
+ }
  return isPrimeAtXY;
 }
 // OPT10: Fast two-branch diagonal view. Each row crosses at most one
 // shell-side boundary in a fixed quadrant. Compute the two integer polynomials
 // directly instead of recomputing abs/max/shell/branch for every dot.
+// FP2: convert each parity row to at most two arithmetic runs. Every
+// Ulam number remains an exact safe integer under the 100T ceiling.
 function drawSquareCornerQuadrant(path,xmin,xmax,ymin,ymax,pt,primeAt){
  const right=xmin>0,left=xmax<0,top=ymin>0,bottom=ymax<0;
  if(!(right||left)||!(top||bottom))return false;
- const side=pt/2;
- for(let y=ymin;y<=ymax;y++){
-  const sy=H/2-(y-camY)*scale;
-  const row=top?4*y*y-y+1:4*y*y-3*y+1;
-  for(let x=xmin+((xmin+y)&1);x<=xmax;x+=2){
-   let n;
-   if(right){
-    if(top) n=x<=y?row-x:4*x*x-3*x+1+y;
-    else n=x<=-y?row+x:4*x*x-3*x+1+y;
-   }else{
-    if(top) n=-x>=y?4*x*x-x+1-y:row-x;
-    else n=x>=y?row+x:4*x*x-x+1-y;
+ // Bottom-left's original branchy loop is faster on our standalone V8
+ // microbenchmark; retain it until device-level evidence warrants a change.
+ if(left&&bottom){
+  const side=pt/2;
+  for(let y=ymin;y<=ymax;y++){
+   const sy=H/2-(y-camY)*scale,row=4*y*y-3*y+1;
+   for(let x=xmin+((xmin+y)&1);x<=xmax;x+=2){
+    const n=x>=y?row+x:4*x*x-x+1-y;
+    if(n>MAX_N||!primeAt(n,x,y))continue;
+    const sx=W/2+(x-camX)*scale;path.rect(sx-side,sy-side,pt,pt);
    }
-   if(n>MAX_N||!primeAt(n,x,y))continue;
-   const sx=W/2+(x-camX)*scale;
-   path.rect(sx-side,sy-side,pt,pt);
+  }
+  return true;
+ }
+ const side=pt/2,px0=W/2-camX*scale;
+ for(let y=ymin;y<=ymax;y++){
+  const sy=H/2-(y-camY)*scale,row=top?4*y*y-y+1:4*y*y-3*y+1;
+  let x=xmin+((xmin+y)&1);
+  if(right){
+   const cutoff=top?y:-y,coef=top?-1:1;
+   if(x<=Math.min(xmax,cutoff)){
+    let n=row+coef*x;
+    for(;x<=xmax&&x<=cutoff;x+=2,n+=2*coef){
+     if(n>MAX_N||!primeAt(n,x,y))continue;
+     const sx=px0+x*scale;path.rect(sx-side,sy-side,pt,pt);
+    }
+   }
+   if(x<=xmax){
+    let n=4*x*x-3*x+1+y;
+    for(;x<=xmax;n+=16*x+10,x+=2){
+     if(n>MAX_N||!primeAt(n,x,y))continue;
+     const sx=px0+x*scale;path.rect(sx-side,sy-side,pt,pt);
+    }
+   }
+  }else{
+   const cutoff=top?-y:y-1;
+   if(x<=Math.min(xmax,cutoff)){
+    let n=4*x*x-x+1-y;
+    for(;x<=xmax&&x<=cutoff;n+=16*x+14,x+=2){
+     if(n>MAX_N||!primeAt(n,x,y))continue;
+     const sx=px0+x*scale;path.rect(sx-side,sy-side,pt,pt);
+    }
+   }
+   if(x<=xmax){
+    const coef=top?-1:1;let n=row+coef*x;
+    for(;x<=xmax;x+=2,n+=2*coef){
+     if(n>MAX_N||!primeAt(n,x,y))continue;
+     const sx=px0+x*scale;path.rect(sx-side,sy-side,pt,pt);
+    }
+   }
   }
  }
  return true;
@@ -5818,32 +6066,18 @@ function opt18CanReprojectDots(oldScale,newScale){
  const a=s=>Math.max(1,Math.min(s*.82,s-.2));
  return Math.abs(a(oldScale)*newScale/oldScale-a(newScale))<1e-10;
 }
-let opt17SquarePathMemo=null;
-function render(){if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt;
+let opt17SquarePathMemo=null,fp2ColdMemoEpoch=0,fp3ColdMemoSerial=0;
+function fp3SquareColdRender(){if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
 const showSquareGrid=scale>=15;
 if(showSquareGrid){const gridPath=new Path2D(),hs=scale*.48;for(let y=ymin;y<=ymax;y++){const sy=H/2-(y-camY)*scale;for(let x=xmin;x<=xmax;x++){const n=ulamNumber(x,y);if(n<1||n>MAX_N)continue;const sx=W/2+(x-camX)*scale;gridPath.rect(sx-hs,sy-hs,hs*2,hs*2);}}ctx.strokeStyle='rgba(150,180,235,.68)';ctx.lineWidth=1.15;ctx.stroke(gridPath)}
 const hasVisiblePrimeData=visiblePrimeDataReady(xmin,xmax,ymin,ymax);
-// The prime layer is immutable while the world range, camera, scale and size
-// remain identical, once the viewport's sieve is fully available.
-// OPT17 pan margin: build 64 CSS pixels beyond the visible viewport only
-// when the complete sieve covers those extra cells. Never draw guessed primes.
-let opt17PrimeBounds={xmin,xmax,ymin,ymax};
-const margin=scale<=3.2?Math.ceil(48/scale):0;
-if(hasVisiblePrimeData&&margin){
- const expanded={xmin:Math.max(-MAX_R,xmin-margin),xmax:Math.min(MAX_R,xmax+margin),
-  ymin:Math.max(-MAX_R,ymin-margin),ymax:Math.min(MAX_R,ymax+margin)};
- opt17PrimeBounds=expanded;
-}
-const opt17CurrentSnapshot=opt17SieveSnapshot();
-const saved=opt17SquarePathMemo;
-const opt17PathHit=hasVisiblePrimeData && opt17SameSnapshot(saved?.sieveSnapshot,opt17CurrentSnapshot) && saved?.MAX_N===MAX_N && saved?.W===W && saved?.H===H && opt18CanReprojectDots(saved?.scale,scale) &&
- saved.bounds.xmin<=xmin && saved.bounds.xmax>=xmax && saved.bounds.ymin<=ymin && saved.bounds.ymax>=ymax;
-const normalPath=opt17PathHit?saved.path:new Path2D();
-if(!opt17PathHit){
-const {xmin,xmax,ymin,ymax}=opt17PrimeBounds;
 const squarePrimeAt=hasVisiblePrimeData?squarePrimeLookupForViewport(xmin,xmax,ymin,ymax):isPrimeAtXY;
-const cornerFastRows=hasVisiblePrimeData && !!cornerPrimeCache?.parts &&
- cornerRectCovers(cornerPrimeCache,{xmin,xmax,ymin,ymax}) &&
+// FP4: the exact quadrant traversal does not depend on a finished corner
+// cache; its primality callback still honors partial/ready sieve stripes.
+// Use it while Workers are progressively publishing a cold viewport, too.
+// A small view crossing an axis stays on the original general renderer.
+const quadrantView=(xmin>0||xmax<0)&&(ymin>0||ymax<0);
+const cornerFastRows=hasVisiblePrimeData && quadrantView &&
  drawSquareCornerQuadrant(normalPath,xmin,xmax,ymin,ymax,pt,squarePrimeAt);
 if(hasVisiblePrimeData&&!cornerFastRows){
 const columnMajor=Math.abs(camX)>Math.abs(camY);
@@ -5895,8 +6129,172 @@ if(xmin<=1&&xmax>=1&&ymin<=0&&ymax>=0&&squarePrimeAt(2,1,0)){
   const sx=W/2+(1-camX)*scale,sy=H/2+camY*scale;
   normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
 }
-// An incomplete viewport is deliberately never memoized.
-opt17SquarePathMemo=hasVisiblePrimeData?{MAX_N,W,H,scale,camX,camY,bounds:opt17PrimeBounds,path:normalPath,sieveSnapshot:opt17CurrentSnapshot}:null;
+ctx.fillStyle='#f5f7fb';ctx.fill(normalPath);
+// FP3: defer optional Path2D memo capture until AFTER the baseline cold paint.
+// Never copy partially finished sieve data, and never delay the current frame
+// to inspect cache readiness arrays.
+if(hasVisiblePrimeData && !branchPrimePreview&&!cornerPrimePreview&&!localPrimePreview &&
+   !branchSieveTask&&!cornerSieveTask&&!sieveWorker){
+ const stamp=++fp3ColdMemoSerial;
+ const oldView={MAX_N,W,H,scale,camX,camY};
+ const oldPath=normalPath,oldBounds={xmin,xmax,ymin,ymax};
+ setTimeout(()=>{
+   if(stamp!==fp3ColdMemoSerial||latticeMode!=='square'||!ready||
+      MAX_N!==oldView.MAX_N||W!==oldView.W||H!==oldView.H||
+      scale!==oldView.scale||camX!==oldView.camX||camY!==oldView.camY)return;
+   if(branchPrimePreview||cornerPrimePreview||localPrimePreview||
+      branchSieveTask||cornerSieveTask||sieveWorker)return;
+   const v=viewShellRange(1.03);
+   if(!(branchCacheCoversRect(branchPrimeCache,{...oldBounds,branch:branchPrimeCache?.branch})||
+        cornerCacheCoversRect(cornerPrimeCache,oldBounds)||
+        cacheCoversShells(v.lo,v.hi)))return;
+   opt17SquarePathMemo={...oldView,bounds:oldBounds,path:oldPath,sieveSnapshot:opt17SieveSnapshot()};
+ },0);
+}
+drawCredit();
+// REV17: do not run a quadratic-discriminant membership test for every visible
+// prime. Generate only active-formula terms whose shells intersect this viewport,
+// then overdraw the prime ones in cyan. This is much cheaper at 1T.
+if(activeFormula){
+  // Show that formula values really exist even when they are composite.  Every
+  // visible generated value is drawn dim cyan; values already known prime in
+  // the local cache are overdrawn bright cyan.  This also makes the F/G parity
+  // branches visible instead of making a composite branch look 'missing'.
+  const formulaPath=new Path2D(),primePath=new Path2D(),formulaPt=Math.max(1,Math.min(2,pt));
+  forEachFormulaTermInRect(activeFormula,xmin,xmax,ymin,ymax,50000,(n,c)=>{
+    const sx=W/2+(c.x-camX)*scale,sy=H/2-(c.y-camY)*scale;
+    formulaPath.rect(sx-formulaPt/2,sy-formulaPt/2,formulaPt,formulaPt);
+    if(cacheHasNumberAtXY(n,c.x,c.y)&&isPrimeAtXY(n,c.x,c.y))primePath.rect(sx-activePt/2,sy-activePt/2,activePt,activePt);
+  });
+  ctx.fillStyle='rgba(24,215,242,.28)';ctx.fill(formulaPath);ctx.fillStyle='#18d7f2';ctx.fill(primePath);
+}
+if(selected){const sx=W/2+(selected.x-camX)*scale,sy=H/2-(selected.y-camY)*scale;if(sx>-30&&sx<W+30&&sy>-30&&sy<H+30){ctx.strokeStyle='#ffb454';ctx.lineWidth=Math.max(2,Math.min(5,scale*.18));const s=Math.max(8,scale*1.25);ctx.strokeRect(sx-s/2,sy-s/2,s,s)}}renderMinimap()}
+
+
+function render(){
+ // Keep the 1.4.0 draw path for genuinely cold or unrelated distant square views.
+ // Reuse FP2's optimized memoized renderer on already computed nearby views.
+ if(ready&&latticeMode==='square'&&
+   (!opt17SquarePathMemo ||
+    Math.abs(camX-opt17SquarePathMemo.camX)*scale>W+64 ||
+    Math.abs(camY-opt17SquarePathMemo.camY)*scale>H+64))
+   return fp3SquareColdRender();
+ if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt;
+const showSquareGrid=scale>=15;
+if(showSquareGrid){const gridPath=new Path2D(),hs=scale*.48;for(let y=ymin;y<=ymax;y++){const sy=H/2-(y-camY)*scale;for(let x=xmin;x<=xmax;x++){const n=ulamNumber(x,y);if(n<1||n>MAX_N)continue;const sx=W/2+(x-camX)*scale;gridPath.rect(sx-hs,sy-hs,hs*2,hs*2);}}ctx.strokeStyle='rgba(150,180,235,.68)';ctx.lineWidth=1.15;ctx.stroke(gridPath)}
+const hasVisiblePrimeData=visiblePrimeDataReady(xmin,xmax,ymin,ymax);
+// The prime layer is immutable while the world range, camera, scale and size
+// remain identical, once the viewport's sieve is fully available.
+// OPT17 pan margin: build 64 CSS pixels beyond the visible viewport only
+// when the complete sieve covers those extra cells. Never draw guessed primes.
+// Cold viewport: draw just the visible cells. Reusable overscan is still
+// built for nearby pans after a valid completed geometry snapshot exists.
+// In particular, unrelated far jumps must not pay for 48 CSS px of extra dots.
+// FP2: avoid traversing sieve readiness arrays on an unrelated cold view.
+// The original fast draw path runs without cached-path bookkeeping.
+const saved=opt17SquarePathMemo;
+const opt17BasicReuse=!!saved && hasVisiblePrimeData &&
+ saved.MAX_N===MAX_N&&saved.W===W&&saved.H===H;
+const opt17CurrentSnapshot=opt17BasicReuse?opt17SieveSnapshot():null;
+const opt17ValidReuse=!!opt17CurrentSnapshot &&
+ opt17SameSnapshot(saved.sieveSnapshot,opt17CurrentSnapshot);
+const opt17NearbyReuse=opt17ValidReuse&&
+ Math.abs(saved.camX-camX)*scale<=48&&Math.abs(saved.camY-camY)*scale<=48;
+let opt17PrimeBounds={xmin,xmax,ymin,ymax};
+const margin=scale<=3.2&&opt17NearbyReuse?Math.ceil(48/scale):0;
+if(margin){
+ const expanded={xmin:Math.max(-MAX_R,xmin-margin),xmax:Math.min(MAX_R,xmax+margin),
+  ymin:Math.max(-MAX_R,ymin-margin),ymax:Math.min(MAX_R,ymax+margin)};
+ opt17PrimeBounds=expanded;
+}
+const opt17PathHit=opt17ValidReuse&&opt18CanReprojectDots(saved.scale,scale)&&
+ saved.bounds.xmin<=xmin&&saved.bounds.xmax>=xmax&&saved.bounds.ymin<=ymin&&saved.bounds.ymax>=ymax;
+const normalPath=opt17PathHit?saved.path:new Path2D();
+if(!opt17PathHit){
+const {xmin,xmax,ymin,ymax}=opt17PrimeBounds;
+const squarePrimeAt=hasVisiblePrimeData?squarePrimeLookupForViewport(xmin,xmax,ymin,ymax):isPrimeAtXY;
+// FP4: the exact quadrant traversal does not depend on a finished corner
+// cache; its primality callback still honors partial/ready sieve stripes.
+// Use it while Workers are progressively publishing a cold viewport, too.
+// A small view crossing an axis stays on the original general renderer.
+const quadrantView=(xmin>0||xmax<0)&&(ymin>0||ymax<0);
+const cornerFastRows=hasVisiblePrimeData && quadrantView &&
+ drawSquareCornerQuadrant(normalPath,xmin,xmax,ymin,ymax,pt,squarePrimeAt);
+if(hasVisiblePrimeData&&!cornerFastRows){
+const columnMajor=Math.abs(camX)>Math.abs(camY);
+const maxY=Math.max(Math.abs(ymin),Math.abs(ymax)),maxX=Math.max(Math.abs(xmin),Math.abs(xmax));
+const linearColumns=xmin>maxY&&xmin>=2||xmax<-maxY&&xmax<=-2;
+const linearRows=ymin>=maxX&&ymin>=2||ymax<=-maxX&&ymax<=-2;
+if(columnMajor){
+  // 오른쪽/왼쪽 가지: 고정 x에서 y를 연속 순회하면 울람 번호와 local-cache 접근이 거의 순차적이다.
+  for(let x=xmin;x<=xmax;x++){
+    const sx=W/2+(x-camX)*scale;
+    if(linearColumns){
+      const step=x>0?1:-1;let y=ymin,n=ulamNumber(x,y);
+      if(n%2===0){y++;n+=step}
+      for(;y<=ymax;y+=2,n+=2*step){
+        if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
+        const sy=H/2-(y-camY)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
+      }
+      continue;
+    }
+    // OPT9: every odd Ulam number occupies an even-checkerboard (x+y).
+    // Halve coordinate conversion and cache lookups on corner/center views.
+    for(let y=ymin+((x+ymin)&1);y<=ymax;y+=2){
+      const n=ulamNumber(x,y);if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
+      const sy=H/2-(y-camY)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
+    }
+  }
+}else{
+  // 위/아래 가지: 기존처럼 고정 y에서 x를 연속 순회한다.
+  for(let y=ymin;y<=ymax;y++){
+    const sy=H/2-(y-camY)*scale;
+    if(linearRows){
+      const step=y<0?1:-1;let x=xmin,n=ulamNumber(x,y);
+if(n%2===0){x++;n+=step}
+      for(;x<=xmax;x+=2,n+=2*step){
+        if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
+        const sx=W/2+(x-camX)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
+      }
+      continue;
+    }
+    for(let x=xmin+((xmin+y)&1);x<=xmax;x+=2){
+      const n=ulamNumber(x,y);if(n>MAX_N||!squarePrimeAt(n,x,y))continue;
+      const sx=W/2+(x-camX)*scale;normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
+    }
+  }
+}
+}
+// The only even prime: its fixed Ulam coordinate is (1,0).
+if(xmin<=1&&xmax>=1&&ymin<=0&&ymax>=0&&squarePrimeAt(2,1,0)){
+  const sx=W/2+(1-camX)*scale,sy=H/2+camY*scale;
+  normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
+}
+// FP2: only fully completed immutable caches are candidates for reusing
+// Path2D. Cold drawing never waits for a snapshot of partially ready stripes.
+// Defer bookkeeping to a timer; stale views/cache identities cannot publish.
+const fp2Core={xmin,xmax,ymin,ymax};
+const fp2Stable=!branchPrimePreview&&!cornerPrimePreview&&!localPrimePreview&&(
+ (branchCacheCoversRect(branchPrimeCache,{...fp2Core,branch:branchPrimeCache?.branch}))||
+ cornerCacheCoversRect(cornerPrimeCache,fp2Core)||
+ cacheCoversShells(viewShellRange(1.03).lo,viewShellRange(1.03).hi)
+);
+if(fp2Stable&&hasVisiblePrimeData){
+ const epoch=++fp2ColdMemoEpoch,mouse={MAX_N,W,H,scale,camX,camY},
+   refs=[localPrimeCache,localPrimePreview,branchPrimeCache,branchPrimePreview,cornerPrimeCache,cornerPrimePreview],
+   memo={...mouse,bounds:opt17PrimeBounds,path:normalPath};
+ opt17SquarePathMemo=null;
+ setTimeout(()=>{
+  if(epoch!==fp2ColdMemoEpoch||latticeMode!=='square'||!ready||
+    MAX_N!==mouse.MAX_N||W!==mouse.W||H!==mouse.H||
+    camX!==mouse.camX||camY!==mouse.camY||scale!==mouse.scale)return;
+  const current=[localPrimeCache,localPrimePreview,branchPrimeCache,branchPrimePreview,cornerPrimeCache,cornerPrimePreview];
+  for(let i=0;i<refs.length;i++)if(refs[i]!==current[i])return;
+  opt17SquarePathMemo={...memo,sieveSnapshot:opt17SieveSnapshot()};
+ },0);
+}else {
+ ++fp2ColdMemoEpoch;opt17SquarePathMemo=null;
+}
 }
 ctx.fillStyle='#f5f7fb';
 if(opt17PathHit && (saved.camX!==camX || saved.camY!==camY || saved.scale!==scale)){
@@ -6136,7 +6534,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral · v1.4.2 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · v1.4.3 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';
@@ -6852,15 +7250,40 @@ async function preloadStartupAccelerator(){
   startupProgress(currentLang==='ko'?'계산 엔진 검증 및 예열…':'Checking and prewarming engines…',5);
   // Concurrent startup: each prewarmed Worker checks the embedded WASM against
   // an independent JS reference before joining the pool. JS fallback is automatic.
+  let branchDone=0,pointDone=0,shownPercent=5;
+  function stageProgress(label,pct){
+    if(token!==startupAccelToken||pct<=shownPercent)return;
+    shownPercent=pct;startupProgress(label,pct);
+  }
+  function warmed(kind){
+    if(kind==='branch')branchDone++;else pointDone++;
+    const pct=Math.min(78,20+Math.round(35*branchDone/Math.max(1,desiredBranch)+23*pointDone/Math.max(1,desiredPoint)));
+    const label=currentLang==='ko'
+      ?'계산 엔진 준비 중 · 소수 '+branchDone+'/'+desiredBranch+' · 수열 '+pointDone+'/'+desiredPoint
+      :'Preparing engines · prime '+branchDone+'/'+desiredBranch+' · formulas '+pointDone+'/'+desiredPoint;
+    stageProgress(label,pct);
+  }
   const bw=[],pw=[];
-  for(let i=0;i<desiredBranch;i++)bw.push(new Promise(resolve=>spawnWarmBranchWorker(null,resolve)));
-  for(let i=0;i<desiredPoint;i++)pw.push(warmOnePointAnalyzeWorker());
+  for(let i=0;i<desiredBranch;i++){
+    bw.push(new Promise(resolve=>spawnWarmBranchWorker(null,resolve))
+      .then(value=>{warmed('branch');return value},error=>{warmed('branch');throw error}));
+  }
+  for(let i=0;i<desiredPoint;i++){
+    pw.push(Promise.resolve(warmOnePointAnalyzeWorker())
+      .then(value=>{warmed('point');return value},error=>{warmed('point');throw error}));
+  }
+  // Give the progress panel an actual paint opportunity while Workers prepare.
+  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+  if(token!==startupAccelToken)return;
+  stageProgress(currentLang==='ko'?'소수 판정 및 수열 계산 엔진 준비 중…':'Preparing prime and formula engines…',20);
   const deadline=start+3350;
-let timer;
-  await Promise.race([Promise.allSettled([...bw,...pw]),new Promise(resolve=>{timer=setTimeout(resolve,Math.max(0,deadline-performance.now()))})]);
+  let timer;
+  await Promise.race([Promise.allSettled([...bw,...pw]),new Promise(resolve=>{
+    timer=setTimeout(resolve,Math.max(0,deadline-performance.now()));
+  })]);
   clearTimeout(timer);
   if(token!==startupAccelToken)return;
-  startupProgress(currentLang==='ko'?'마지막 화면 준비 중…':'Preparing your last view…',80);
+  stageProgress(currentLang==='ko'?'첫 화면에 필요한 소수 준비 중…':'Preparing primes for the first view…',82);
   // First visible view is useful; 48 saved positions and full c-search are not.
   if(!preloadCenterShellSynchronously()){
     const bt=branchTargetForView(1.14,true),ct=!bt&&cornerTargetForView(1.10,true);
@@ -6879,7 +7302,11 @@ let timer;
     }
   }
   console.info(`[SMART PRELOAD] startup ${(performance.now()-start).toFixed(0)} ms · branch idle ${idleBranchSieveWorkers.length}/${desiredBranch} · point idle ${idlePointAnalyzeWorkers.length}/${desiredPoint} · no runtime benchmarking`);
-  startupProgress(currentLang==='ko'?'준비 완료':'Ready',100);
+  stageProgress(currentLang==='ko'?'첫 화면 그리기 준비 완료…':'First view is prepared…',95);
+  // Progress 95% and 100% should not collapse into the same paint.
+  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+  if(token!==startupAccelToken)return;
+  stageProgress(currentLang==='ko'?'준비 완료':'Ready',100);
   await nextAnimationFrame();
 }
 

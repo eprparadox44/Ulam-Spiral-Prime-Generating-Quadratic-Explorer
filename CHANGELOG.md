@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-02 — v1.4.3 (100T optimized release; FP10 promotion)
+
+- Promoted the v1.4.2.10 (FP10) experimental implementation to the public v1.4.3 release with **version labels only** changed in the application HTML; calculation and recommendation logic is unchanged.
+- Improved Square first-draw responsiveness and preserved prior optimized Hexagonal, Triangular, Sacks and Klauber rendering/Worker paths.
+- Added geometry-verified Triangular/Klauber quadratic recommendations and faster geometric candidate construction.
+- Kept the revised visibility bonus that accounts for lattice geometry and parity. Selected-point recommendation signatures can legitimately differ from v1.4.2; the independent prime-statistics counting core remains unchanged.
+- Compared three versions across three user-supplied load-condition CSV files (1,188 benchmark rows; no recorded timeouts/errors). Performance varies by workload; not every category improves versus v1.4.2.
+- Preserved all prior versioned HTML releases; updated GitHub Pages and the canonical standalone entry point to v1.4.3.
+
 ## 2026-11-01 — v1.4.2 (100T performance & accuracy)
 
 - Promoted the OPT25-tested 100T HTML baseline to a clean v1.4.2 release, without experimental OPT/1Q naming in the page title.

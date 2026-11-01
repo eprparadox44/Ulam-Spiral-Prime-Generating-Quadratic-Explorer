@@ -6,7 +6,7 @@
 
 An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
 
-**Current release: v1.4.2 (November 1, 2026)** · [MIT License](LICENSE).
+**Current release: v1.4.3 (November 2, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -24,7 +24,15 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.2
+## What's new in v1.4.3
+
+- Promoted the v1.4.2.10 (FP10) optimized implementation as the official **v1.4.3**, preserving its calculation and recommendation logic.
+- Improved first-draw responsiveness across Square, Triangular, Sacks and Klauber geometries with optimized rendering/viewport paths and geometry candidate generation.
+- Added geometry-verified candidate recommendations for Triangular and Klauber selected points, including faster Klauber line construction.
+- Updated the selected-point *visibility bonus* to account for geometric spacing and parity; recommendation lists may intentionally differ from v1.4.2. This is not, by itself, an error in prime counts.
+- Preserved the 100T navigation ceiling, five geometries, exact prime-statistics calculation path, saved formulas and bilingual interface.
+
+### Previous v1.4.2 changes
 
 - Fixed precision-sensitive selected-point polynomial statistics and parameter ranges by using exact integer arithmetic where needed.
 - Accelerated Square Ulam redraws and zooming with reusable viewport rendering paths.
@@ -41,7 +49,7 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Unified estimated-density minimap visualization across all five spiral modes.
 - Expanded the non-Klauber constant-term search while preserving Klauber-specific functionality.
 
-See [v1.4.2 release notes](RELEASE_NOTES_v1.4.2.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.2.md).
+See [v1.4.3 release notes](RELEASE_NOTES_v1.4.3.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.3.md).
 
 ## Mathematical interpretation
 
