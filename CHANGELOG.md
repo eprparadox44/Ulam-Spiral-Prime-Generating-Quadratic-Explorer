@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-01 — v1.4.2 (100T performance & accuracy)
+
+- Promoted the OPT25-tested 100T HTML baseline to a clean v1.4.2 release, without experimental OPT/1Q naming in the page title.
+- Fixed unsafe intermediate Number arithmetic in short selected-point quadratic statistics and parameter bounds.
+- Added Square viewport and zoom render caching while retaining the original appearance.
+- Improved incremental prime-point display and exact WASM primality paths for Hexagonal, Triangular and Klauber Triangle modes.
+- Added proactive Worker initialization to reduce the first mode-switch delay; improved selected-point statistics with reusable modular-root preparations.
+- Preserved 100T limit, five spiral modes, minimaps, search and saved formulas; the experimental 1Q version was not shipped.
+
 ## 2026-10-30 — v1.4.0 (100T stable release)
 
 - Promoted OPT16 to the official v1.4.0 standalone HTML (100 trillion).

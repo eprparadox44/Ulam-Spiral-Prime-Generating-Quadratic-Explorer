@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.4.0 — 100T prime exploration, five-mode density minimaps, accurate and accelerated point-sequence statistics
+Release: v1.4.2 — 100T prime exploration, five-mode density minimaps, accurate and accelerated point-sequence statistics
 
 MIT License
 
@@ -27,13 +27,13 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.4.0">
+<meta name="application-version" content="1.4.2">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral</title>
+<title>Ulam Spiral · v1.4.2 (100T)</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
-#app{height:100%;display:grid;grid-template-rows:auto 1fr}header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0c1220;border-bottom:1px solid #243047;flex-wrap:wrap;z-index:5}.title{font-weight:800;font-size:16px;white-space:nowrap}.pill{border:1px solid #2a3853;background:#121b2b;border-radius:12px;padding:8px 10px;font-size:13px}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.controls button{padding-left:8px;padding-right:8px}input{width:190px;background:#070d18;color:#fff;border:1px solid #34435f;padding:8px 10px;border-radius:10px;font:inherit}header input,header button{font-size:14px}#jumpInput{width:150px;padding-left:8px;padding-right:8px}#jumpInput::placeholder{font-size:.93em}#langToggle{min-width:50px;padding-left:8px;padding-right:8px}button{border:1px solid #34435f;background:#162137;color:#fff;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer}button:hover{background:#1d2b47}#stage{position:relative;min-height:0}canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:default}#cv:focus-visible{outline:2px solid #69bdf2;outline-offset:-3px}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr}header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0c1220;border-bottom:1px solid #243047;flex-wrap:wrap;z-index:5}.title{font-weight:800;font-size:16px;white-space:nowrap}.pill{border:1px solid #2a3853;background:#121b2b;border-radius:12px;padding:8px 10px;font-size:13px}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.controls button{padding-left:8px;padding-right:8px}input{width:190px;background:#070d18;color:#fff;border:1px solid #34435f;padding:8px 10px;border-radius:10px;font:inherit}header input,header button{font-size:14px}#jumpInput{width:150px;padding-left:8px;padding-right:8px}#jumpInput::placeholder{font-size:.93em}#langToggle{min-width:50px;padding-left:8px;padding-right:8px}button{border:1px solid #34435f;background:#162137;color:#fff;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer}button:hover{background:#1d2b47}#stage{position:relative;min-height:0}canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:default}#cv:focus-visible{outline:2px solid #ffffff;outline-offset:-3px}
 #spiralModeSelect{width:124px;min-width:124px;height:36px;border:1px solid #34435f;border-radius:9px;background:#10192b;color:#e8eef8;padding:4px 7px;font:inherit;font-size:13px;cursor:pointer;flex:0 0 auto}
 
 
@@ -1374,22 +1374,55 @@ function resizeMinimap(){if(!showMinimap){miniWrap.style.display='none';miniTogg
 function miniMapXYInView(x,y,v){const s=miniSide||1;return{px:(x-v.cx+v.r)/(2*v.r)*s,py:(v.cy+v.r-y)/(2*v.r)*s}}
 function miniMapXY(x,y){return miniMapXYInView(x,y,miniViewport())}
 function formulaParamRange(a,b,c,maxN=MAX_N){
+  // v1.4.1: no rounded discriminants or cancelled intermediates at large
+  // vertex offsets.  Number fast path is allowed only when every integer
+  // intermediate is certifiably safe; otherwise exact BigInt root bounds.
+  if(![a,b,c,maxN].every(Number.isSafeInteger))throw RangeError('Unsafe polynomial coefficient or limit');
   if(a>0){
-    const D=b*b-4*a*(c-maxN);if(D<0)return null;
-    const root=Math.sqrt(D),den=2*a;
-    let lo=Math.ceil((-b-root)/den),hi=Math.floor((-b+root)/den);
-    const val=t=>a*t*t+b*t+c;
-    while(lo<=hi&&val(lo)>maxN)lo++;
-    while(lo<=hi&&val(hi)>maxN)hi--;
-    while(val(lo-1)<=maxN)lo--;
-    while(val(hi+1)<=maxN)hi++;
-    return hi>=lo?[lo,hi]:null;
+    const d1=b*b,d2=4*a*(c-maxN),D=d1-d2;
+    if([d1,d2,D,c-maxN].every(Number.isSafeInteger)){
+      if(D<0)return null;
+      const root=Math.sqrt(D),den=2*a;
+      let lo=Math.ceil((-b-root)/den),hi=Math.floor((-b+root)/den);
+      const largestT=Math.max(Math.abs(lo-1),Math.abs(hi+1));
+      const absBound=Math.abs(a)*largestT*largestT+Math.abs(b)*largestT+Math.abs(c);
+      if(Number.isSafeInteger(lo)&&Number.isSafeInteger(hi)&&absBound<=Number.MAX_SAFE_INTEGER){
+        const val=t=>a*t*t+b*t+c;
+        while(lo<=hi&&val(lo)>maxN)lo++;
+        while(lo<=hi&&val(hi)>maxN)hi--;
+        while(val(lo-1)<=maxN)lo--;
+        while(val(hi+1)<=maxN)hi++;
+        return hi>=lo?[lo,hi]:null;
+      }
+    }
+    const A=BigInt(a),B=BigInt(b),C=BigInt(c),M=BigInt(maxN),disc=B*B-4n*A*(C-M);
+    if(disc<0n)return null;
+    // Newton's integer square root, exact even when the discriminant is
+    // beyond 2^53. Integer roots of f(t)<=M use floor(sqrt(discriminant)).
+    let sq=disc;
+    if(disc>1n){
+      let x=1n<<BigInt((disc.toString(2).length+1)>>1);
+      while(true){const y=(x+disc/x)>>1n;if(y>=x){sq=x;break}x=y}
+    }
+    const den=2n*A;
+    const floor=(n,d)=>{let q=n/d;if(n%d<0n)q--;return q};
+    const ceil=(n,d)=>{let q=n/d;if(n%d>0n)q++;return q};
+    const lo=ceil(-B-sq,den),hi=floor(-B+sq,den);
+    if(lo>hi)return null;
+    const l=Number(lo),h=Number(hi);
+    if(!Number.isSafeInteger(l)||!Number.isSafeInteger(h))throw RangeError('Polynomial parameter bound outside safe integer domain');
+    return[l,h];
   }
   if(a===0&&b!==0){
-    let lo,hi;
-    if(b>0){lo=Math.ceil((1-c)/b);hi=Math.floor((maxN-c)/b)}
-    else{lo=Math.ceil((maxN-c)/b);hi=Math.floor((1-c)/b)}
-    return hi>=lo&&hi-lo<=250000?[lo,hi]:null;
+    const B=BigInt(b),C=BigInt(c),M=BigInt(maxN);
+    const floor=(n,d)=>{if(d<0n){n=-n;d=-d}let q=n/d;if(n%d<0n)q--;return q};
+    const ceil=(n,d)=>-floor(-n,d);
+    const lo=B>0n?ceil(1n-C,B):ceil(M-C,B);
+    const hi=B>0n?floor(M-C,B):floor(1n-C,B);
+    if(hi<lo||hi-lo>250000n)return null;
+    const l=Number(lo),h=Number(hi);
+    if(!Number.isSafeInteger(l)||!Number.isSafeInteger(h))throw RangeError('Linear parameter bound outside safe integer domain');
+    return[l,h];
   }
   return null;
 }
@@ -1842,11 +1875,23 @@ function formulaStatsCore(a,b,c,maxN,primes,primeLimit,paramRange=null){
   const range=paramRange||formulaParamRange(a,b,c,maxN);
   if(range){
     const[lo,hi]=range,len=hi-lo+1;
+    if(![a,b,c,maxN,lo,hi].every(Number.isSafeInteger))throw RangeError('Unsafe polynomial statistic input');
+    // A Number polynomial is EXACT only when all intermediate products and
+    // additions fit in 2^53-1. Evaluate bounds once per range; rare large-
+    // offset/cancellation intervals use an exact BigInt expression.
+    const tAbs=Math.max(Math.abs(lo),Math.abs(hi));
+    const safeBound=BigInt(Math.abs(a))*BigInt(tAbs)*BigInt(tAbs)+BigInt(Math.abs(b))*BigInt(tAbs)+BigInt(Math.abs(c));
+    const fast=safeBound<=BigInt(Number.MAX_SAFE_INTEGER);
+    const A=fast?0n:BigInt(a),B=fast?0n:BigInt(b),C=fast?0n:BigInt(c),M=BigInt(maxN);
+    const value=fast?(t=>a*t*t+b*t+c):(t=>{
+      const T=BigInt(t),v=A*T*T+B*T+C;
+      return v<1n||v>M?0:Number(v);
+    });
     // A handful of terms is cheaper to divide exactly than to compute modular
     // polynomial roots for all 78,497 base primes. Also accelerates WASM self-checks.
     if(len<=64){
       for(let t=lo;t<=hi;t++){
-        const v=a*t*t+b*t+c;if(v<1||v>maxN)continue;
+        const v=value(t);if(v<1||v>maxN)continue;
         termCount++;const odd=v%2!==0;if(odd)oddCount++;
         let prime=v===2;
         if(v>2&&odd){
@@ -1859,7 +1904,7 @@ function formulaStatsCore(a,b,c,maxN,primes,primeLimit,paramRange=null){
     }
     const composite=new Uint8Array(len);
     for(let i=0,t=lo;i<len;i++,t++){
-      const v=a*t*t+b*t+c;
+      const v=value(t);
       if(v<2||v>maxN||(v!==2&&v%2===0))composite[i]=1;
     }
     let fixedPrime=0;
@@ -1869,7 +1914,7 @@ function formulaStatsCore(a,b,c,maxN,primes,primeLimit,paramRange=null){
       for(const r of roots){let t=lo+modNorm(r-modNorm(lo,p),p);for(;t<=hi;t+=p)composite[t-lo]=1}
     }
     for(let i=0,t=lo;i<len;i++,t++){
-      const v=a*t*t+b*t+c;if(v<1||v>maxN)continue;
+      const v=value(t);if(v<1||v>maxN)continue;
       termCount++;const odd=v%2!==0;if(odd)oddCount++;
       let prime=false;
       if(v===2)prime=true;
@@ -2433,6 +2478,30 @@ function analyzePointAsync(x,y){
   }
   if(!jobs.length){commit();return}
   revealCompletedFixed();
+  // OPT21: keep completed fixed-direction formulas appearing first, while
+  // distributing the heavier remaining exact-statistics jobs early.  Sorting
+  // changes ONLY Worker dispatch order, never candidate membership, exact
+  // statistics, final formula order/ranking or the selected-point UI.
+  if(jobs.length>pointAnalyzeWorkerCap()){
+    const fixedIds=new Set(prepared.fixed.map(polyKey));
+    const fixedJobs=[],remainingJobs=[];
+    const estimatedWork=job=>{
+      try{
+        const range=job.paramRange||formulaParamRange(job.a,job.b,job.c,MAX_N);
+        return range?Math.max(0,range[1]-range[0]+1):0;
+      }catch(_){return 0}
+    };
+    for(const job of jobs){
+      (job.receivers.some(r=>fixedIds.has(r.id))?fixedJobs:remainingJobs).push(job);
+    }
+    // Evaluate each job's exact parameter bounds only once, not O(k log k)
+    // times during the sort. This also avoids unnecessary main-thread work.
+    const weights=new Map(remainingJobs.map(job=>[job,estimatedWork(job)]));
+    // Keep fixed jobs in their original order for progressive reveal.  Sort
+    // only the dynamic tail; JS stable sort preserves equal-cost ordering.
+    remainingJobs.sort((a,b)=>weights.get(b)-weights.get(a));
+    jobs.splice(0,jobs.length,...fixedJobs,...remainingJobs);
+  }
   const workerCount=Math.min(jobs.length,pointAnalyzeWorkerCap());
   let next=0,done=0,failed=false;
   function cleanup(reuse=true){
@@ -2901,8 +2970,9 @@ function cSearchWorkerMain(){
 }
 // OPT16 parity class acceleration: same exact class accounting; original base WASM untouched.
 const FORMULA_STATS_WASM_B64='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CyADIBBPDQEgC0IBUg0ACwsgCEUNBCANQv////8PgyELQQEgECADQX9zanQhCEIBIQ0DQAJAIAhBAXFFDQAgCyANfiAMgiENCyALIAt+IAyCIQsgCEEBSyEEIAhBAXYhCCAEDQALIA1C/////w+DIgsgC34gDIIhDSALIBatfiAMgqchFiADIRAgCyAJfiAMgiALfiAMgiILQgFSDQALCyAPQX5qIggNAEIBIQsMAQtCASENIBRCAYYhCwNAIAsgDIIhCwJAIAhBAXFFDQAgCyANfiAMgiENCyAIQQFLIQQgCyALfiELIAhBAXYhCCAEDQALIA1C/////w+DIQsLAkAgD0EAIAsgFiAPIBNrIhBqIA9wrX4gDIIiCaciCCAKIAyBIg1CP4cgDIMgDXynIgNJGyAIIANraiIIIBFPDQADQCAIQQN2QZD7qoEAaiIEIAQtAABBASAIQQdxdHI6AAAgCCAPaiIIIBFJDQALCyAWRQ0AIBCtIAx8IBatfSAMgiALfiAMgiILIAlRDQAgD0EAIAunIgggA0kbIAggA2tqIgggEU8NAANAIAhBA3ZBkPuqgQBqIgQgBC0AAEEBIAhBB3F0cjoAACAIIA9qIgggEUkNAAsLIBJBAWoiEiAGRw0AC0EAIQ8LIBFBASARQQFLG60hDSAHrSEVIA+tIQlCACELQQAhEEEAIRZBACEXQQAhGANAAkAgCyAKfCIMIAB+IAF8IAx+IAJ8IgxCAVMNACAMIAVVDQBBACAQQQFqIhA2AoD7qoEAAkACQCAMQgGDUA0AQQAgF0EBaiIXNgKI+6qBAAJAAkAgDEIDWg0AIAxCAlEhCAwBCwJAIA9FDQAgDCAJUSEIDAELAkAgDCAVVg0AIAynIRJBACEIAkAgBkUNACAGIQQDQCAIIARqQQF2IgNBAWogCCADQQJ0QYCIgIAAaigCACASSSIRGyIIIAQgAyARGyIESQ0ACwsgCCAGTw0EIAhBAnRBgIiAgABqKAIAIBJGIQgMAQsgC6ciCEEDdkGQ+6qBAGotAAAgCEEHcXZBf3NBAXEhCAsgCEUNAkEAIBhBAWoiGDYCjPuqgQAMAQsgDEICUg0BC0EAIBZBAWoiFjYChPuqgQALQQAhCCALQgF8IgsgDVINAAsLIAgLAIABBG5hbWUAGBdmb3JtdWxhX3N0YXRzXzEwMHQud2FzbQFLBQAJcHJpbWVfcHRyAQpyZXN1bHRfcHRyAg5wcmltZV9jYXBhY2l0eQMNdGVybV9jYXBhY2l0eQQSZm9ybXVsYV9zdGF0c18xMDB0BxIBAA9fX3N0YWNrX3BvaW50ZXIAfwlwcm9kdWNlcnMBDHByb2Nlc3NlZC1ieQEFY2xhbmdfMTcuMC4wIChodHRwczovL2dpdGh1Yi5jb20vc3dpZnRsYW5nL2xsdm0tcHJvamVjdC5naXQgMTA5OTliNmQwMzRmZTMxOGYzZDU2YzgzYmRkYjY1NzI1OTNhOGJiMCkASQ90YXJnZXRfZmVhdHVyZXMEKwptdWx0aXZhbHVlKw9tdXRhYmxlLWdsb2JhbHMrD3JlZmVyZW5jZS10eXBlcysIc2lnbi1leHQ=';
+const FORMULA_STATS_OPT23_WASM_B64='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';
 function formulaStatsWorkerMain(){
-  let primes=null,maxN=0,primeLimit=0,wasm=null,wasmReady=false;
+  let primes=null,maxN=0,primeLimit=0,wasm=null,wasmReady=false,wasmOpt23=null;
   function decodeB64(x){const raw=atob(x),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);return u}
   function zeroStats(){return{termCount:0,primeCount:0,ratio:0,oddCount:0,oddPrimeCount:0,oddRatio:0}}
   function wasmStats(a,b,c,paramRange=null){
@@ -2910,7 +2980,11 @@ function formulaStatsWorkerMain(){
     // 100T-specific verified WASM: a 700k-prime table and compact packed sieve.
     // Large polynomial domains are evaluated in bounded chunks, not as a
     // single enormous Uint8Array. Count aggregation does not change semantics.
-    const chunk=wasm.term_capacity(),length=range[1]-range[0]+1;
+    // OPT23: prefer the cached modular-root engine only for long jobs;
+    // retain the trusted original WASM for short intervals and as fallback.
+    const length=range[1]-range[0]+1;
+    const active=(wasmOpt23&&length>=100000)?wasmOpt23:wasm;
+    const chunk=active.term_capacity();
     if(length>chunk){
       const sums=[0,0,0,0];
       for(let low=range[0];low<=range[1];low+=chunk){
@@ -2921,9 +2995,17 @@ function formulaStatsWorkerMain(){
       return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
     }
     // Fall back safely for unsupported coefficients.
-    const rc=wasm.formula_stats_100t(BigInt(a),BigInt(b),BigInt(c),range[0],range[1],BigInt(maxN),primes.length,primeLimit);
-    if(rc!==0)return formulaStatsCore(a,b,c,maxN,primes,primeLimit,range);
-    const q=new Uint32Array(wasm.memory.buffer,wasm.result_ptr(),4);
+    const rc=active.formula_stats_100t(BigInt(a),BigInt(b),BigInt(c),range[0],range[1],BigInt(maxN),primes.length,primeLimit);
+    if(rc!==0){
+      if(active!==wasm){const fallback=wasm.formula_stats_100t(BigInt(a),BigInt(b),BigInt(c),range[0],range[1],BigInt(maxN),primes.length,primeLimit);
+        if(fallback===0){const u=new Uint32Array(wasm.memory.buffer,wasm.result_ptr(),4);
+          const [termCount,primeCount,oddCount,oddPrimeCount]=u;
+          return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
+        }
+      }
+      return formulaStatsCore(a,b,c,maxN,primes,primeLimit,range);
+    }
+    const q=new Uint32Array(active.memory.buffer,active.result_ptr(),4);
     const termCount=q[0],primeCount=q[1],oddCount=q[2],oddPrimeCount=q[3];
     return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount,oddPrimeCount,oddRatio:oddCount?oddPrimeCount/oddCount:0};
   }
@@ -2961,22 +3043,9 @@ function formulaStatsWorkerMain(){
         const all=countIn(formulaParamRange(aa,bb,cc,maxN));
         const below=countIn(formulaParamRange(aa,bb,cc,0));
         const termCount=all-below;
-        let primeCount=0;
-        const disc=bb*bb-4*aa*(cc-2);
-        if(Number.isSafeInteger(disc)&&disc>=0){
-          const root=Math.sqrt(disc),den=2*aa;
-          const found=new Set();
-          for(const sign of [-1,1]){
-            const guess=Math.round((-bb+sign*root)/den);
-            for(let k=guess-1;k<=guess+1;k++)
-              if(k>=start&&k<=end&&aa*k*k+bb*k+cc===2)found.add(k);
-          }
-          primeCount=found.size;
-        }else if(disc<0){
-          primeCount=0;
-        }else{
-          return raw(aa,bb,cc,[start,end]);
-        }
+        // Exact count of F(k)=2: #{F<=2} - #{F<=1}. No rounded
+        // discriminant and no unsafe value==2 check near distant vertices.
+        const primeCount=countIn(formulaParamRange(aa,bb,cc,2))-countIn(formulaParamRange(aa,bb,cc,1));
         return{termCount,primeCount,ratio:termCount?primeCount/termCount:0,oddCount:0,oddPrimeCount:0,oddRatio:0};
       }
       return raw(aa,bb,cc,[start,end]);
@@ -3045,6 +3114,22 @@ function formulaStatsWorkerMain(){
             throw Error('100T WASM point odd-a parity cross-check mismatch');
         }
       }catch(error){console.warn('[WASM point self-check] JS fallback:',String(error));wasm=null;wasmReady=false}
+      // OPT23: optional optimized engine; keep the proven original as fallback.
+      if(wasmReady){try{
+        const fastMod=await WebAssembly.instantiate(decodeB64(FORMULA_STATS_OPT23_WASM_B64),{});
+        const fast=fastMod.instance.exports;
+        if(primes.length>fast.prime_capacity())throw Error('OPT23 prime table capacity');
+        new Uint32Array(fast.memory.buffer,fast.prime_ptr(),primes.length).set(primes);
+        // Cross-check a 100T-scale sample against the original WASM, comparing
+        // all exact count fields, without changing the visible UI.
+        const A=4n,B=2n,C=41n,L=1,H=1000;
+        if(fast.formula_stats_100t(A,B,C,L,H,BigInt(maxN),primes.length,primeLimit)!==0)throw Error('OPT23 self-test rc');
+        const newCounts=Array.from(new Uint32Array(fast.memory.buffer,fast.result_ptr(),4));
+        if(wasm.formula_stats_100t(A,B,C,L,H,BigInt(maxN),primes.length,primeLimit)!==0)throw Error('legacy self-test rc');
+        const oldCounts=Array.from(new Uint32Array(wasm.memory.buffer,wasm.result_ptr(),4));
+        if(newCounts.some((v,i)=>v!==oldCounts[i]))throw Error('OPT23 startup comparison mismatch');
+        wasmOpt23=fast;
+      }catch(error){console.warn('[OPT23 point WASM fallback]',String(error));wasmOpt23=null}}
       // OPT13: Prime table/WASM initialization alone doesn't warm the long
       // polynomial sieve loops.  Perform a short throwaway run so the first
       // actual selected point does not pay as much cold-code cost.  Results
@@ -3061,7 +3146,7 @@ function formulaStatsWorkerMain(){
   }catch(err){self.postMessage({type:'error',message:String(err&&err.message||err)})}};
 }
 function formulaStatsWorkerSource(){
-  return `const FORMULA_STATS_WASM_B64=${JSON.stringify(FORMULA_STATS_WASM_B64)};\n`+[modNorm,modPowSmall,modInversePrime,sqrtModPrime,polynomialRootsModPrime,formulaParamRange,basePrimeContains,formulaStatsCore,formulaStatsWorkerMain].map(fn=>fn.toString()).join('\n')+'\n('+formulaStatsWorkerMain.toString()+')();';
+  return `const FORMULA_STATS_WASM_B64=${JSON.stringify(FORMULA_STATS_WASM_B64)};\nconst FORMULA_STATS_OPT23_WASM_B64=${JSON.stringify(FORMULA_STATS_OPT23_WASM_B64)};\n`+[modNorm,modPowSmall,modInversePrime,sqrtModPrime,polynomialRootsModPrime,formulaParamRange,basePrimeContains,formulaStatsCore,formulaStatsWorkerMain].map(fn=>fn.toString()).join('\n')+'\n('+formulaStatsWorkerMain.toString()+')();';
 }
 function pointAnalyzeWorkerCap(){
   const hc=Math.max(1,Number(navigator.hardwareConcurrency)||2),mobile=navigator.userAgentData?.mobile||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),memory=Number(navigator.deviceMemory)||8;
@@ -3674,12 +3759,12 @@ function startHexBuild(target){
  const width=target.xmax-target.xmin+1,height=target.ymax-target.ymin+1,count=width*height;
  if(count>12000000){console.warn('[hex] viewport larger than 12M cells');return}
  const bounds=hexRingBounds(target),cache={...target,...bounds,width,height,bits:new Uint8Array(Math.ceil(count/8)),done:new Uint8Array(bounds.hi-bounds.lo+1)};
- hexPreview=cache;
+ hexPreview=cache;hexLastPaint=0;
  if(cache.lo===0){const idx=(-cache.ymin)*width-cache.xmin;if(idx>=0&&idx<count)cache.done[0]=1}
  const t0=performance.now(),token=hexGeneration,workerCount=Math.max(1,Math.min(mobilePrimeDevice()?2:6,Math.max(1,(navigator.hardwareConcurrency||4)-1)));
  const jobs=[];
  // Work toward the currently visible center first, while retaining exact ring ownership.
- const stripe=24;for(let h=Math.max(1,bounds.lo);h<=bounds.hi;h+=stripe)jobs.push({h0:h,h1:Math.min(bounds.hi,h+stripe-1)});
+ const stripe=12;for(let h=Math.max(1,bounds.lo);h<=bounds.hi;h+=stripe)jobs.push({h0:h,h1:Math.min(bounds.hi,h+stripe-1)});
  const focus=hexRadius(Math.round(camX),Math.round(camY));jobs.sort((a,b)=>Math.abs((a.h0+a.h1)/2-focus)-Math.abs((b.h0+b.h1)/2-focus));
  const workers=[],poolCount=Math.min(workerCount,jobs.length);let next=0,completed=0,wasmCount=0,stopped=false;
  const cleanup=(reuse=false)=>{for(const w of workers){w.onmessage=null;w.onerror=null;if(reuse&&w._hexReady&&idleHexWorkers.length<hexWorkerCap())idleHexWorkers.push(w);else w.terminate()}workers.length=0};
@@ -4258,8 +4343,39 @@ const EXTRA_PHI_FIXED=30262465214248651242265067423n,EXTRA_PHASE_MASK=(1n<<96n)-
 let extraWorker=null,extraWorkers=[],extraTimer=0,extraToken=0,extraChunks=[],extraPreview=null,extraLayer=null,extraLayerCtx=null,extraGridLayer=null,extraGridCtx=null,extraFormulaLayer=null,extraFormulaCtx=null,extraArmLayer=null,extraArmCtx=null,extraDataCount=0,extraPrimeCount=0,extraTestedCount=0,extraTriPrimeNumbers=new Set(),extraLastMessage=0,extraChunkPayloadBytes=0,extraChunkPeakBytes=0,extraMemWarned=false;
 let extraSpatialBuckets=new Map();
 let idleExtraWorkers=[],extraWorkerURL=null;
+let extraWarmTimer=0,extraWarmingWorkers=[];
 function extraWorkerCap(){return Math.min(mobilePrimeDevice()?2:4,Math.max(1,(navigator.hardwareConcurrency||2)-1))}
-function resetExtraWorkerPool(){for(const w of idleExtraWorkers)w.terminate();idleExtraWorkers=[];if(extraWorkerURL){URL.revokeObjectURL(extraWorkerURL);extraWorkerURL=null}}
+function resetExtraWorkerPool(){
+ clearTimeout(extraWarmTimer);extraWarmTimer=0;
+ for(const w of extraWarmingWorkers)try{w.terminate()}catch(_){}extraWarmingWorkers=[];
+ for(const w of idleExtraWorkers)w.terminate();idleExtraWorkers=[];
+ if(extraWorkerURL){URL.revokeObjectURL(extraWorkerURL);extraWorkerURL=null}
+}
+// OPT25 experiment: warm the exact prime lattice Worker only after startup,
+// on a 100T-safe single-cell job. Do not change the real renderer or MR engine.
+window.__ulamExtraWarmQA=()=>({idle:idleExtraWorkers.length,warming:extraWarmingWorkers.length});
+function scheduleExtraPrimeWarmup(delay=700){
+ clearTimeout(extraWarmTimer);
+ extraWarmTimer=setTimeout(()=>{
+  extraWarmTimer=0;
+  if(!ready||isExtraMode()||extraWorkers.length||extraWarmingWorkers.length)return;
+  if(!extraWorkerURL)extraWorkerURL=URL.createObjectURL(new Blob([`(${extraWorkerMain.toString()})();`],{type:'text/javascript'}));
+  const nWorkers=Math.max(0,Math.min(extraWorkerCap(),4)-idleExtraWorkers.length);
+  for(let i=0;i<nWorkers;i++){
+   let w;try{w=new Worker(extraWorkerURL)}catch(_){continue}
+   extraWarmingWorkers.push(w);
+   function remove(){const j=extraWarmingWorkers.indexOf(w);if(j>=0)extraWarmingWorkers.splice(j,1)}
+   function finish(ok){w.onmessage=null;w.onerror=null;remove();
+    if(ok&&idleExtraWorkers.length<extraWorkerCap()&&!isExtraMode())idleExtraWorkers.push(w);
+    else try{w.terminate()}catch(_){}
+   }
+   w.onmessage=e=>{if(e.data?.type==='done')finish(true);else if(e.data?.type==='error')finish(false)};
+   w.onerror=()=>finish(false);
+   // r=9999999, c=0: one odd >1M integer strictly below 100T.
+   w.postMessage({mode:'klauber',rect:{xmin:-.4,xmax:.4,ymin:-9999999.4,ymax:-9999998.6},maxN:MAX_N});
+  }
+ },Math.max(0,delay));
+}
 function releaseExtraWorker(w){w.onmessage=null;w.onerror=null;extraWorkers=extraWorkers.filter(v=>v!==w);extraWorker=extraWorkers[extraWorkers.length-1]||null;if(idleExtraWorkers.length<extraWorkerCap())idleExtraWorkers.push(w);else w.terminate()}
 const EXTRA_PICK_GRID=32;
 let extraWatchdog=0; // Re-check suspended far-view jobs; never treat unfinished preview as permanently ready.
@@ -4388,7 +4504,10 @@ function extraViewRect(factor=1.06){return {xmin:camX-W*factor/(2*scale),xmax:ca
 function extraEnsure(recovery=false){
  if(!isExtraMode()||!ready||!W||!H||(!recovery&&extraPreviewCoversCurrent()))return;
  clearTimeout(extraWatchdog);extraWatchdog=0;
- const formulaKey=extraScopeFormulaKey();
+ // OPT24 display only: first received chunk can request an immediate paint.
+ clearTimeout(extraWarmTimer);extraWarmTimer=0;
+ for(const w of extraWarmingWorkers)try{w.terminate()}catch(_){}extraWarmingWorkers=[];
+ const formulaKey=extraScopeFormulaKey();extraLastMessage=-Infinity;
  const fullRect=extraViewRect(EXTRA_OVERSCAN),token=++extraToken;
  for(const w of extraWorkers)try{w.terminate()}catch(_){}extraWorkers=[];extraWorker=null;
  extraChunks=[];extraChunkPayloadBytes=0;extraMemWarned=false;extraSpatialBuckets.clear();extraTriPrimeNumbers.clear();extraDataCount=0;extraPrimeCount=0;extraTestedCount=0;
@@ -4527,7 +4646,7 @@ function extraEnsure(recovery=false){
        extraArmCtx.fillStyle=color;extraArmCtx.fill(path);
       }
      }
-     const now=performance.now();if(now-extraLastMessage>110){extraLastMessage=now;requestRender()}
+     const now=performance.now(),refreshGap=(p.mode==='tri'||p.mode==='klauber')?48:110;if(now-extraLastMessage>refreshGap){extraLastMessage=now;requestRender()}
     }else if(d.type==='arm'){ 
      if(!extraArmCtx) return;
      p.lastProgressAt=performance.now();
@@ -5217,6 +5336,17 @@ function renderExtraMinimap(){
 function extraWorkerMain(){
  'use strict';
  const MAX=100000000000000,TAU=2*Math.PI,SQ3=Math.sqrt(3),PHI=(3-Math.sqrt(5))/2,PHI_FIXED=30262465214248651242265067423n,MASK=(1n<<96n)-1n;
+ // OPT20: Tiny self-contained exact 100T MR WASM. Falls back to the
+ // unchanged BigInt implementation if WebAssembly is unavailable.
+ let fastPrimeMR=null,fastPrimeTried=false;
+ function getFastPrimeMR(){
+  if(fastPrimeTried)return fastPrimeMR;fastPrimeTried=true;
+  if(typeof WebAssembly==='undefined'||typeof atob!=='function')return null;
+  try{const raw=atob('AGFzbQEAAAABDQJgAX4Bf2ADfn5+AX4DAwIAAQUDAQACBggBfwFBwIgECwcpAwZtZW1vcnkCAA1pc19wcmltZV8xMDB0AAAMbXVsbW9kX2NoZWNrAAEK8gYCiQYIAn8EfgF8An8BfgF8AX4BfwJAIABCAloNAEEADwsCQAJAAkAgAEIBg1ANAEEBIQEgAEIDUQ0CIABCA4JQRQ0BQQAPCyAAQgJRDwsgAEIFUQ0AAkAgAEIFglBFDQBBAA8LIABCB1ENAAJAIABCB4JQRQ0AQQAPCyAAQgtRDQACQCAAQguCUEUNAEEADwsgAEINUQ0AAkAgAEINglBFDQBBAA8LIABCEVENAAJAIABCEYJQRQ0AQQAPCyAAQhNRDQACQCAAQhOCUEUNAEEADwsgAEIXUQ0AAkAgAEIXglBFDQBBAA8LIABCHVENAAJAIABCHYJQRQ0AQQAPCyAAQh9RDQACQCAAQh+CUEUNAEEADwsgAEIlUQ0AQQAhASAAQiWCUA0AQX8hAiAAQn98IgMhBANAIAJBAWohAiAEQgKDIQUgBEIBiCIGIQQgBVANAAsgALohB0EAIQggAkEBakECSSEJA0ACQCAIQQN0QYCIgIAAaikDACIEIABaDQBCASEKIAYhBQNAAkAgBUIBg1ANAAJAAkAgCrogBLqiIAejIgtEAAAAAAAA8ENjIAtEAAAAAAAAAABmcUUNACALsSEMDAELQgAhDAsgBCAKfiAMIAB+fSIKQj+HIACDIAp8IgpCACAAIAogAFQbfSEKCwJAIAVCAVENAAJAAkAgBLoiCyALoiAHoyILRAAAAAAAAPBDYyALRAAAAAAAAAAAZnFFDQAgC7EhDAwBC0IAIQwLIAQgBH4gDCAAfn0iBEI/hyAAgyAEfCIEQgAgACAEIABUG30hBCAFQgBSIQEgBUIBiCEFIAENAQsLIApCAVENACAKIANRDQBBACEBIAIhDSAJDQIDQAJAAkAgCroiCyALoiAHoyILRAAAAAAAAPBDYyALRAAAAAAAAAAAZnFFDQAgC7EhBAwBC0IAIQQLIAogCn4gBCAAfn0iBEI/hyAAgyAEfCIEQgAgACAEIABUG30iCiADUQ0BIA1Bf2oiDUUNAwwACwtBASEBIAhBAWoiCEEHRw0ACwsgAQtlAgF+AXwgASAAfiEDAkACQCAAuiABuqIgArqjIgREAAAAAAAA8ENjIAREAAAAAAAAAABmcUUNACAEsSEADAELQgAhAAsgAyAAIAJ+fSIAQj+HIAKDIAB8IgBCACACIAAgAlQbfQsLPwEAQYAICzgCAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAHAAAAAAAAAAsAAAAAAAAADQAAAAAAAAARAAAAAAAAAABcBG5hbWUAFRR1bGFtX21yX2NoZWNrZWQud2FzbQEeAgANaXNfcHJpbWVfMTAwdAEMbXVsbW9kX2NoZWNrBxIBAA9fX3N0YWNrX3BvaW50ZXIJCgEABy5yb2RhdGEAfwlwcm9kdWNlcnMBDHByb2Nlc3NlZC1ieQEFY2xhbmdfMTcuMC4wIChodHRwczovL2dpdGh1Yi5jb20vc3dpZnRsYW5nL2xsdm0tcHJvamVjdC5naXQgMTA5OTliNmQwMzRmZTMxOGYzZDU2YzgzYmRkYjY1NzI1OTNhOGJiMCkASQ90YXJnZXRfZmVhdHVyZXMEKwptdWx0aXZhbHVlKw9tdXRhYmxlLWdsb2JhbHMrD3JlZmVyZW5jZS10eXBlcysIc2lnbi1leHQ='),bytes=new Uint8Array(raw.length);
+   for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+   fastPrimeMR=new WebAssembly.Instance(new WebAssembly.Module(bytes),{}).exports.is_prime_100t;return fastPrimeMR;
+  }catch(_err){return null}
+ }
  let tStart=0;
  const goldenFrac=[0n,16n,32n].map(shift=>Number(((PHI_FIXED<<shift)&MASK)>>43n)/9007199254740992);
  function phase(n){
@@ -5237,7 +5367,7 @@ function extraWorkerMain(){
  const lookupLimit=1000000;
  let primeMark=null;
  function lookupPrime(n){if(!primeMark)primeMark=(()=>{const a=new Uint8Array(lookupLimit+1);a[0]=a[1]=1;for(let p=2;p*p<=lookupLimit;p++)if(!a[p])for(let n=p*p;n<=lookupLimit;n+=p)a[n]=1;return a})();return primeMark[n]===0}
- function isPrime(n){if(n<2)return false;if(n<=lookupLimit)return lookupPrime(n);for(const p of small){if(n===p)return true;if(n%p===0)return false}
+ function isPrime(n){if(n<2)return false;if(n<=lookupLimit)return lookupPrime(n);const fastMR=getFastPrimeMR();if(fastMR)return fastMR(BigInt(n))===1;for(const p of small){if(n===p)return true;if(n%p===0)return false}
   let d=n-1,s=0;while(d%2===0){d/=2;s++}
   // n <= 1e14: Number division by 2 keeps every exponent bit exact.
   // Modular products and seven witnesses use BigInt.
@@ -5249,18 +5379,20 @@ function extraWorkerMain(){
  // Typed-array chunk writer: the dense triangular and near-origin Sacks
  // paths no longer allocate a JS object for every prime / integer site.
  function packedEmitter(mode,rect,box){
-  const LIMIT=12000;
+  // OPT20: publish early in tri/Klauber; retain 2048 for throughput.
+  // Polar modes retain their original 12000-point batching.
+  const LIMIT=(mode==='tri'||mode==='klauber')?2048:12000;
   const x=new Float64Array(LIMIT),y=new Float64Array(LIMIT),n=new Float64Array(LIMIT),p=new Uint8Array(LIMIT);
-  let len=0;
+  let len=0,emitAt=(mode==='tri'||mode==='klauber')?128:LIMIT;
   function flush(){
    if(!len)return;
    const xx=x.slice(0,len),yy=y.slice(0,len),nn=n.slice(0,len),pp=p.slice(0,len);
    self.postMessage({type:'chunk',x:xx.buffer,y:yy.buffer,n:nn.buffer,p:pp.buffer,box},[xx.buffer,yy.buffer,nn.buffer,pp.buffer]);
-   len=0;
+   len=0;emitAt=LIMIT;
   }
   function push(xx,yy,nn,pp){
    const i=len++;x[i]=xx;y[i]=yy;n[i]=nn;p[i]=pp;
-   if(len===LIMIT)flush();
+   if(len===emitAt)flush();
   }
   return {push,flush};
  }
@@ -5285,7 +5417,13 @@ function extraWorkerMain(){
   const i0=Math.ceil(rect.xmin/unit-1e-9),i1=Math.floor(rect.xmax/unit+1e-9);
   const output=packedEmitter(mode,rect,{...rect});
   let tested=0;
-  for(let i=i0;i<=i1;i++){
+  // OPT20: center-first columns, then alternating to both sides. Each
+  // integer i in [i0,i1] is visited exactly once, independently of parity.
+  const ic=Math.max(i0,Math.min(i1,Math.round((rect.xmin+rect.xmax)/(2*unit))));
+  const maxStep=Math.max(ic-i0,i1-ic);
+  for(let step=0;step<=maxStep;step++)for(let side=0;side<(step===0?1:2);side++){
+   const i=side===0?ic+step:ic-step;
+   if(i<i0||i>i1)continue;
    const x=unit*i;if(x<rect.xmin||x>=rect.xmax)continue;
    const j0=Math.ceil(rect.ymin-i/2-1e-9),j1=Math.floor(rect.ymax-i/2+1e-9);
    for(let j=j0;j<=j1;j++){
@@ -5293,10 +5431,7 @@ function extraWorkerMain(){
     const n=triNumberFromIJ(i,j);
     if(n<2||n>maxN)continue;
     tested++;
-    // Exact parity shortcut before the Miller-Rabin/trial-division pipeline.
-    // 2 is retained; bitwise operators are avoided because n may reach 1e12.
     if(n>2&&n%2===0)continue;
-    // Send only prime dots: composite positions can be inverted in O(1) on hover.
     if(!isPrime(n))continue;
     output.push(x,y,n,1);
    }
@@ -5311,7 +5446,13 @@ function extraWorkerMain(){
   const rmax=Math.floor(Math.sqrt(maxN-1));
   const from=Math.max(0,Math.ceil(-rect.ymax-1e-9)),to=Math.min(rmax,Math.floor(-rect.ymin+1e-9));
   let tested=0;
-  for(let r=from;r<=to;r++){
+  // OPT20: start near the center of each Worker stripe, then expand
+  // upward/downward. This changes publication order, not the tested cells.
+  const rc=Math.max(from,Math.min(to,Math.round(-(rect.ymin+rect.ymax)/2)));
+  const maxStep=Math.max(rc-from,to-rc);
+  for(let step=0;step<=maxStep;step++)for(let side=0;side<(step===0?1:2);side++){
+   const r=side===0?rc+step:rc-step;
+   if(r<from||r>to)continue;
    const xmin=Math.max(-r,Math.ceil(rect.xmin-1e-9)),xmax=Math.min(r,Math.floor(rect.xmax+1e-9));
    const mid=r*r+r+1;
    for(let c=xmin;c<=xmax;c++){
@@ -5649,10 +5790,57 @@ function drawSquareCornerQuadrant(path,xmin,xmax,ymin,ymax,pt,primeAt){
  }
  return true;
 }
-function render(){if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt,normalPath=new Path2D();
+// OPT17: reuse the Square prime Path2D only while its source cache state is unchanged.
+// Progressive sieve publication is tracked to invalidate stale paths.
+// OPT17: cache identity and published-stripe fingerprint. The original
+// visiblePrimeDataReady() accepts *partially* published sieve work, so using
+// it as a completeness test would freeze progressive prime drawing.
+function opt17ReadyTotal(a){let count=0;if(a)for(let i=0;i<a.length;i++)count+=a[i];return count}
+function opt17SieveSnapshot(){
+ const refs=[localPrimeCache,localPrimePreview,branchPrimeCache,branchPrimePreview,cornerPrimeCache,cornerPrimePreview];
+ const flags=[opt17ReadyTotal(localPrimePreview?.readyBlocks),
+  opt17ReadyTotal(branchPrimeCache?.readyLines),opt17ReadyTotal(branchPrimePreview?.readyLines)];
+ for(const c of [cornerPrimeCache,cornerPrimePreview]){
+  for(const [key,part] of Object.entries(c?.parts||{})){
+   refs.push(key,part,part?.bits);flags.push(opt17ReadyTotal(part?.readyLines));
+  }
+ }
+ return {refs,flags};
+}
+function opt17SameSnapshot(a,b){
+ if(!a||!b||a.refs.length!==b.refs.length||a.flags.length!==b.flags.length)return false;
+ for(let i=0;i<a.refs.length;i++)if(a.refs[i]!==b.refs[i])return false;
+ for(let i=0;i<a.flags.length;i++)if(a.flags[i]!==b.flags[i])return false;
+ return true;
+}
+function opt18CanReprojectDots(oldScale,newScale){
+ if(oldScale<1.22||newScale<1.22)return oldScale===newScale;
+ const a=s=>Math.max(1,Math.min(s*.82,s-.2));
+ return Math.abs(a(oldScale)*newScale/oldScale-a(newScale))<1e-10;
+}
+let opt17SquarePathMemo=null;
+function render(){if(isExtraMode())return renderExtra();if(latticeMode==='hex')return renderHex();if(!W||!H)return;prepareLocalCacheForView();ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);if(!ready){renderMinimap();return}const hx=W/(2*scale),hy=H/(2*scale);let xmin=Math.max(-MAX_R,Math.floor(camX-hx)-1),xmax=Math.min(MAX_R,Math.ceil(camX+hx)+1),ymin=Math.max(-MAX_R,Math.floor(camY-hy)-1),ymax=Math.min(MAX_R,Math.ceil(camY+hy)+1);const pt=Math.max(1,Math.min(scale*.82,scale-.2)),activePt=activeFormula?Math.max(3,pt):pt;
 const showSquareGrid=scale>=15;
 if(showSquareGrid){const gridPath=new Path2D(),hs=scale*.48;for(let y=ymin;y<=ymax;y++){const sy=H/2-(y-camY)*scale;for(let x=xmin;x<=xmax;x++){const n=ulamNumber(x,y);if(n<1||n>MAX_N)continue;const sx=W/2+(x-camX)*scale;gridPath.rect(sx-hs,sy-hs,hs*2,hs*2);}}ctx.strokeStyle='rgba(150,180,235,.68)';ctx.lineWidth=1.15;ctx.stroke(gridPath)}
 const hasVisiblePrimeData=visiblePrimeDataReady(xmin,xmax,ymin,ymax);
+// The prime layer is immutable while the world range, camera, scale and size
+// remain identical, once the viewport's sieve is fully available.
+// OPT17 pan margin: build 64 CSS pixels beyond the visible viewport only
+// when the complete sieve covers those extra cells. Never draw guessed primes.
+let opt17PrimeBounds={xmin,xmax,ymin,ymax};
+const margin=scale<=3.2?Math.ceil(48/scale):0;
+if(hasVisiblePrimeData&&margin){
+ const expanded={xmin:Math.max(-MAX_R,xmin-margin),xmax:Math.min(MAX_R,xmax+margin),
+  ymin:Math.max(-MAX_R,ymin-margin),ymax:Math.min(MAX_R,ymax+margin)};
+ opt17PrimeBounds=expanded;
+}
+const opt17CurrentSnapshot=opt17SieveSnapshot();
+const saved=opt17SquarePathMemo;
+const opt17PathHit=hasVisiblePrimeData && opt17SameSnapshot(saved?.sieveSnapshot,opt17CurrentSnapshot) && saved?.MAX_N===MAX_N && saved?.W===W && saved?.H===H && opt18CanReprojectDots(saved?.scale,scale) &&
+ saved.bounds.xmin<=xmin && saved.bounds.xmax>=xmax && saved.bounds.ymin<=ymin && saved.bounds.ymax>=ymax;
+const normalPath=opt17PathHit?saved.path:new Path2D();
+if(!opt17PathHit){
+const {xmin,xmax,ymin,ymax}=opt17PrimeBounds;
 const squarePrimeAt=hasVisiblePrimeData?squarePrimeLookupForViewport(xmin,xmax,ymin,ymax):isPrimeAtXY;
 const cornerFastRows=hasVisiblePrimeData && !!cornerPrimeCache?.parts &&
  cornerRectCovers(cornerPrimeCache,{xmin,xmax,ymin,ymax}) &&
@@ -5707,7 +5895,16 @@ if(xmin<=1&&xmax>=1&&ymin<=0&&ymax>=0&&squarePrimeAt(2,1,0)){
   const sx=W/2+(1-camX)*scale,sy=H/2+camY*scale;
   normalPath.rect(sx-pt/2,sy-pt/2,pt,pt);
 }
-ctx.fillStyle='#f5f7fb';ctx.fill(normalPath);drawCredit();
+// An incomplete viewport is deliberately never memoized.
+opt17SquarePathMemo=hasVisiblePrimeData?{MAX_N,W,H,scale,camX,camY,bounds:opt17PrimeBounds,path:normalPath,sieveSnapshot:opt17CurrentSnapshot}:null;
+}
+ctx.fillStyle='#f5f7fb';
+if(opt17PathHit && (saved.camX!==camX || saved.camY!==camY || saved.scale!==scale)){
+ const r=scale/saved.scale;
+ ctx.save();ctx.translate(W/2+(saved.camX-camX)*scale,H/2+(camY-saved.camY)*scale);
+ ctx.scale(r,r);ctx.translate(-W/2,-H/2);ctx.fill(normalPath);ctx.restore();
+}else ctx.fill(normalPath);
+drawCredit();
 // REV17: do not run a quadratic-discriminant membership test for every visible
 // prime. Generate only active-formula terms whose shells intersect this viewport,
 // then overdraw the prime ones in cyan. This is much cheaper at 1T.
@@ -5939,7 +6136,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral · 100T OPT9 (WASM square sieve)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · v1.4.2 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';
@@ -6689,7 +6886,7 @@ let timer;
 async function setRange(target){
   if(sieveWorker){++sieveToken;sieveWorker.terminate();sieveWorker=null}localBuildTarget=null;
   stopSavedStatsBackfill();++startupAccelToken;if(branchSieveTask){branchSieveTask.terminate();branchSieveTask=null}if(cornerSieveTask){cornerSieveTask.terminate();cornerSieveTask=null}resetLocalSievePool();resetBranchSievePool();resetPointAnalyzeWorkerPool();recentPrimeCaches=[];recentBranchPrimeCaches=[];recentCornerPrimeCaches=[];branchPrimeCache=null;branchPrimePreview=null;branchBuildTarget=null;cornerPrimeCache=null;cornerPrimePreview=null;cornerBuildTarget=null;branchAdaptiveModes=null;MAX_N=target;MAX_R=radiusFor(target);positiveQuadraticKeyCache.clear();savedNaturalStatsCache.clear();miniCensusReady.clear();miniSparseMemo.clear();updateRangeUI();formulaStatCache.clear();localPrimeCache={low:0,high:0,firstOdd:1,oddCount:0,bits:null,rLo:0,rHi:-1,bytes:0};localPrimePreview=null;
-  extraCancelBuild();resetExtraWorkerPool();ready=false;initBasePrimeData();initQuickFormulaRows();HEX_R=hexRadiusFor(MAX_N);hexCancelBuild();resetHexWorkerPool();hexCache=null;hexHistory=[];clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);
+  extraCancelBuild();resetExtraWorkerPool();ready=false;initBasePrimeData();initQuickFormulaRows();HEX_R=hexRadiusFor(MAX_N);hexCancelBuild();resetHexWorkerPool();hexCache=null;hexHistory=[];clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);scheduleExtraPrimeWarmup(650);
 }
 initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();try{const mode=localStorage.getItem('ULAM_LATTICE_MODE');if(['square','hex','tri','sacks','klauber'].includes(mode)||(mode==='vogel'&&ENABLE_VOGEL_MODE))latticeMode=mode}catch(_){}updateShapeUI();refreshSearchABForLattice();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
 })();

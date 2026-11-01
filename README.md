@@ -6,7 +6,7 @@
 
 An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
 
-**Current release: v1.4.0 (October 30, 2026)** · [MIT License](LICENSE).
+**Current release: v1.4.2 (November 1, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -24,7 +24,16 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.0
+## What's new in v1.4.2
+
+- Fixed precision-sensitive selected-point polynomial statistics and parameter ranges by using exact integer arithmetic where needed.
+- Accelerated Square Ulam redraws and zooming with reusable viewport rendering paths.
+- Improved progressive prime rendering in Hexagonal, Triangular and Klauber Triangle modes.
+- Added optimized exact WASM primality checks and prewarmed lattice Workers for faster first navigation to Triangular and Klauber modes.
+- Accelerated selected-point quadratic statistics by reusing prime-specific modular-root preparations; the established exact calculation fallback remains available.
+- Retained the five modes, 100T limit, saved formulas, minimaps and bilingual interface; no 1Q/1000T experimental expansion is included.
+
+### Previous v1.4.0 changes
 
 - Raised navigation ceiling from **10¹² to 10¹⁴**.
 - Significantly accelerated Square Ulam loading at distant sides and corners with full-range and hybrid WASM sieve paths, viewport cache improvements and throttled intermediate redraws.
@@ -32,7 +41,7 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Unified estimated-density minimap visualization across all five spiral modes.
 - Expanded the non-Klauber constant-term search while preserving Klauber-specific functionality.
 
-See [v1.4.0 release notes](RELEASE_NOTES_v1.4.0.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.0.md).
+See [v1.4.2 release notes](RELEASE_NOTES_v1.4.2.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.2.md).
 
 ## Mathematical interpretation
 
