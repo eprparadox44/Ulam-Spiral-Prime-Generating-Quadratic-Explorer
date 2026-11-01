@@ -2415,6 +2415,7 @@ function deferPointAnalysis(x,y){
 function analyzePointAsync(x,y){
   const fp6Start=FP6_STATS_PROFILE?performance.now():0;
   let fp6WorkerJobs=0,fp6WorkerTotal=0,fp6WorkerMax=0;
+  const fp6PointJobTimes=[];
   stopSavedStatsBackfill();cancelPointAnalysis(false);
   const token=pointAnalyzeToken,prepared=dedupePointCandidatesByNaturalSequence(preparePointCandidates(x,y)),all=prepared.fixed.concat(prepared.pool),stats=new Map(),lineStats=new Map(),projectedStats=new Map(),jobs=[],jobByStatsKey=new Map();
   pointAnalysisPending=true;formulas=[];renderFormulaPanel();sched();
@@ -2480,7 +2481,8 @@ function analyzePointAsync(x,y){
     if(FP6_STATS_PROFILE){
       const result={point:selected?.n,overallMs:performance.now()-fp6Start,
         jobs:fp6WorkerJobs,totalWorkerCpuMs:fp6WorkerTotal,
-        maxSingleJobMs:fp6WorkerMax,workerCount:Math.min(jobs.length,pointAnalyzeWorkerCap())};
+        maxSingleJobMs:fp6WorkerMax,workerCount:Math.min(jobs.length,pointAnalyzeWorkerCap()),
+        slowest:fp6PointJobTimes.sort((a,b)=>b.ms-a.ms).slice(0,8)};
       window.__ulamFP6Profile.point.push(result);
       console.info('[FP6 point profile]',result);
     }
@@ -2538,6 +2540,7 @@ function analyzePointAsync(x,y){
         const fs=d.stats;w._job=null;
         if(FP6_STATS_PROFILE&&Number.isFinite(d.workMs)){
           fp6WorkerJobs++;fp6WorkerTotal+=d.workMs;fp6WorkerMax=Math.max(fp6WorkerMax,d.workMs);
+          fp6PointJobTimes.push({a:job.a,b:job.b,c:job.c,ms:d.workMs});
         }
         for(const receiver of job.receivers){
           (receiver.kind==='line'?lineStats:receiver.kind==='global'?projectedStats:stats).set(receiver.id,fs);
@@ -2798,7 +2801,7 @@ function sched(cacheDelay=140){
 
 // FP6 optional point-worker timing, disabled unless ?statsProfile=1.
 const FP6_STATS_PROFILE=new URLSearchParams(location.search).get('statsProfile')==='1';
-window.__ulamFP6Profile={point:[]};
+window.__ulamFP6Profile={point:[],search:[],activeSearch:null};
 function cSearchWorkerMain(){
   function primesUpTo(limit){
     const mark=new Uint8Array(limit+1),out=[];
@@ -3257,6 +3260,18 @@ function renderCSearchResults(rows){
 }
 function finishCSearchVerification(rows,token){
   if(token!==cSearchToken)return;
+  if(FP6_STATS_PROFILE){
+    const p=window.__ulamFP6Profile.activeSearch;
+    if(p?.token===token){
+      const totalMs=performance.now()-p.started;
+      const result={a:p.a,b:p.b,cMin:p.lo,cMax:p.hi,totalMs,
+        prefilterMs:p.prefilterMs,verificationMs:totalMs-p.prefilterMs,
+        candidates:p.candidates,resultCount:rows.length};
+      window.__ulamFP6Profile.search.push(result);
+      window.__ulamFP6Profile.activeSearch=null;
+      console.info('[FP6 c-search profile]',result);
+    }
+  }
   if(cVerifyWorkers.length){for(const w of cVerifyWorkers)try{w.terminate()}catch(_){}cVerifyWorkers=[]}
   rows.sort((u,v)=>v.oddRatio-u.oddRatio||v.oddPrimeCount-u.oddPrimeCount||v.ratio-u.ratio);
   renderCSearchResults(rows);
@@ -3510,6 +3525,10 @@ function startCSearch(){
   const countEligible=splitCSearchIntervals(intervals,oddOnly,1).total;
   stopCSearchRun();
   const token=++cSearchToken;
+  if(FP6_STATS_PROFILE){
+    window.__ulamFP6Profile.activeSearch={token,started:performance.now(),a,b,lo,hi,
+      candidates:null,prefilterMs:null};
+  }
   lastCSearchRows=[];cResults.innerHTML='';runCSearch.disabled=true;stopCSearch.disabled=false;
   cSearchStatus.textContent=geometryFilter?tr('slopeFilterCount',countEligible,span):tr('prefilterStart',lo,hi,span);
   if(!countEligible){
@@ -3544,6 +3563,10 @@ function startCSearch(){
   cSearchPool=workers;cSearchWorker=workers[0];
   const handleDone=candidates=>{
     if(token!==cSearchToken)return;
+    if(FP6_STATS_PROFILE){
+      const p=window.__ulamFP6Profile.activeSearch;
+      if(p?.token===token){p.prefilterMs=performance.now()-p.started;p.candidates=candidates.length;}
+    }
     cleanupPool();
     cSearchStatus.textContent=tr('prefilterDone',candidates.length);
     verifyCSearchCandidates(a,b,candidates,token);
