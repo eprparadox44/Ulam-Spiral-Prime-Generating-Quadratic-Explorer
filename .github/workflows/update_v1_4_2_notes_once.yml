@@ -1,0 +1,21 @@
+name: Update v1.4.2 release notes once
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'RELEASE_NOTES_v1.4.2.md'
+      - '.github/workflows/update_v1_4_2_notes_once.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update existing release description without changing assets or tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release edit v1.4.2 --notes-file RELEASE_NOTES_v1.4.2.md
