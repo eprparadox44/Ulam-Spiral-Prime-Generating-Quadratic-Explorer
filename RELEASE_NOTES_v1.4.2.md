@@ -6,13 +6,20 @@
 
 ## What's changed
 
-- Corrected numerical precision risks in short selected-point quadratic statistics and quadratic parameter range calculations.
-- Cached Square Ulam viewport dot geometry and reused eligible dot paths across zoom and small moves.
-- Improved progressive prime display in Hexagonal, Triangular and Klauber Triangle modes.
-- Accelerated exact prime classification for Triangular and Klauber, with a JavaScript/BigInt fallback path.
-- Prewarmed prime lattice Workers to reduce the first Triangular/Klauber mode-switch latency.
-- Reused prime-specific modular-root preparation across selected-point quadratic statistics with a hybrid fallback strategy.
+- Smoother panning and zooming in Square Ulam mode.
+- Prime dots appear sooner as they are calculated in Hexagonal, Triangular and Klauber Triangle modes.
+- Reduced the initial wait when switching to Triangular and Klauber Triangle modes.
+- Faster selected-point quadratic statistics, with fixes for some precision-sensitive calculations.
 - Updated the browser-tab title to **Ulam Spiral · v1.4.2 (100T)**.
+
+## Technical details
+
+- Cached and reused Square Ulam viewport dot geometry during zooming and small camera movements.
+- Improved progressive prime-point rendering in Hexagonal, Triangular and Klauber Triangle modes.
+- Accelerated exact WASM primality checks in Triangular and Klauber modes while retaining a JavaScript/BigInt fallback.
+- Prewarmed prime lattice Web Workers to reduce first-mode-switch latency.
+- Reused prime-specific modular-root preparation in selected-point quadratic statistics, with a hybrid fallback strategy.
+- Corrected intermediate arithmetic precision in short selected-point quadratic statistics and parameter-range calculations.
 
 ## Notes
 
@@ -32,13 +39,20 @@ For details, see the [verification notes](https://github.com/eprparadox44/Ulam-S
 
 ## 주요 변경
 
-- 선택점 기준 짧은 이차식 통계 및 매개변수 구간의 중간 계산 정밀도 문제 보정.
-- 사각 울람 나선에서 화면 위치·확대 변경 시 재사용 가능한 점 도형 캐시 도입.
-- 육각·삼각·클라우버에서 소수 점을 더 일찍, 점진적으로 표시.
-- 삼각·클라우버의 정확한 WASM 소수 판정을 가속하고 대체 계산 경로 보존.
-- 삼각·클라우버 계산 Worker를 미리 준비하여 첫 모드 전환 지연 감소.
-- 선택점 수열 통계에 소수별 모듈러 제곱근 준비값 재사용 적용.
+- 사각 울람 나선의 화면 이동 및 확대·축소 반응 속도 개선.
+- 육각·삼각·클라우버 나선에서 계산된 소수점이 더 일찍 화면에 나타나도록 개선.
+- 삼각·클라우버 나선으로 처음 전환할 때 대기 시간 단축.
+- 선택점 기준 이차식 통계 계산 속도 개선 및 일부 정밀도 문제 수정.
 - 브라우저 탭 제목을 **Ulam Spiral · v1.4.2 (100T)**로 변경.
+
+## 내부 최적화 사항
+
+- 사각 울람 나선의 점 도형을 캐시하고 화면 이동·확대 시 재사용.
+- 육각·삼각·클라우버 나선의 소수점 점진적 표시 개선.
+- 삼각·클라우버의 정확한 WASM 소수 판정 가속 및 JavaScript/BigInt 대체 계산 경로 유지.
+- 삼각·클라우버의 소수 격자 계산 Worker를 미리 준비해 첫 모드 전환 지연 감소.
+- 선택점 수열 통계에서 소수별 모듈러 제곱근 준비값 재사용 및 대체 계산 방식 유지.
+- 짧은 이차식 통계와 매개변수 구간의 중간 계산 정밀도 보정.
 
 ## 참고사항.
 모든 나선 모드·탐색 범위·화면 위치를 빠짐없이 검증하거나 수학적으로 증명한 것은 아니므로 주의.
