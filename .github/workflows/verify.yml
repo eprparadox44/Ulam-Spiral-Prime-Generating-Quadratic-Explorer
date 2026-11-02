@@ -25,3 +25,5 @@ jobs:
         run: node tests/worker_pool_race.js
       - name: Regression-test Klauber 1/8 geometry and c-search limits
         run: node tests/klauber_eighth_slope.js
+      - name: Regression-test Hexagonal minimap outer-ring geometry
+        run: node tests/hex_minimap_edge.js

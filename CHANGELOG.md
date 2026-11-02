@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02 — v1.4.5 (Hexagonal minimap boundary fix)
+
+- Fixed blank or off-map zoomed Hexagonal minimap near 100T outer rings. The old minimap center was clamped to Square-mode bounds (about ±5M), but Hex reaches ±5.77M; zoomed Hex minimaps now follow the camera even at the edge.
+- Added targeted regression coverage for the reported n=99,999,076,320,761, all six zoomed levels, and full-world Hex overview.
+
 ## 2026-11-02 — v1.4.4 (Klauber 1/8 search / c ≤ 90M)
 
 - Reduced the Klauber constant-term search bound from ±10 billion to ±90 million.

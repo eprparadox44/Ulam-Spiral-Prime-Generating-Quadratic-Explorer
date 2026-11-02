@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.4.4 — Klauber 1/8 visible-line search and 90-million c range
+Release: v1.4.5 — Hexagonal minimap outer-ring tracking fix
 
 MIT License
 
@@ -27,9 +27,9 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.4.4">
+<meta name="application-version" content="1.4.5">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral · v1.4.4 (100T)</title>
+<title>Ulam Spiral · v1.4.5 (100T)</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
@@ -1374,7 +1374,16 @@ function miniViewport(){
   // current camera center. Since n grows as radius², each x10 level changes
   // the minimap side length by exactly about sqrt(10).
   if(n===MAX_N)return latticeMode==='klauber'?{n,r,cx:0,cy:-r/2,originCentered:false}:{n,r,cx:0,cy:0,originCentered:true};
-  const snap=Math.max(1,Math.round(r/128)),limit=Math.max(0,(isExtraMode()?(latticeMode==='tri'?extraTriRadiusFor(MAX_N):Math.sqrt(MAX_N)):MAX_R)-r);
+  const snap=Math.max(1,Math.round(r/128));
+  // At 100T, Hex axial coordinates reach ~5.77M beyond Square's 5M
+  // MAX_R. Follow the camera on zoomed Hex minimaps even at outer rings;
+  // restricting the center to HEX_R-r still clips edge points.
+  // The full 100T overview remains anchored at the origin above.
+  if(latticeMode==='hex')return{
+    n,r,cx:Math.round(camX/snap)*snap,cy:Math.round(camY/snap)*snap,
+    originCentered:false
+  };
+  const limit=Math.max(0,(isExtraMode()?(latticeMode==='tri'?extraTriRadiusFor(MAX_N):Math.sqrt(MAX_N)):MAX_R)-r);
   let cx=Math.round(camX/snap)*snap,cy=Math.round(camY/snap)*snap;
   cx=Math.max(-limit,Math.min(limit,cx));cy=Math.max(-limit,Math.min(limit,cy));
   return{n,r,cx,cy,originCentered:false};
@@ -6544,7 +6553,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral · v1.4.4 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · v1.4.5 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';

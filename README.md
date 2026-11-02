@@ -6,7 +6,7 @@
 
 An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
 
-**Current release: v1.4.4 (November 2, 2026)** · [MIT License](LICENSE).
+**Current release: v1.4.5 (November 2, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -24,7 +24,11 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.4
+## What's new in v1.4.5
+
+- Fixed zoomed Hexagonal minimap losing the current view and highlighted prime sequence near the outer 100T rings. The zoomed map now tracks the camera instead of clamping to Square-mode coordinates.
+
+### Previous v1.4.4 changes
 
 - Lowered Klauber c-search bounds from ±10 billion to **±90 million**.
 - Expanded the visible-line geometric filter from |slope|≥1/2 to **|slope|≥1/8**, retaining its 50,000-row continuity condition.
@@ -57,7 +61,7 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Unified estimated-density minimap visualization across all five spiral modes.
 - Expanded the non-Klauber constant-term search while preserving Klauber-specific functionality.
 
-See [v1.4.4 release notes](RELEASE_NOTES_v1.4.4.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.4.md).
+See [v1.4.5 release notes](RELEASE_NOTES_v1.4.5.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.5.md).
 
 ## Mathematical interpretation
 
