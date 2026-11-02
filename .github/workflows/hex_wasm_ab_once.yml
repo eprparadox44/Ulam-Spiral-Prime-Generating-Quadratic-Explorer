@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/hex_wasm_ab_once.yml'
       - 'experimental/build_hex_100t.py'
+      - 'experimental/bench_hex_100t.js'
 permissions:
   contents: write
 jobs:
