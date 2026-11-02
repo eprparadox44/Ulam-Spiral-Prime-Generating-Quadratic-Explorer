@@ -1,0 +1,45 @@
+name: Experimental 100T Hex WASM A/B
+on:
+  push:
+    branches: [perf/hex-wasm-100t-v146]
+    paths:
+      - '.github/workflows/hex_wasm_ab_once.yml'
+permissions:
+  contents: write
+jobs:
+  ab:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install WASM compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang lld >/dev/null
+          clang --version
+      - name: Rebuild standalone test variant
+        run: python3 experimental/build_hex_100t.py
+      - name: Validate embedded JavaScript
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('experimental/hex_wasm_experiment.html','utf8');
+          const code=html.match(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/i)[1];
+          new vm.Script(code);
+          console.log('PASS: compiled HTML script syntax');
+          JS
+      - name: Install browser driver
+        run: |
+          which google-chrome || which chromium || true
+          npm install --no-save playwright-core@1.56.0
+      - name: Browser A/B old JS versus new WASM at 100T
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: node experimental/bench_hex_100t.js
+      - name: Commit validated experiment binaries and HTML
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add experimental/hex_prime_100T.wasm experimental/hex_wasm_experiment.html
+          git commit -m 'experiment: generated and validated 100T Hex WASM standalone HTML'
+          git push
