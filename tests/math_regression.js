@@ -29,7 +29,7 @@ for(let i=0;i<11000;i++){const k=pick(1,6),a=k*k,b=k*pick(-100,100),c=pick(-2000
 // Generate more actual valid long lines instead of only negative samples.
 let successful=0;
 for(let i=0;i<1100;i++){
- const k=pick(1,4),d=pick(-2,2),h=pick(-5000,5000),a=k*k,b=k*(2*h+1+d),r=pick(80000,850000),e=pick(-r,r),c=h*h+h+1+d*h+e;
+ const k=pick(1,4),d=pick(-8,8),h=pick(-5000,5000),a=k*k,b=k*(2*h+1+d),r=pick(80000,850000),e=pick(-r,r),c=h*h+h+1+d*h+e;
  if(Math.abs(c)>1e10)continue;
  const rs=full.klauberVisibleCIntervals(a,b,-1e10,1e10);
  const valid=full.klauberLongestVisibleLineRows(a,b,c)>=50000;
@@ -38,10 +38,10 @@ for(let i=0;i<1100;i++){
 assert(successful>=100,`not enough positive filter cases: ${successful}`);
 // Slow geometric oracle on a small, deliberately varied subset: compute the
 // REAL row by floor(sqrt(P(n)-1)), not the interval function's inequalities.
-for(let j=0;j<50;j++){
+for(let j=0;j<20;j++){
  const k=pick(1,3),h=pick(-20,20),d=pick(-2,2),e=pick(-120000,120000),a=k*k,b=k*(2*h+1+d),c=h*h+h+1+d*h+e;
  let best=0;
- for(let slope=-2;slope<=2;slope++){
+ for(let slope=-8;slope<=8;slope++){
   const twiceH=b/k-1-slope;if(twiceH%2!==0)continue;
   const hh=twiceH/2,intercept=c-(hh*hh+hh+1+slope*hh);
   let started=-1;

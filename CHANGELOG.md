@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-02 — v1.4.4 (Klauber 1/8 search / c ≤ 90M)
+
+- Reduced the Klauber constant-term search bound from ±10 billion to ±90 million.
+- Extended optional geometric filtering to visible slopes |m|≥1/8, keeping the existing 50,000-row minimum; added relevant b=−7 and b=9 presets.
+- Generalized the constant-time interval-union calculation for |d|=2..8; matched independent row witnesses across 960,060 small-domain exhaustive tests.
+- Only exact physical 50,000-row segments pass the checked filter; shorter valid global polynomial candidates remain searchable with the filter unchecked.
+- Previous versions and the v1.4.3 GitHub Release are not overwritten.
+
 ## 2026-11-02 — v1.4.3 (100T optimized release; FP10 promotion)
 
 - Promoted the v1.4.2.10 (FP10) experimental implementation to the public v1.4.3 release with **version labels only** changed in the application HTML; calculation and recommendation logic is unchanged.

@@ -23,3 +23,5 @@ jobs:
         run: python3 scripts/verify_release.py --require-node
       - name: Regression-test Worker pool readiness
         run: node tests/worker_pool_race.js
+      - name: Regression-test Klauber 1/8 geometry and c-search limits
+        run: node tests/klauber_eighth_slope.js

@@ -6,7 +6,7 @@
 
 An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
 
-**Current release: v1.4.3 (November 2, 2026)** · [MIT License](LICENSE).
+**Current release: v1.4.4 (November 2, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -20,11 +20,19 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Five geometries: **Square Ulam**, **Hexagonal**, **Triangular**, **Sacks spiral**, and **Klauber Triangle**.
 - Navigate and zoom to 100 trillion. Prime caches, optimized Web Workers, WASM sieves and exact primality checks support distant exploration.
 - Select a point to discover quadratic sequences and compare finite-range prime counts and rates; save formulas in the browser's local storage.
-- Search quadratic coefficients: **c = −70,000,000 to +70,000,000** in Square/Hex/Tri/Sacks; Klauber retains its specialized **up to ±10 billion** constant-term search.
+- Search quadratic coefficients: **c = −70,000,000 to +70,000,000** in Square/Hex/Tri/Sacks; Klauber uses a specialized **±90 million** constant-term search with an optional geometric line filter.
 - Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.3
+## What's new in v1.4.4
+
+- Lowered Klauber c-search bounds from ±10 billion to **±90 million**.
+- Expanded the visible-line geometric filter from |slope|≥1/2 to **|slope|≥1/8**, retaining its 50,000-row continuity condition.
+- Added a=1, b=−7 and b=9 to the Klauber c-search presets for 1/8-slope families.
+- Updated exact interval-union prefiltering for the additional directions; custom input ranges are kept when switching modes.
+- The selected-point quadratic G(n)=n²−7n+89,999,969 pictured near the outer edge spans only two physical Klauber rows, so it does not pass the unchanged 50,000-row filter; the filter can be switched off when exploring such candidates.
+
+### Previous v1.4.3 changes
 
 - Promoted the v1.4.2.10 (FP10) optimized implementation as the official **v1.4.3**, preserving its calculation and recommendation logic.
 - Improved first-draw responsiveness across Square, Triangular, Sacks and Klauber geometries with optimized rendering/viewport paths and geometry candidate generation.
@@ -49,7 +57,7 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Unified estimated-density minimap visualization across all five spiral modes.
 - Expanded the non-Klauber constant-term search while preserving Klauber-specific functionality.
 
-See [v1.4.3 release notes](RELEASE_NOTES_v1.4.3.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.3.md).
+See [v1.4.4 release notes](RELEASE_NOTES_v1.4.4.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.4.md).
 
 ## Mathematical interpretation
 

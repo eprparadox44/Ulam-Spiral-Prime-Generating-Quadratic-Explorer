@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.4.3 — 100T optimized five-mode prime exploration and geometric quadratic recommendations
+Release: v1.4.4 — Klauber 1/8 visible-line search and 90-million c range
 
 MIT License
 
@@ -27,9 +27,9 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.4.3">
+<meta name="application-version" content="1.4.4">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral · v1.4.3 (100T)</title>
+<title>Ulam Spiral · v1.4.4 (100T)</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
@@ -298,7 +298,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
     <div class="cField"><label id="labelPrimeLimit">Small-prime limit</label><input id="cPrimeLimit" inputmode="numeric" value="3000"></div>
     <label class="cWide" id="klauberSlopeFilterBox" style="display:none;align-items:center;gap:7px;font-size:11px;cursor:pointer">
       <input id="klauberSlopeOnly" type="checkbox" checked style="width:15px;height:15px;flex:0 0 auto;accent-color:#18d7f2">
-      <span id="klauberSlopeFilterText">Within 100T · |slope| ≥ 1/2 · line ≥ 50k rows</span>
+      <span id="klauberSlopeFilterText">Within 100T · |slope| ≥ 1/8 · line ≥ 50k rows</span>
     </label>
     <label class="cWide" id="klauberNormalizeBox" style="display:none;align-items:center;gap:7px;font-size:11px;cursor:pointer">
       <input id="klauberNormalizeAB" type="checkbox" style="width:15px;height:15px;flex:0 0 auto;accent-color:#18d7f2">
@@ -390,8 +390,8 @@ const I18N={
     hexPresetGroup:k=>`Hex lattice line · k=${k} (a=3k²)`,
     hintHex:'Hex mode: lattice-line presets use a=3k² (k=1…4), with b values observed on the hex spiral. Uncheck to enter a and b freely. The Worker prefilters c, then verifies the strongest candidates. c range: −70,000,000 to +70,000,000.',
     hintTri:'Triangular: six exact baseline lattice directions (3 original + 3 rotated by 30°), wherever integer-coefficient quadratics exist. Other a=6k² presets remain available. Prime counts use Worker/WASM verification.',
-    hintKlauber:'Klauber: up to ±10 billion. Visible-line geometric filter: a coherent straight segment spans at least 50,000 rows with |slope|≥1/2 within 100T; clipped end segments are allowed. Requires a perfect-square a and b divisible by √a. Only screened candidates are verified.',
-    slopeFilterLabel:'Within 100T · |slope| ≥ 1/2 · straight line ≥ 50,000 rows',
+    hintKlauber:'Klauber: c from −90 million to +90 million. Visible-line geometric filter: a coherent straight segment spans at least 50,000 rows with |slope|≥1/8 within 100T; clipped end segments are allowed. Requires a perfect-square a and b divisible by √a. Only screened candidates are verified.',
+    slopeFilterLabel:'Within 100T · |slope| ≥ 1/8 · straight line ≥ 50,000 rows',
     slopeFilterUnsupported:'The geometric slope filter requires a=k² and b divisible by k=√a, with |b/√a|≤2 million. Uncheck the filter to search other coefficients.',
     slopeFilterEmpty:'No c produces a ≥50k-row line with |slope|≥1/2 within 100T.',
     slopeFilterCount:(count,total)=>`Geometric filter: ${count.toLocaleString()} of ${total.toLocaleString()} c candidates remain`,
@@ -444,8 +444,8 @@ const I18N={
     hexPresetGroup:k=>`육각 격자선 · k=${k} (a=3k²)`,
     hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −70000000부터 +70000000까지 한 번에 탐색할 수 있다.',
     hintTri:'삼각 모드: 기존 3방향과 추가 3방향의 기본 축에서 정수계수 이차식이 성립하면 고정식으로 표시한다. a=6k² 추천식도 유지하며, 소수율은 Worker/WASM으로 검증한다.',
-    hintKlauber:'클라우버: 상수항 ±100억. 기울기 |m|≥1/2인 동일 직선 구간이 100조 이내에서 최소 5만 행 이어지는 c만 선별한다. 끝에서 잘리는 구간도 허용한다. a=k², b가 k의 배수일 때 적용. 소수 점수 계산 전에 제외한다.',
-    slopeFilterLabel:'100조 이내 · |기울기| ≥ 1/2 · 직선 ≥ 5만 행',
+    hintKlauber:'클라우버: 상수항 ±9천만. 기울기 |m|≥1/8인 동일 직선 구간이 100조 이내에서 최소 5만 행 이어지는 c만 선별한다. 끝에서 잘리는 구간도 허용한다. a=k², b가 k의 배수일 때 적용. 소수 점수 계산 전에 제외한다.',
+    slopeFilterLabel:'100조 이내 · |기울기| ≥ 1/8 · 직선 ≥ 5만 행',
     slopeFilterUnsupported:'기하학 기울기 필터는 a=k², b는 k=√a의 배수, |b/√a|≤200만일 때만 지원한다. 다른 계수를 탐색하려면 체크를 해제해 달라냥.',
     slopeFilterEmpty:'100조 이내에서 |기울기|≥1/2인 직선이 5만 행 이상 이어지는 c가 없습니다.',
     slopeFilterCount:(count,total)=>`기하학 선별: ${total.toLocaleString()}개 중 ${count.toLocaleString()}개 c만 검사`,
@@ -1240,7 +1240,7 @@ const SEARCH_AB_PRESETS_SACKS=[
 // Fixed geometry uses d in {0, +1, -1, +2, -2}.
 // The SEARCH coefficient menu ALSO includes b=-2 (d=-3), which is NOT one of those five fixed directions.
 const SEARCH_AB_PRESETS_KLAUBER=[
- ...[0,1,2,-1,3,-2].map(b=>({a:1,b})),
+ ...[0,1,2,-1,3,-2,-7,9].map(b=>({a:1,b})),
  ...[2,3,4].flatMap(k=>[-2*k,-k,0,k,2*k].map(b=>({a:k*k,b})))
 ];
 const SEARCH_AB_PRESETS_VOGEL=[
@@ -1279,6 +1279,12 @@ function refreshSearchABForLattice(){
   const match=presets.findIndex(p=>p.a===prevA&&p.b===prevB);
   cPreset.value=String(match>=0?match:0);
   applySearchABPreset();
+  // Change only untouched defaults when switching modes, not user ranges.
+  if(latticeMode==='klauber'&&cMin.value==='-70000000'&&cMax.value==='70000000'){
+    cMin.value='-90000000';cMax.value='90000000';
+  }else if(latticeMode!=='klauber'&&cMin.value==='-90000000'&&cMax.value==='90000000'){
+    cMin.value='-70000000';cMax.value='70000000';
+  }
   updateCSearchLimitText();
 }
 function applySearchABPreset(){
@@ -3354,7 +3360,7 @@ function verifyCSearchCandidates(a,b,candidates,token){
 // purpose: require >=50,000 rows of the SAME line inside the triangular bounds.
 // Let P(t)=k²t²+bt+c, r=k*t+h and x=P(t)-(r²+r+1).
 // Then x=k*d*t+(c-h²-h-1), d=b/k-2h-1, so |screen slope|=1/|d|
-// (vertical for d=0). |slope|>=1/2 means integer |d|<=2.
+// (vertical for d=0). |slope|>=1/8 means integer |d|<=8.
 // For any L consecutive t, c must lie in the intersection of the row bounds
 // at the first and last terms. Because both bounds are affine in t, the
 // endpoints suffice. Clipped segments at r=0 or the world maxRow are allowed.
@@ -3367,7 +3373,7 @@ function klauberVisibleCIntervals(a,b,cMin,cMax,maxN=MAX_N){
   if(k>maxRow||need<2)return [];
   // n>=1: do not use the b -> -b symmetry of all integer inputs.
   for(const effectiveB of [b]){
-    for(let d=-2;d<=2;d++){
+    for(let d=-8;d<=8;d++){
       const twiceH=effectiveB/k-1-d;
       if(twiceH%2!==0)continue;
       const h=twiceH/2;
@@ -3376,10 +3382,8 @@ function klauberVisibleCIntervals(a,b,cMin,cMax,maxN=MAX_N){
       if(lastT<firstT)continue;
       const lc=2*k*h-effectiveB,uc=2*k*(h+1)-effectiveB;
       const l0=h*h+1,u0=(h+1)*(h+1);
-      // The lower/upper c bounds are affine; their difference grows by 2k
-      // for every step in t. We can compute the entire union without looping
-      // through up to a million rows. Only the very first feasible t may be
-      // separated by an integer gap when k>1 and |d|=2.
+      // Bounds are affine and interval width grows by 2k per t.
+      // After consecutive intervals first touch, all later ones touch.
       const loAt=t=>l0+lc*t+Math.max(0,lc)*(need-1);
       const hiAt=t=>u0+uc*t+Math.min(0,uc)*(need-1);
       const diffAtZero=hiAt(0)-loAt(0);
@@ -3387,17 +3391,22 @@ function klauberVisibleCIntervals(a,b,cMin,cMax,maxN=MAX_N){
       if(validFirst>lastT)continue;
       const add=(x,y)=>{x=Math.max(cMin,x);y=Math.min(cMax,y);if(x<=y)spans.push([x,y])};
       if(Math.abs(d)<=1){
-        // As t grows, intervals are nested for d=0 or ±1.
         add(loAt(lastT),hiAt(lastT));
-      }else if(validFirst===lastT){
-        add(loAt(validFirst),hiAt(validFirst));
       }else{
-        // |d|=2: every interval from validFirst+1 onward overlaps its
-        // neighbour because its width is already >=2k. Include any isolated
-        // first interval separately, then merge globally.
-        add(loAt(validFirst),hiAt(validFirst));
-        if(d===2)add(loAt(lastT),hiAt(validFirst+1));
-        else add(loAt(validFirst+1),hiAt(lastT));
+        // For |d|=2..8, the intervals move monotonically and widen by 2k.
+        // Isolated early intervals are emitted; the remainder is merged
+        // as a single affine union without iterating millions of rows.
+        let first=validFirst;
+        while(first<lastT){
+          const touching=d>1
+            ?hiAt(first+1)+1>=loAt(first)
+            :hiAt(first)+1>=loAt(first+1);
+          if(touching)break;
+          add(loAt(first),hiAt(first));
+          first++;
+        }
+        if(d>1)add(loAt(lastT),hiAt(first));
+        else add(loAt(first),hiAt(lastT));
       }
     }
   }
@@ -3417,7 +3426,7 @@ function klauberLongestVisibleLineRows(a,b,c,maxN=MAX_N){
   if(k<1||k*k!==a||b%k!==0||!Number.isSafeInteger(maxN)||maxN<1)return 0;
   const maxRow=Math.floor(Math.sqrt(maxN-1));
   let longest=0;
-  for(const effectiveB of [b])for(let d=-2;d<=2;d++){
+  for(const effectiveB of [b])for(let d=-8;d<=8;d++){
     const twiceH=effectiveB/k-1-d;
     if(twiceH%2!==0)continue;
     const h=twiceH/2;
@@ -3502,8 +3511,9 @@ function updateKlauberNormalizationUI(){
     ?`b ${fmt(b)} → ${fmt(canonical.b)} · c: 새 수열 기준 (자연수 동치 보장 없음)`
     :`Integer reindex t=n+(${fmt(canonical.shift)}): b=${fmt(b)} → b′=${fmt(canonical.b)}, original c → reduced c′=c${canonical.offset<0?'−':'+'}${fmt(Math.abs(canonical.offset))}.${active?.c!==undefined?` Selected reduced c′=${fmt(active.c)}.`:''} Entered c limits apply to reduced c′.`;
 }
-// OPT12: all modes support at least ±70 million; preserve the wider Klauber ±10 billion range.
-function cSearchLimit(){return latticeMode==='klauber'?10000000000:70000000}
+// Cap Klauber c at ±90M for practical visible-line search through slope 1/8.
+// This is not a bound on arbitrary unnormalized quadratics with large b.
+function cSearchLimit(){return latticeMode==='klauber'?90000000:70000000}
 function cSearchRangeHint(){
   const n=cSearchLimit().toLocaleString(currentLang==='ko'?'ko-KR':'en-US');
   if(currentLang==='ko')return latticeMode==='klauber'
@@ -6534,7 +6544,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral · v1.4.3 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · v1.4.4 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';
