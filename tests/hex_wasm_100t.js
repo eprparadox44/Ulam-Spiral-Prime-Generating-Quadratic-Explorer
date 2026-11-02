@@ -52,7 +52,7 @@ function refBitmap(t){
    assert.equal(Boolean(w.prime_test(n,54)),refPrime(n),'primality mismatch '+n);
  }
  const samples=[{xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100},
-  {xmin:4500000,xmax:4500047,ymin:300000,ymax:3000039,h0:4800000,h1:4800070,maxN:1e14},
+  {xmin:4500000,xmax:4500047,ymin:300000,ymax:300039,h0:4800000,h1:4800070,maxN:1e14},
   {xmin:-5773478,xmax:-5773470,ymin:953027,ymax:953039,h0:5773473,h1:5773480,maxN:1e14}];
  for(let i=0;i<24;i++){
   const ring=[100,1000000,3500000,5773500][i%4],face=i%6;
