@@ -6,7 +6,7 @@ const src=fs.readFileSync(process.argv[2]||path.resolve(__dirname,'../index.html
 const js=src.match(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/i)?.[1];
 assert(js,'embedded script');
 function extract(name){
- const re=new RegExp('function\s+'+name+'\('),m=re.exec(js);assert(m,'function '+name);
+ const re=new RegExp('function\\s+'+name+'\\('),m=re.exec(js);assert(m,'function '+name);
  const begin=m.index,brace=js.indexOf('{',begin);let depth=0;
  for(let i=brace;i<js.length;i++){
   if(js[i]==='{')depth++;
