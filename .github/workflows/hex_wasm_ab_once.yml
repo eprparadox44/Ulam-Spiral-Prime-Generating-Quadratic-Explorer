@@ -4,6 +4,7 @@ on:
     branches: [perf/hex-wasm-100t-v146]
     paths:
       - '.github/workflows/hex_wasm_ab_once.yml'
+      - 'experimental/build_hex_100t.py'
 permissions:
   contents: write
 jobs:
