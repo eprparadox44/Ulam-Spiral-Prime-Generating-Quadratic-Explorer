@@ -38,11 +38,8 @@ once("if(primes.length>80000)throw Error('100T experiment: legacy hex WASM capac
      "// 100T compiled WASM needs only the first 54 trial primes (<=251).")
 once("new Uint32Array(wasm.memory.buffer,wasm.primes_ptr(),primes.length).set(primes);",
      "new Uint32Array(wasm.memory.buffer,wasm.primes_ptr(),wasmPrimeCount).set(primes.subarray(0,wasmPrimeCount));")
-once("""        const sample={xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100};
-        const count=wasm.compute(sample.xmin,sample.xmax,sample.ymin,sample.ymax,sample.h0,sample.h1,primes.length,100n);
-        const expected=jsCompute(sample),actual=new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),count);
-        if(count!==expected.length||actual.some((v,i)=>v!==expected[i]))throw Error('Hex WASM/JS verification mismatch');""",
-     """        const samples=[
+old_sample_re=r"""(?m)^\\s*const sample=\\{xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100\\};\\n\\s*const count=wasm\\.compute\\(sample\\.xmin,sample\\.xmax,sample\\.ymin,sample\\.ymax,sample\\.h0,sample\\.h1,primes\\.length,100n\\);\\n\\s*const expected=jsCompute\\(sample\\),actual=new Uint8Array\\(wasm\\.memory\\.buffer,wasm\\.bitmap_ptr\\(\\),count\\);\\n\\s*if\\(count!==expected\\.length\\|\\|actual\\.some\\(\\(v,i\\)=>v!==expected\\[i\\]\\)\\)throw Error\\('Hex WASM/JS verification mismatch'\\);"""
+replacement="""\n        const samples=[
           {xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100},
           {xmin:-5773478,xmax:-5773470,ymin:953027,ymax:953039,h0:5773473,h1:5773480,maxN:100000000000000}
         ];
@@ -51,7 +48,9 @@ once("""        const sample={xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100};
           const expected=jsCompute(sample);
           if(count!==expected.length||new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),count).some((v,i)=>v!==expected[i]))
             throw Error('Hex 100T WASM/JS bitmap mismatch');
-        }""")
+        }"""
+html,hits=re.subn(old_sample_re,replacement,html)
+assert hits==1,hits
 once("wasm.compute(d.xmin,d.xmax,d.ymin,d.ymax,d.h0,d.h1,primes.length,BigInt(d.maxN))",
      "wasm.compute(d.xmin,d.xmax,d.ymin,d.ymax,d.h0,d.h1,wasmPrimeCount,BigInt(d.maxN))")
 # Only change renderer comments and the internal trial version tag; no UI,
