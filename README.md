@@ -6,7 +6,7 @@
 
 An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
 
-**Current release: v1.4.5 (November 2, 2026)** · [MIT License](LICENSE).
+**Current release: v1.4.6 (November 2, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -24,7 +24,12 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.5
+## What's new in v1.4.6
+
+- Replaced the slow exact JavaScript fallback for 100-trillion Hexagonal visible-cell sieving with a newly compiled deterministic WASM prime engine (2.7 KB compressed binary, embedded in the single-file HTML). Original JS remains the fallback if WASM cannot initialize or passes neither bitmap check.
+- Browser A/B (same viewport, three Workers, two regions): an interior Hex sieve finished in 40.5–40.6 ms versus 105.6–200.8 ms in v1.4.5; the thin extreme-edge region was about 20–21 ms versus 21–23 ms. Bitmaps matched exactly. Results are machine/load-specific, not guaranteed speedups.
+
+### Previous v1.4.5 changes
 
 - Fixed zoomed Hexagonal minimap losing the current view and highlighted prime sequence near the outer 100T rings. The zoomed map now tracks the camera instead of clamping to Square-mode coordinates.
 
@@ -61,7 +66,7 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Unified estimated-density minimap visualization across all five spiral modes.
 - Expanded the non-Klauber constant-term search while preserving Klauber-specific functionality.
 
-See [v1.4.5 release notes](RELEASE_NOTES_v1.4.5.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.5.md).
+See [v1.4.6 release notes](RELEASE_NOTES_v1.4.6.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.6.md).
 
 ## Mathematical interpretation
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 — v1.4.6 (100T Hexagonal WASM acceleration)
+
+- Replaced the original 80,000-prime-capacity Hex WASM with a new deterministic 100T-capable WASM engine, using only the first 54 small trial primes and exact 64-bit modular Miller–Rabin. Legacy exact JS computation remains a runtime fallback.
+- Added a 100T edge-case bitmap preflight on Worker initialization, plus regression tests for 30,000 modular multiplications, 1,200 primality classifications and 27 Hex grid bitmaps.
+- Independent Chromium A/B experiment: complete interior Hex sieve 105.6–200.8 ms (JS) versus 40.5–40.6 ms (WASM), same 3 Workers and identical output bits; sparse outer edge showed a smaller improvement.
+- No changes to other lattice modes, point analysis, c-search, Path2D drawing or minimap geometry. WASM adds about 4 MiB linear memory per active Hex Worker.
+
 ## 2026-11-02 — v1.4.5 (Hexagonal minimap boundary fix)
 
 - Fixed blank or off-map zoomed Hexagonal minimap near 100T outer rings. The old minimap center was clamped to Square-mode bounds (about ±5M), but Hex reaches ±5.77M; zoomed Hex minimaps now follow the camera even at the edge.

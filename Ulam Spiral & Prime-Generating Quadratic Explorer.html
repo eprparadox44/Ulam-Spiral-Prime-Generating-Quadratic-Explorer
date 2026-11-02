@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.4.5 — Hexagonal minimap outer-ring tracking fix
+Release: v1.4.6 — Hexagonal minimap outer-ring tracking fix
 
 MIT License
 
@@ -27,9 +27,9 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.4.5">
+<meta name="application-version" content="1.4.6">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral · v1.4.5 (100T)</title>
+<title>Ulam Spiral · v1.4.6 (100T)</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
@@ -3709,11 +3709,11 @@ klauberNormalizeAB.addEventListener('change',updateKlauberNormalizationUI);
 runCSearch.onclick=startCSearch;
 stopCSearch.onclick=()=>{stopCSearchRun();cSearchStatus.textContent=tr('stopped')};
 
-// ===== Hexagonal Ulam lattice (single-file module, isolated from square optimized paths) =====
+// ===== Hexagonal Ulam lattice (100T exact WASM experiment; all other paths unchanged) =====
 // Axial (q,r), pointy-top tiles. Ring h contains 6h cells; 1 is at the origin.
 const HEX_DQ=[0,-1,-1,0,1,1], HEX_DR=[-1,0,1,1,0,-1];
 const HEX_SQRT3=Math.sqrt(3);
-const HEX_SIEVE_B64='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';
+const HEX_SIEVE_B64='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';
 let latticeMode='square',HEX_R=hexRadiusFor(MAX_N);
 let hexCache=null,hexPreview=null,hexTask=null,hexGeneration=0,hexHistory=[],hexTimer=0,hexLastPaint=0;
 let hexWorkerURL=null,idleHexWorkers=[];
@@ -3779,7 +3779,7 @@ function hexIsPrime(n,q,r){if(n===2)return true;if(n<2||n%2===0)return false;con
 function hexSetReady(cache,h0,h1,result){for(let i=0;i<cache.bits.length;i++)cache.bits[i]|=result[i];cache.done.fill(1,h0-cache.lo,h1-cache.lo+1)}
 function hexCancelBuild(){++hexGeneration;clearTimeout(hexTimer);hexTimer=0;if(hexTask){hexTask.stop();hexTask=null}hexPreview=null}
 function hexWorkerMain(){
- let primes=new Uint32Array(0),wasm=null;
+ let primes=new Uint32Array(0),wasm=null;const wasmPrimeCount=54;
  function byteDecode(s){const b=atob(s),out=new Uint8Array(b.length);for(let i=0;i<b.length;i++)out[i]=b.charCodeAt(i);return out}
  // Tiny visible arcs are faster to test directly than to initialize a
  // 664k-prime sieve repeatedly. Seven bases are deterministic below 100T.
@@ -3830,20 +3830,26 @@ function hexWorkerMain(){
      if(d.type==='init'){
        primes=d.primes;
        try{
-         if(primes.length>80000)throw Error('100T experiment: legacy hex WASM capacity exceeded; use hybrid exact JS');
+         // 100T compiled WASM needs only the first 54 trial primes (<=251).
          const mod=await WebAssembly.instantiate(byteDecode(HEX_SIEVE_B64),{});wasm=mod.instance.exports;
-         new Uint32Array(wasm.memory.buffer,wasm.primes_ptr(),primes.length).set(primes);
-         const sample={xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100};
-         const count=wasm.compute(sample.xmin,sample.xmax,sample.ymin,sample.ymax,sample.h0,sample.h1,primes.length,100n);
-         const expected=jsCompute(sample),actual=new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),count);
-         if(count!==expected.length||actual.some((v,i)=>v!==expected[i]))throw Error('Hex WASM/JS verification mismatch');
+         new Uint32Array(wasm.memory.buffer,wasm.primes_ptr(),wasmPrimeCount).set(primes.subarray(0,wasmPrimeCount));
+         const samples=[
+          {xmin:-4,xmax:4,ymin:-4,ymax:4,h0:1,h1:4,maxN:100},
+          {xmin:-5773478,xmax:-5773470,ymin:953027,ymax:953039,h0:5773473,h1:5773480,maxN:100000000000000}
+        ];
+        for(const sample of samples){
+          const count=wasm.compute(sample.xmin,sample.xmax,sample.ymin,sample.ymax,sample.h0,sample.h1,wasmPrimeCount,BigInt(sample.maxN));
+          const expected=jsCompute(sample);
+          if(count!==expected.length||new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),count).some((v,i)=>v!==expected[i]))
+            throw Error('Hex 100T WASM/JS bitmap mismatch');
+        }
        }catch(ex){wasm=null}
        self.postMessage({type:'ready',wasm:!!wasm});return;
      }
      if(d.type==='job'){
        let result;
        if(wasm){
-         const bytes=wasm.compute(d.xmin,d.xmax,d.ymin,d.ymax,d.h0,d.h1,primes.length,BigInt(d.maxN));
+         const bytes=wasm.compute(d.xmin,d.xmax,d.ymin,d.ymax,d.h0,d.h1,wasmPrimeCount,BigInt(d.maxN));
          if(bytes<0)throw new Error('Hex WASM grid size / run limit ('+bytes+')');
          result=new Uint8Array(bytes);result.set(new Uint8Array(wasm.memory.buffer,wasm.bitmap_ptr(),bytes));
        }else result=jsCompute(d);
@@ -6553,7 +6559,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral · v1.4.5 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · v1.4.6 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';
@@ -7334,6 +7340,7 @@ async function setRange(target){
   stopSavedStatsBackfill();++startupAccelToken;if(branchSieveTask){branchSieveTask.terminate();branchSieveTask=null}if(cornerSieveTask){cornerSieveTask.terminate();cornerSieveTask=null}resetLocalSievePool();resetBranchSievePool();resetPointAnalyzeWorkerPool();recentPrimeCaches=[];recentBranchPrimeCaches=[];recentCornerPrimeCaches=[];branchPrimeCache=null;branchPrimePreview=null;branchBuildTarget=null;cornerPrimeCache=null;cornerPrimePreview=null;cornerBuildTarget=null;branchAdaptiveModes=null;MAX_N=target;MAX_R=radiusFor(target);positiveQuadraticKeyCache.clear();savedNaturalStatsCache.clear();miniCensusReady.clear();miniSparseMemo.clear();updateRangeUI();formulaStatCache.clear();localPrimeCache={low:0,high:0,firstOdd:1,oddCount:0,bits:null,rLo:0,rHi:-1,bytes:0};localPrimePreview=null;
   extraCancelBuild();resetExtraWorkerPool();ready=false;initBasePrimeData();initQuickFormulaRows();HEX_R=hexRadiusFor(MAX_N);hexCancelBuild();resetHexWorkerPool();hexCache=null;hexHistory=[];clamp();await preloadStartupAccelerator();ready=true;renderSavedPanel();progressWrap.style.display='none';queueLocalCacheEnsure(0);sched();scheduleBranchSieveWarmup();schedulePointAnalyzeWarmup(400);scheduleExtraPrimeWarmup(650);
 }
+
 initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();try{const mode=localStorage.getItem('ULAM_LATTICE_MODE');if(['square','hex','tri','sacks','klauber'].includes(mode)||(mode==='vogel'&&ENABLE_VOGEL_MODE))latticeMode=mode}catch(_){}updateShapeUI();refreshSearchABForLattice();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
 })();
 </script></body></html>

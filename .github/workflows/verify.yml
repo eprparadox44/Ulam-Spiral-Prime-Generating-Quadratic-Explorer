@@ -27,3 +27,5 @@ jobs:
         run: node tests/klauber_eighth_slope.js
       - name: Regression-test Hexagonal minimap outer-ring geometry
         run: node tests/hex_minimap_edge.js
+      - name: Regression-test exact 100T Hex WASM modular arithmetic and bitmaps
+        run: node tests/hex_wasm_100t.js
