@@ -29,3 +29,5 @@ jobs:
         run: node tests/hex_minimap_edge.js
       - name: Regression-test exact 100T Hex WASM modular arithmetic and bitmaps
         run: node tests/hex_wasm_100t.js
+      - name: Regression-test source-free saved formula direct jump
+        run: node tests/saved_jump_regression.js index.html

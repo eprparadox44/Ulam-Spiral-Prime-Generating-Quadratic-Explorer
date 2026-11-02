@@ -6,7 +6,7 @@
 
 An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
 
-**Current release: v1.4.6 (November 2, 2026)** · [MIT License](LICENSE).
+**Current release: v1.4.7 (November 3, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -24,7 +24,13 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.6
+## What's new in v1.4.7
+
+- Fixed **Jump to this sequence** for saved c-search formulas that have no originating point: the button now finds a genuine in-range polynomial value near the camera and navigates immediately.
+- Saved formulas with a valid original source point still jump to that original point. Stale/out-of-range source points fall back to the same in-range term locator.
+- No synchronous full-point analysis or primality scan was added. Verified by clicking the button in Chromium across all five geometries.
+
+### Previous v1.4.6 changes
 
 - Replaced the slow exact JavaScript fallback for 100-trillion Hexagonal visible-cell sieving with a newly compiled deterministic WASM prime engine (2.7 KB compressed binary, embedded in the single-file HTML). Original JS remains the fallback if WASM cannot initialize or passes neither bitmap check.
 - Browser A/B (same viewport, three Workers, two regions): an interior Hex sieve finished in 40.5–40.6 ms versus 105.6–200.8 ms in v1.4.5; the thin extreme-edge region was about 20–21 ms versus 21–23 ms. Bitmaps matched exactly. Results are machine/load-specific, not guaranteed speedups.
@@ -66,7 +72,7 @@ Open the HTML file in a recent browser. No installation or separate build is req
 - Unified estimated-density minimap visualization across all five spiral modes.
 - Expanded the non-Klauber constant-term search while preserving Klauber-specific functionality.
 
-See [v1.4.6 release notes](RELEASE_NOTES_v1.4.6.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.6.md).
+See [v1.4.7 release notes](RELEASE_NOTES_v1.4.7.md), [changelog](CHANGELOG.md) and [verification notes](RELEASE_QA_v1.4.7.md).
 
 ## Mathematical interpretation
 

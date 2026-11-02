@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HTML="$ROOT/index.html"
-for TEST in math_regression saved_modes worker_pool_race point_sequence_dedup saved_semantic_regression quadratic_multiset_property klauber_eighth_slope hex_minimap_edge hex_wasm_100t; do
+for TEST in math_regression saved_modes worker_pool_race point_sequence_dedup saved_semantic_regression quadratic_multiset_property klauber_eighth_slope hex_minimap_edge hex_wasm_100t saved_jump_regression; do
   node "$ROOT/tests/$TEST.js" "$HTML"
 done
 node - "$HTML" <<'JS'

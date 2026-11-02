@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Release: v1.4.6 — Hexagonal minimap outer-ring tracking fix
+Release: v1.4.7 — Hexagonal minimap outer-ring tracking fix
 
 MIT License
 
@@ -27,9 +27,9 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.4.6">
+<meta name="application-version" content="1.4.7">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral · v1.4.6 (100T)</title>
+<title>Ulam Spiral · v1.4.7 (100T)</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
@@ -383,6 +383,7 @@ const I18N={
     clearSavedConfirm:'Delete all saved sequences?',
     selectedReset:'The selected point was reset because it is outside the new range.',
     originalOutOfRange:n=>`The original position is outside the current ${rangeName(n)} range.`,
+    noSavedJumpTerm:'This sequence has no valid generated value within the current range.',
     sourceSaved:n=>`saved at ${n.toLocaleString()}`,
     pointSeq:n=>`Sequences at ${n.toLocaleString()}`,
     status:(range,x,y,scale,count)=>`Range ${range} · center (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/cell · ${count.toLocaleString()} cells`,
@@ -437,6 +438,7 @@ const I18N={
     clearSavedConfirm:'저장한 수열을 모두 삭제할까요?',
     selectedReset:'선택점이 새 범위를 벗어나 초기화되었다.',
     originalOutOfRange:n=>`이 저장식의 원래 위치가 현재 ${rangeName(n)} 범위를 벗어난다.`,
+    noSavedJumpTerm:'현재 탐색 범위 안에서 이 식의 유효한 생성값을 찾지 못했다.',
     sourceSaved:n=>`${n.toLocaleString()}에서 저장`,
     pointSeq:n=>`${n.toLocaleString()}에서 찾은 수열`,
     status:(range,x,y,scale,count)=>`범위 ${range} · 중심 (${x.toFixed(1)}, ${y.toFixed(1)}) · ${scale.toFixed(2)} px/칸 · 화면 ${count.toLocaleString()}칸`,
@@ -2292,16 +2294,65 @@ function renderSavedPanel(){
   if(statsUpdated)persistSaved();
   if(ready&&savedEntries.some(e=>!savedEntryStats(e)))queueSavedStatsBackfill();
 }
+// Saved c-search formulas have no originating selected point. Find a real,
+// in-range term near the current camera rather than silently leaving it still.
+// Only integer polynomial values are considered; primality is deliberately
+// NOT tested here so a saved-sequence jump never blocks on Miller-Rabin.
+function nearestSavedFormulaTerm(f){
+ if(!f||![f.a,f.b,f.c].every(Number.isSafeInteger))return null;
+ let ranges;
+ try{ranges=formulaScopedParamIntervalsForBand(f,2,MAX_N)}catch(_){return null}
+ if(!ranges.length)return null;
+ const at=isExtraMode()?extraApproxNumber(camX,camY):
+   latticeNumber(Math.round(camX),Math.round(camY));
+ const target=Number.isSafeInteger(at)?Math.max(2,Math.min(MAX_N,at)):2;
+ const A=BigInt(f.a),B=BigInt(f.b),C=BigInt(f.c),max=BigInt(MAX_N);
+ let best=null,bestDist=Infinity;
+ function consider(t,lo,hi){
+   if(!Number.isSafeInteger(t)||t<lo||t>hi)return;
+   const T=BigInt(t),v=A*T*T+B*T+C;
+   if(v<2n||v>max)return;
+   const n=Number(v),p=latticeCoord(n),dx=p.x-camX,dy=p.y-camY,d=dx*dx+dy*dy;
+   if(d<bestDist){bestDist=d;best={n,x:p.x,y:p.y}}
+ }
+ for(const [lo,hi] of ranges){
+   if(lo>hi)continue;
+   const seeds=[lo,hi];
+   if(f.a){
+     const D=f.b*f.b-4*f.a*(f.c-target);
+     if(Number.isFinite(D)&&D>=0){
+       const root=Math.sqrt(D),den=2*f.a;
+       seeds.push((-f.b-root)/den,(-f.b+root)/den);
+     }else seeds.push(-f.b/(2*f.a));
+   }else if(f.b)seeds.push((target-f.c)/f.b);
+   for(const seed of seeds){
+     if(!Number.isFinite(seed))continue;
+     const center=Math.round(Math.max(lo,Math.min(hi,seed)));
+     consider(center,lo,hi);
+     // Neighboring parameters can land on a different spiral arm despite
+     // similar values. Evaluate a small local window by screen distance.
+     for(let k=1;k<=24;k++){consider(center-k,lo,hi);consider(center+k,lo,hi)}
+   }
+ }
+ return best;
+}
 function activateSavedEntry(entry,doMove){
-  const variant=displaySavedVariant(entry),src=variant.source||entry.source;activeFormula=savedModeFormula(entry);
-  if(doMove&&src){
-    const pos=latticeCoord(src.n);    if(src.n>MAX_N){alert(tr('originalOutOfRange',MAX_N));return}
-    // REV20 instant jump: the old path synchronously ran full 1T point analysis
-    // before the browser could paint the destination.  A saved formula already
-    // contains everything needed to highlight it, so navigation itself is O(1).
+  const variant=displaySavedVariant(entry),src=variant.source||entry.source;
+  const formula=savedModeFormula(entry);
+  let jumpPoint=null;
+  if(doMove){
+    if(Number.isSafeInteger(src?.n)&&src.n>=1&&src.n<=MAX_N){
+      const pos=latticeCoord(src.n);
+      jumpPoint={x:pos.x,y:pos.y,n:src.n};
+    }else jumpPoint=nearestSavedFormulaTerm(formula);
+    if(!jumpPoint){alert(tr('noSavedJumpTerm'));return}
+  }
+  activeFormula=formula;
+  if(doMove){
+    // Instant jump: never run synchronous point analysis or exact prime tests.
     ++pointAnalyzeKick;cancelPointAnalysis();
-    camX=pos.x;camY=pos.y;scale=Math.max(scale,5.5);clamp();
-    selected={x:pos.x,y:pos.y,n:src.n};formulas=[];pointAnalysisPending=false;pointAnalysisDoneKey='';
+    camX=jumpPoint.x;camY=jumpPoint.y;scale=Math.max(scale,5.5);clamp();
+    selected=jumpPoint;formulas=[];pointAnalysisPending=false;pointAnalysisDoneKey='';
     selEl.innerHTML=selectionSummary(false);
     miniBgKey='';miniFormulaKey='';
   }
@@ -6559,7 +6610,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){document.title='Ulam Spiral · v1.4.6 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){document.title='Ulam Spiral · v1.4.7 (100T)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 — v1.4.7 (Restore saved-formula direct jump)
+
+- Fixed the **Jump to this sequence** button failing silently for formulas saved directly from the c-search results because these entries intentionally have null source coordinates.
+- For source-free saved formulas, select an actual polynomial term within 2..MAX_N near the current camera, using cheap integer arithmetic and no synchronous primality scan.
+- Preserve exact source-backed jumps; stale/out-of-range origins receive a safe fallback. A formula with no valid in-range term shows an explicit message and does not alter the existing selection.
+- Verified all five geometries by clicking the saved-sequence UI in Chromium, plus source-backed and out-of-range unit tests. All prior 100T Hex WASM improvements remain unchanged.
+
 ## 2026-11-02 — v1.4.6 (100T Hexagonal WASM acceleration)
 
 - Replaced the original 80,000-prime-capacity Hex WASM with a new deterministic 100T-capable WASM engine, using only the first 54 small trial primes and exact 64-bit modular Miller–Rabin. Legacy exact JS computation remains a runtime fallback.
