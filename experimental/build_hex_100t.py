@@ -59,5 +59,38 @@ once("wasm.compute(d.xmin,d.xmax,d.ymin,d.ymax,d.h0,d.h1,primes.length,BigInt(d.
 # geometry or other mode is changed in the A/B experiment.
 once("// ===== Hexagonal Ulam lattice (single-file module, isolated from square optimized paths) =====",
      "// ===== Hexagonal Ulam lattice (100T exact WASM experiment; all other paths unchanged) =====")
+probe=r"""
+// A/B measurement adapter; injected into BOTH isolated experimental files,
+// absent from all user-facing releases.
+window.__ULAM_HEX_AB__={
+  ready:()=>ready,
+  run:async(x,y)=>{
+    if(latticeMode!=='hex')switchLattice('hex');
+    scale=5;camX=x;camY=y;clamp();
+    hexCancelBuild();hexCache=null;hexPreview=null;
+    const rect=hexViewRect(1),started=performance.now();
+    sched(0);
+    return new Promise((resolve,reject)=>{
+      const limit=performance.now()+120000;
+      const id=setInterval(()=>{
+        if(performance.now()>limit){clearInterval(id);reject(Error('Hex benchmark timed out'));return}
+        const c=hexCache;
+        if(!c?.bits||c.xmin>rect.xmin||c.xmax<rect.xmax||c.ymin>rect.ymin||c.ymax<rect.ymax||!c.done.every(v=>v===1))return;
+        clearInterval(id);
+        let hash=2166136261;
+        for(const b of c.bits)hash=Math.imul((hash^b)>>>0,16777619)>>>0;
+        resolve({ms:performance.now()-started,hash:hash.toString(16),bytes:c.bits.length,
+          bounds:[c.xmin,c.xmax,c.ymin,c.ymax,c.lo,c.hi]});
+      },20);
+    });
+  }
+};
+"""
+insertion="initSearchABPresets();loadSaved();updateUIText();"
+assert html.count(insertion)==1
+baseline=(root / "Ulam Spiral & Prime-Generating Quadratic Explorer v1.4.5.html").read_text(encoding="utf8")
+assert baseline.count(insertion)==1
+(root / "experimental/hex_baseline_instrumented.html").write_text(baseline.replace(insertion,probe+insertion),encoding="utf8")
+html=html.replace(insertion,probe+insertion)
 (root / "experimental/hex_wasm_experiment.html").write_text(html,encoding="utf8")
 print("WASM bytes:",wasm.stat().st_size,"Standalone HTML chars:",len(html))
