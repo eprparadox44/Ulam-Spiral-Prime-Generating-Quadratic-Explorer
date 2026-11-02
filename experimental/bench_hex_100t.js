@@ -19,7 +19,7 @@ const {chromium}=require('playwright-core');
     page.on('console',m=>{if(m.text().includes('[hex sieve]'))logs.push(m.text())});
     page.on('pageerror',e=>{console.error(label,'PAGE ERROR',String(e));process.exitCode=1});
     await page.goto('file://'+file,{waitUntil:'domcontentloaded',timeout:120000});
-    await page.waitForFunction(()=>typeof ready==='boolean' && ready,{timeout:180000});
+    await page.waitForFunction(()=>typeof ready==='boolean' && ready,null,{timeout:180000,polling:200});
     outputs[label]=[];
     for(const tc of cases){
       const val=await page.evaluate(async ({x,y})=>{
