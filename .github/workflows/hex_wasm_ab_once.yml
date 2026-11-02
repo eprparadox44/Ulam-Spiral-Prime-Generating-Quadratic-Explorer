@@ -25,7 +25,9 @@ jobs:
           node - <<'JS'
           const fs=require('fs'),vm=require('vm');
           const html=fs.readFileSync('experimental/hex_wasm_experiment.html','utf8');
-          const code=html.match(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/i)[1];
+          const start=html.indexOf('<script>'),end=html.lastIndexOf('</script>');
+          if(start<0||end<=start)throw Error('missing inline script');
+          const code=html.slice(start+8,end);
           new vm.Script(code);
           console.log('PASS: compiled HTML script syntax');
           JS
