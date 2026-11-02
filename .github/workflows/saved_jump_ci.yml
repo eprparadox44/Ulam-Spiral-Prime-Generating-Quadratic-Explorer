@@ -1,0 +1,35 @@
+name: Verify saved jump repair (experimental)
+on:
+  push:
+    branches: [fix/saved-formula-jump-v147]
+    paths:
+      - .github/workflows/saved_jump_ci.yml
+      - tests/saved_jump_regression.js
+      - tests/saved_jump_browser.js
+      - index.html
+permissions:
+  contents: read
+concurrency:
+  group: saved-jump-ci
+  cancel-in-progress: true
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify syntax and saved jump no-source math
+        run: |
+          node tests/saved_jump_regression.js index.html
+          node tests/saved_modes.js index.html
+          node tests/saved_semantic_regression.js index.html
+      - name: Install browser test driver
+        run: |
+          which chromium || which google-chrome
+          npm install --no-save playwright-core@1.56.0
+      - name: Click saved jump in all five modes
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: node tests/saved_jump_browser.js index.html
