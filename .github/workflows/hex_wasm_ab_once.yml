@@ -6,6 +6,9 @@ on:
       - '.github/workflows/hex_wasm_ab_once.yml'
       - 'experimental/build_hex_100t.py'
       - 'experimental/bench_hex_100t.js'
+concurrency:
+  group: hex-100t-branch-ab
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
