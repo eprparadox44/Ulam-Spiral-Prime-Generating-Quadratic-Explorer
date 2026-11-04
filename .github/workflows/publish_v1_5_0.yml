@@ -1,0 +1,43 @@
+name: Publish v1.5.0 1P official release
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish_v1_5_0.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.repository == 'eprparadox44/Ulam-Spiral-Prime-Generating-Quadratic-Explorer'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify release and JavaScript syntax
+        run: python3 scripts/verify_release.py --require-node
+      - name: Run regression checks
+        run: |
+          set -euo pipefail
+          node tests/worker_pool_race.js
+          node tests/klauber_eighth_slope.js
+          node tests/hex_minimap_edge.js
+          node tests/hex_wasm_100t.js
+          node tests/saved_jump_regression.js index.html
+      - name: Publish immutable v1.5.0 source snapshot and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh api repos/${GITHUB_REPOSITORY}/git/ref/tags/v1.5.0 >/dev/null 2>&1; then
+            echo 'v1.5.0 tag already exists; refusing to overwrite'
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs" -f ref='refs/tags/v1.5.0' -f sha="${GITHUB_SHA}"
+          cp index.html Ulam.Spiral.Prime-Generating.Quadratic.Explorer.v1.5.0.1P.html
+          zip -q -9 ULAM_v1.5.0_1P_RELEASE.zip Ulam.Spiral.Prime-Generating.Quadratic.Explorer.v1.5.0.1P.html README.md README.ko.md RELEASE_NOTES_v1.5.0.md RELEASE_QA_v1.5.0.md checksums_v1.5.0.sha256
+          gh release create v1.5.0 --verify-tag --latest --title 'v1.5.0 — 1P Range Expansion (100T → 1P)' --notes-file RELEASE_NOTES_v1.5.0.md Ulam.Spiral.Prime-Generating.Quadratic.Explorer.v1.5.0.1P.html checksums_v1.5.0.sha256 ULAM_v1.5.0_1P_RELEASE.zip

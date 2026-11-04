@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the current standalone distribution and its v1.3+ feature markers.
+"""Verify the current standalone distribution and its v1.5 1P feature markers.
 Usage: python3 scripts/verify_release.py --require-node
 """
 from __future__ import annotations
@@ -14,7 +14,7 @@ import sys
 
 PROJECT_TITLE='Ulam Spiral & Prime-Generating Quadratic Explorer'
 OFFICIAL_NAME=PROJECT_TITLE+'.html'
-RELEASE_RE=re.compile(r'^\s*Release:\s*(v\d+\.\d+\.\d+)(?=\s|$)',re.M)
+RELEASE_RE=re.compile(r'^\s*(?:Release|Official release):\s*(v\d+\.\d+\.\d+)(?=\s|$)',re.M)
 
 class DocumentParser(HTMLParser):
     def __init__(self):
@@ -61,7 +61,7 @@ def main():
           '<html' in html and doc.style_count>=1 and len(doc.inline_scripts)==1 and
           not doc.external_scripts and not doc.stylesheet_links)
     check('product title',PROJECT_TITLE in html)
-    check('100T navigation', 'MAX_N=100000000000000' in html and 'id="jumpInput"' in html)
+    check('1P navigation', 'MAX_N=1000000000000000' in html and 'id="jumpInput"' in html)
     check('corner preview throttle',bool(re.search(r'CORNER_PREVIEW_FRAME_INTERVAL_MS\s*=\s*160\b',html)))
     check('startup at 1','Startup always begins at Ulam number 1' in html)
     check('all five visible spiral modes',all(f'value="{mode}"' in html for mode in
@@ -69,12 +69,12 @@ def main():
     check('hexagonal and triangular formulas preserved', 'EXTRA_TRI_BASE_DIRS' in html and 'hexLineFormula(' in html)
     check('pinned triangular formulas preserved', 'extraTriDeduplicateConstants' in html and 'if(f.pinned)continue' in html and 'fixed.filter(f=>f.pinned||' in html)
     check('quadratic presets preserved', all(x in html for x in ['SEARCH_AB_PRESETS_HEX','SEARCH_AB_PRESETS_SQUARE','SEARCH_AB_PRESETS_TRI','SEARCH_AB_PRESETS_SACKS']))
-    check('existing +/-70M search defaults preserved', 'id="cMin" inputmode="numeric" value="-70000000"' in html and 'id="cMax" inputmode="numeric" value="70000000"' in html)
+    check('expanded +/-220M search defaults', 'id="cMin" inputmode="numeric" value="-220000000"' in html and 'id="cMax" inputmode="numeric" value="220000000"' in html)
     check('Vogel internal path preserved', 'ENABLE_VOGEL_MODE' in html and 'vogelArmCandidates' in html and 'vogelPairCandidates' in html)
     check('saved formulas preserved','ulam_saved_formulas_v1' in html)
     check('Klauber natural-index and geometry functions preserved',all(x in html for x in
         ('extraKlauberNumber(', 'klauberProjectFormula(', 'klauberSlopeOnly', 'klauberMiniTermsInView(')))
-    check('minimap levels and exact density functions preserved', 'const MINI_LEVELS=[100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000]' in html and
+    check('minimap levels and exact density functions preserved', 'const MINI_LEVELS=[100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000,1000000000000000]' in html and
         all(s in html for s in ['function miniUsePrimeDensity(', 'function miniCensusSources(', 'function miniSparseFormulaExpected(']))
     check('density only eligible at 100M or 1B', 'view.n!==100000000 && view.n!==1000000000' in html)
     check('no diagnostic UI',all(f'id="{n}"' not in html for n in ('debugPanel','diagnosticPanel','testDiagnostics')))

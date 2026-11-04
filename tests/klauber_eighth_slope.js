@@ -21,7 +21,7 @@ function create(maxN,rows){
  return sandbox.api;
 }
 const full=create(100000000000000,50000);
-assert(js.includes("latticeMode==='klauber'?90000000:70000000"));
+assert(js.includes("latticeMode==='klauber'?280000000:220000000"));
 assert(js.includes(" ...[0,1,2,-1,3,-2,-7,9].map(b=>({a:1,b}))"));
 assert(js.includes('|slope| ≥ 1/8'));
 const incl=(c,ranges)=>Array.from(ranges).some(([lo,hi])=>lo<=c&&c<=hi);

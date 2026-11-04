@@ -4,9 +4,9 @@
 
 <img width="570" height="362" alt="Ulam spiral and prime-generating quadratic explorer" src="https://github.com/user-attachments/assets/c274ae9d-a1a8-4ea2-a2e1-8f1540010685" />
 
-An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁴ (100 trillion)**.
+An interactive, **single-file standalone HTML** application for exploring primes and quadratic sequences over **1 ≤ N ≤ 10¹⁵ (1 quadrillion / 1P)**.
 
-**Current release: v1.4.7 (November 3, 2026)** · [MIT License](LICENSE).
+**Current release: v1.5.0 (November 4, 2026)** · [MIT License](LICENSE).
 
 ## Launch
 
@@ -18,13 +18,21 @@ Open the HTML file in a recent browser. No installation or separate build is req
 ## Explore
 
 - Five geometries: **Square Ulam**, **Hexagonal**, **Triangular**, **Sacks spiral**, and **Klauber Triangle**.
-- Navigate and zoom to 100 trillion. Prime caches, optimized Web Workers, WASM sieves and exact primality checks support distant exploration.
+- Navigate and zoom to 1 quadrillion (1P). Prime caches, optimized Web Workers, WASM sieves and exact primality checks support distant exploration.
 - Select a point to discover quadratic sequences and compare finite-range prime counts and rates; save formulas in the browser's local storage.
-- Search quadratic coefficients: **c = −70,000,000 to +70,000,000** in Square/Hex/Tri/Sacks; Klauber uses a specialized **±90 million** constant-term search with an optional geometric line filter.
-- Seven minimap levels: **100M / 1B / 10B / 100B / 1T / 10T / 100T**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
+- Search quadratic coefficients: **c = −220,000,000 to +220,000,000** in Square/Hex/Tri/Sacks; Klauber uses a specialized **±280 million** constant-term search with an optional geometric line filter.
+- Eight SI minimap levels: **100M / 1G / 10G / 100G / 1T / 10T / 100T / 1P**. All five modes have formula-density overlays with a maximum-brightness threshold of approximately **20% estimated prime rate** and suppression of mathematically impossible arms.
 - English/Korean UI, pointer and keyboard navigation.
 
-## What's new in v1.4.7
+## What's new in v1.5.0 — 1P range expansion
+
+- **Tenfold range expansion:** 100T (10¹⁴) → 1P (10¹⁵), across all five visible spiral geometries.
+- Deterministic 1P primality checks, accurate large-integer quadratic statistics, 64M-term WASM sieve and Web Worker parallelism.
+- Expanded quadratic c-search: ±220M (general modes) and ±280M (Klauber, with optional geometric filter).
+- Preserves low-zoom 1.15 px/cell high-density remote navigation, formula saving, offline standalone HTML, bilingual UI.
+- Incorporates all verified pre-release development optimizations (OPT26–OPT36) into **one official v1.5.0 release**. See [release notes](RELEASE_NOTES_v1.5.0.md).
+
+## Previous release: v1.4.7
 
 - Fixed **Jump to this sequence** for saved c-search formulas that have no originating point: the button now finds a genuine in-range polynomial value near the camera and navigates immediately.
 - Saved formulas with a valid original source point still jump to that original point. Stale/out-of-range source points fall back to the same in-range term locator.
