@@ -1,13 +1,11 @@
 # Changelog
 
-## 2026-11-04 — v1.5.0 (1P range expansion; official release)
+## 2026-11-04 — v1.5.0 (1P range expansion)
 
-- Expanded all five visible spiral geometries from 100T (10^14) to **1P (10^15)**.
-- Added exact 1P primality paths, larger prime-sieve/worker capacity, safe quadratic bounds, and 64M-term WASM statistics.
-- Expanded c-search to ±220M in general geometries and ±280M in Klauber while preserving the |slope| ≥ 1/8 and 50k-row geometric filter.
-- Kept maximum-density remote exploration at a minimum scale of 1.15px per cell and preserved existing UI, minimap and saved formulas.
-- Integrated proven pre-release optimizations OPT26–OPT36; internal labels v1.5.1–v1.5.7 are development milestones, not separate published releases.
-- See [v1.5.0 release notes](RELEASE_NOTES_v1.5.0.md) and [verification summary](RELEASE_QA_v1.5.0.md).
+- Extended the maximum search range from 100 trillion (100T) to 1 quadrillion (1P) in all five spiral views.
+- Updated quadratic-sequence prime statistics for the larger range.
+- Expanded the constant-term c search to ±220M in Square, Hexagonal, Triangular and Sacks modes, and ±280M in Klauber Triangle.
+- Improved calculation efficiency for large-number analysis.
 
 ## 2026-11-03 — v1.4.7 (Restore saved-formula direct jump)
 

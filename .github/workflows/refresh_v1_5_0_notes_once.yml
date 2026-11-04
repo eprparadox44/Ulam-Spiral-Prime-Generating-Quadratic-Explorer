@@ -1,0 +1,30 @@
+name: Refresh v1.5.0 public release notes once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refresh_v1_5_0_notes_once.yml'
+permissions:
+  contents: write
+jobs:
+  update-release-description:
+    if: github.repository == 'eprparadox44/Ulam-Spiral-Prime-Generating-Quadratic-Explorer'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that release tag is unchanged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/v1.5.0" --jq '.object.sha')"
+          test "$TAG_SHA" = "9a651edfbbcc42d33ea8d947de73e6ea5d009467"
+      - name: Update release description and documentation ZIP
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release edit v1.5.0 --notes-file RELEASE_NOTES_v1.5.0.md
+          cp index.html Ulam.Spiral.Prime-Generating.Quadratic.Explorer.v1.5.0.1P.html
+          zip -q -9 ULAM_v1.5.0_1P_RELEASE.zip Ulam.Spiral.Prime-Generating.Quadratic.Explorer.v1.5.0.1P.html README.md README.ko.md RELEASE_NOTES_v1.5.0.md RELEASE_QA_v1.5.0.md checksums_v1.5.0.sha256
+          gh release upload v1.5.0 ULAM_v1.5.0_1P_RELEASE.zip --clobber
