@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 — Korean terminology refinement (website documentation)
+
+- Updated the Korean-facing product name to **울람 나선 & 소수 생성 이차다항식 탐색기** and the corresponding recommendation label.
+- Preserved the existing English name, URLs and v1.5.1 release tag/assets; this commit changes terminology only, not numerical algorithms or version number.
+
+
 ## 2026-11-06 — v1.5.1 (performance optimizations)
 
 - Improved quadratic prime-statistics reuse, small-prime filtering, and low-zoom Hexagonal rendering while keeping 1P and eight Workers.

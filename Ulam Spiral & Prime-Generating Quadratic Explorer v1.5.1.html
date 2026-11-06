@@ -32,6 +32,7 @@ SOFTWARE.
 <html lang="en">
 <head>
 <meta name="application-version" content="1.5.1">
+<meta name="description" content="울람 나선 &amp; 소수 생성 이차다항식 탐색기 — 최대 1P의 소수 분포와 이차다항식 수열을 탐색합니다.">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ulam Spiral · v1.5.1 (1P) — Optimized</title>
 <style>
@@ -281,7 +282,7 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
 
 /* v1.2.33: place the Klauber scope control in the point-sequence panel's first row. */
 </style></head>
-<body><div id="app"><header><div class="title">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><select id="spiralModeSelect" aria-label="Spiral mode" title="Spiral mode"><option value="square">Square</option><option value="hex">Hexagonal</option><option value="tri">Triangular</option><option value="sacks">Sacks</option><option value="klauber">Klauber Triangle</option></select></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
+<body><div id="app"><header><div class="title" id="productTitle">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><select id="spiralModeSelect" aria-label="Spiral mode" title="Spiral mode"><option value="square">Square</option><option value="hex">Hexagonal</option><option value="tri">Triangular</option><option value="sacks">Sacks</option><option value="klauber">Klauber Triangle</option></select></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
 <div id="stage"><canvas id="cv" tabindex="0" aria-label="Prime spiral canvas; arrow keys move between points, plus and minus zoom"></canvas><div id="zoomIndicator">×1</div><div id="hoverTip"></div>
 
 <div id="cSearchPanel">
@@ -794,6 +795,7 @@ function syncMobileHeaderWidths(){
 
 function updateUIText(){
   syncMobileHeaderWidths();
+  document.getElementById('productTitle').textContent=currentLang==='ko'?'울람 나선 & 소수 생성 이차다항식 탐색기':'Ulam Spiral & Prime-Generating Quadratic Explorer';
   document.documentElement.lang=currentLang==='ko'?'ko':'en';
   jumpInput.placeholder='1 ~ '+MAX_N;
   jumpBtn.textContent=tr('go');homeBtn.textContent=tr('go1');
@@ -2856,7 +2858,7 @@ function renderFormulaPanel(){
        header.style.cssText='margin-top:9px;padding-top:7px;border-top:1px solid #293750;font-weight:750;color:#c8dcf6';
        header.textContent=section==='geometry'
         ?(currentLang==='ko'?'기하학적 가지 / Pair (위치 정렬 기준)':'Geometric arms / pairs (position alignment)')
-        :(currentLang==='ko'?'소수 생성 이차식 후보 (별도 분석)':'Prime-generating quadratic candidates (separate ranking)');
+        :(currentLang==='ko'?'소수 생성 이차다항식 후보 (별도 분석)':'Prime-generating quadratic candidates (separate ranking)');
        formulaList.appendChild(header);lastSection=section;
       }
     }
