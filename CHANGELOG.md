@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-07 — Korean terminology and coefficient-preset readability
+
+- Completed the Korean terminology update to **이차다항식** in Klauber and explanatory labels.
+- Improved readability of a/b coefficient presets: compact selectable values with a wrapping description beneath, including narrow screens.
+- No changes to prime calculations, worker count, file formats or the official v1.5.1 release assets.
+
+
 ## 2026-11-06 — Korean terminology refinement (website documentation)
 
 - Updated the Korean-facing product name to **울람 나선 & 소수 생성 이차다항식 탐색기** and the corresponding recommendation label.

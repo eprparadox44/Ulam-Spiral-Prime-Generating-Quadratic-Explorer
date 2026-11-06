@@ -281,6 +281,15 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
 }
 
 /* v1.2.33: place the Klauber scope control in the point-sequence panel's first row. */
+
+/* v1.5.1 maintenance: fully readable quadratic-coefficient presets. */
+.cPresetRow{flex-wrap:wrap;align-items:flex-start}
+.cPresetRow label{flex:0 0 auto;max-width:100%;white-space:normal}
+.cPresetRow select{flex:1 1 100%;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.cPresetNote{font-size:11px;line-height:1.4;color:#92a1b8;margin-top:5px;white-space:normal;overflow-wrap:anywhere}
+.cPresetNote[hidden]{display:none}
+@media (max-width:760px){.cPresetNote{font-size:10px}}
+@media (max-height:620px) and (pointer:coarse){.cPresetNote{font-size:8px;margin-top:3px}}
 </style></head>
 <body><div id="app"><header><div class="title" id="productTitle">Ulam Spiral &amp; Prime-Generating Quadratic Explorer</div><div class="controls"><input id="jumpInput" inputmode="numeric" placeholder="1 ~ 1000000000000000"><button id="jumpBtn">Go</button><button id="zin">＋</button><button id="zout">－</button><button id="home">Go to 1</button><select id="spiralModeSelect" aria-label="Spiral mode" title="Spiral mode"><option value="square">Square</option><option value="hex">Hexagonal</option><option value="tri">Triangular</option><option value="sacks">Sacks</option><option value="klauber">Klauber Triangle</option></select></div><div class="langSeqRow"><button id="langToggle" title="English / 한국어">En/한</button><div class="modeSwitch"><span class="sequenceLabel">Sequence</span><button id="cSearchBtn">Search</button><button id="savedToggle">Saved 0</button><button id="showFormula">at Selected Point</button></div></div></header>
 <div id="stage"><canvas id="cv" tabindex="0" aria-label="Prime spiral canvas; arrow keys move between points, plus and minus zoom"></canvas><div id="zoomIndicator">×1</div><div id="hoverTip"></div>
@@ -292,8 +301,9 @@ header #langToggle{width:44px;min-width:44px;padding-left:3px;padding-right:3px}
       <label id="labelRecommendedAB">Recommended lattice-line a, b</label>
       <div class="cPresetRow">
         <label><input id="cPresetMode" type="checkbox" checked> <span id="labelUseRecommended">Use recommended pairs</span></label>
-        <select id="cPreset"></select>
+        <select id="cPreset" aria-label="Quadratic coefficients a, b"></select>
       </div>
+      <div id="cPresetNote" class="cPresetNote" role="status"></div>
     </div>
     <div class="cField"><label>a</label><input id="cA" inputmode="numeric" value="1" disabled></div>
     <div class="cField"><label>b</label><input id="cB" inputmode="numeric" value="-1" disabled></div>
@@ -450,13 +460,13 @@ const I18N={
     presetClassic:'n²−n+c · 고전적 전항 홀수 계열',presetMonic:'n²+c · 단순 monic 계열',presetEven:'짝수 b · 홀수 c 권장',
     hexPresetGroup:k=>`육각 격자선 · k=${k} (a=3k²)`,
     hintHex:'육각 모드는 실제 격자선에서 나타나는 a=3k² (k=1~4) 계열의 b 조합을 추천한다. 체크를 끄면 a, b를 자유 입력할 수 있다. c는 −220000000부터 +220000000까지 한 번에 탐색할 수 있다.',
-    hintTri:'삼각 모드: 기존 3방향과 추가 3방향의 기본 축에서 정수계수 이차식이 성립하면 고정식으로 표시한다. a=6k² 추천식도 유지하며, 소수율은 Worker/WASM으로 검증한다.',
+    hintTri:'삼각 모드: 기존 3방향과 추가 3방향의 기본 축에서 정수계수 이차다항식이 성립하면 고정식으로 표시한다. a=6k² 추천식도 유지하며, 소수율은 Worker/WASM으로 검증한다.',
     hintKlauber:'클라우버: 상수항 ±2억 8천만. 기울기 |m|≥1/8인 동일 직선 구간이 1P 이내에서 최소 5만 행 이어지는 c만 선별한다. 끝에서 잘리는 구간도 허용한다. a=k², b가 k의 배수일 때 적용. 소수 점수 계산 전에 제외한다.',
     slopeFilterLabel:'1P 이내 · |기울기| ≥ 1/8 · 직선 ≥ 5만 행',
     slopeFilterUnsupported:'기하학 기울기 필터는 a=k², b는 k=√a의 배수, |b/√a|≤200만일 때만 지원한다. 다른 계수를 탐색하려면 체크를 해제해 달라냥.',
     slopeFilterEmpty:'1P 이내에서 |기울기|≥1/8인 직선이 5만 행 이상 이어지는 c가 없습니다.',
     slopeFilterCount:(count,total)=>`기하학 선별: ${total.toLocaleString()}개 중 ${count.toLocaleString()}개 c만 검사`,
-    hintSacks:'삭스 모드: a=k²인 이차식은 일반적으로 원점을 지나지 않는 점근 직선에 접근한다. 횡방향 오프셋은 π(c−b²/(4k²))이다. 유한 구간에서는 곡선일 수 있다.',
+    hintSacks:'삭스 모드: a=k²인 이차다항식은 일반적으로 원점을 지나지 않는 점근 직선에 접근한다. 횡방향 오프셋은 π(c−b²/(4k²))이다. 유한 구간에서는 곡선일 수 있다.',
     hintVogel:'보겔 모드: 황금각의 근사 주기에 해당하는 피보나치 계수 후보를 추천한다. 정확한 직선은 보장되지 않으며 소수율은 독립 검증한다.'
   }
 };
@@ -519,7 +529,7 @@ function localizeSlopeLabel(label){
     // In earlier builds d=+2 was mistakenly tagged ↗ +1/2 despite y=-r.
     const oldHalfDown=/(?:Half-slope|반기울기) ↗ \(\+1\/2\)/.test(label);
     const oldHalfUp=/(?:Half-slope|반기울기) ↖ \(−1\/2\)/.test(label);
-    let en='Klauber quadratic',ko='클라우버 이차식';
+    let en='Klauber quadratic',ko='클라우버 이차다항식';
     if(/(?:Vertical|세로)/.test(label)){en='Klauber Vertical';ko='클라우버 세로'}
     else if(oldHalfDown||/(?:↘) \(−1\/2\)/.test(label)){en='Klauber ↘ (−1/2)';ko='클라우버 ↘ (−1/2)'}
     else if(oldHalfUp||/(?:↗) \(\+1\/2\)/.test(label)){en='Klauber ↗ (+1/2)';ko='클라우버 ↗ (+1/2)'}
@@ -553,7 +563,7 @@ function displaySavedLabel(label){
   return label;
 }
 function presetNote(p){
-  if(latticeMode==='klauber')return currentLang==='ko'?`클라우버 · 격자선 이차식 (a=${p.a})`:`Klauber · lattice quadratics (a=${p.a})`;
+  if(latticeMode==='klauber')return currentLang==='ko'?`클라우버 · 격자선 이차다항식 (a=${p.a})`:`Klauber · lattice quadratics (a=${p.a})`;
   if(latticeMode==='tri')return currentLang==='ko'?`삼각 껍질 · a=6k² (k=${Math.round(Math.sqrt(p.a/6))})`:`Triangular shell · 6k² (k=${Math.round(Math.sqrt(p.a/6))})`;
   if(latticeMode==='sacks')return currentLang==='ko'?`삭스 · 제곱수 계수 k² (k=${Math.round(Math.sqrt(p.a))})`:`Sacks · square coefficient k² (k=${Math.round(Math.sqrt(p.a))})`;
   if(latticeMode==='vogel')return currentLang==='ko'?'보겔 · 피보나치 준주기 (직선 보장 없음)':'Vogel · Fibonacci quasiperiod (no exact straight-line guarantee)';
@@ -816,6 +826,7 @@ function updateUIText(){
   const presetValue=cPreset.value;
   renderPresetOptions();
   if(presetValue!==''&&Number(presetValue)<searchABPresets().length)cPreset.value=presetValue;
+  updateSearchABPresetNote();
   if(!cSearchWorker&&!runCSearch.disabled){
     if(lastCSearchRows.length){
       const best=lastCSearchRows[0];
@@ -1290,10 +1301,20 @@ function renderPresetOptions(){
   presets.forEach((p,i)=>{
     const o=document.createElement('option');
     o.value=String(i);
-    o.textContent=`a=${p.a}, b=${p.b}　${presetNote(p)}`;
+    o.textContent=`a=${p.a}, b=${p.b}`;
+    o.title=`a=${p.a}, b=${p.b} — ${presetNote(p)}`;
     cPreset.appendChild(o);
   });
   if(keep!==''&&Number(keep)<presets.length)cPreset.value=keep;
+}
+function updateSearchABPresetNote(){
+  const p=searchABPresets()[Number(cPreset.value)||0];
+  const note=document.getElementById('cPresetNote');
+  if(note){
+    note.textContent=p?presetNote(p):'';
+    note.hidden=!cPresetMode.checked;
+  }
+  cPreset.title=p?`a=${p.a}, b=${p.b} — ${presetNote(p)}`:'';
 }
 function initSearchABPresets(){
   renderPresetOptions();
@@ -1324,6 +1345,7 @@ function applySearchABPreset(){
     const presets=searchABPresets(),p=presets[Number(cPreset.value)||0]||presets[0];
     cA.value=String(p.a);cB.value=String(p.b);
   }
+  updateSearchABPresetNote();
 }
 
 const FIXED_DIRS=[
@@ -4854,7 +4876,7 @@ for(const t of (latticeMode==='klauber'?[...new Set([Math.max(1,seed),Math.max(1
    if(seen.has(key)||gcd3(can.a,can.b,can.c)>1||fixedDivisor(can.a,can.b,can.c))continue;
    if(latticeMode==='klauber'&&!extraFormulaContainsN(n,can,true))continue;
    seen.add(key);
-   const label=(latticeMode==='klauber'?(currentLang==='ko'?'클라우버 이차식':'Klauber quadratic'):'')+
+   const label=(latticeMode==='klauber'?(currentLang==='ko'?'클라우버 이차다항식':'Klauber quadratic'):'')+
      (latticeMode==='tri'?(currentLang==='ko'?'삼각 껍질':'Triangular shell'):'')+
      (latticeMode==='sacks'?(currentLang==='ko'?'삭스 점근 직선 근사':'Sacks asymptotic line'):'')+
      (latticeMode==='vogel'?(currentLang==='ko'?'보겔 준주기':'Vogel quasiperiod'):'')+` · a=${a}`;
