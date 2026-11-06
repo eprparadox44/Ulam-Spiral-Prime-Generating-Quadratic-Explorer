@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — v1.5.1 (performance optimizations)
+
+- Improved quadratic prime-statistics reuse, small-prime filtering, and low-zoom Hexagonal rendering while keeping 1P and eight Workers.
+- Removed recommended formulas already represented by fixed formulas through verified integer reindexing or integer-step subsequences; preserved fixed and saved formulas.
+- Kept the five spiral modes, search limits, save format, and primality calculation engine.
+
+
 ## 2026-11-04 — v1.5.0 (1P range expansion)
 
 - Extended the maximum search range from 100 trillion (100T) to 1 quadrillion (1P) in all five spiral views.

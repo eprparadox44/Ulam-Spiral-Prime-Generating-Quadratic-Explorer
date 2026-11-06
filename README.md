@@ -6,7 +6,7 @@
 
 A browser-based tool for exploring **prime numbers** and the patterns formed by quadratic sequences. It places numbers in five different spirals and lets you explore as far as **1 quadrillion (1P, 10¹⁵)**.
 
-**Current public release: v1.5.0 (November 4, 2026)** · [MIT License](LICENSE)
+**Current public release: v1.5.1 (November 6, 2026)** · [MIT License](LICENSE)
 
 ## Open the explorer
 
@@ -22,11 +22,11 @@ The downloaded file works without installation or an internet connection.
 - Search for interesting formulas of the form `at² + bt + c` by varying the constant term **c**.
 - Save formulas to revisit them later in the same browser. The interface supports English and Korean.
 
-## What's new in v1.5.0
+## What's new in v1.5.1
 
-Since the previous public release (**v1.4.7**), the maximum exploration range has increased **from 100 trillion to 1 quadrillion**. Large-number sequence analysis now works across that range. The constant-term search supports **±220 million** in Square, Hexagonal, Triangular and Sacks modes, and **±280 million** in Klauber Triangle.
+Improved quadratic prime-statistics processing and low-zoom Hexagonal rendering, and refined recommendations to avoid duplicate fixed-formula sequences. The **1P** exploration range and constant-term c search limits from v1.5.0 remain unchanged.
 
-See the [v1.5.0 release notes](RELEASE_NOTES_v1.5.0.md) or [release history](CHANGELOG.md).
+See the [v1.5.1 release notes](RELEASE_NOTES_v1.5.1.md) or [release history](CHANGELOG.md).
 
 ## A note on the results
 

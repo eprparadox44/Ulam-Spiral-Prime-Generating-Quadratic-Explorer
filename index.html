@@ -1,21 +1,11 @@
 <!doctype html>
 <!--
 Ulam Spiral & Prime-Generating Quadratic Explorer
-Official release: v1.5.0 (1P) — expanded range from 100T to 1P
-(100 trillion to 1 quadrillion; 10^14 to 10^15).
-The previously tested v1.5.7/OPT36 candidate is the implementation baseline.
-All proven optimizations are included in this v1.5.0 release.
-Internal optimization history (for maintainers; not the public release numbering):
-OPT36: Klauber natural-index quadratics differing by t→t+k share full
-1P statistics with exact missing/extra prefix term corrections.
-OPT35 modulo-3 pruning and OPT34 64M WASM are retained unchanged.
-OPT34: enlarge the packed 1P statistics sieve from 32M to 64M entries;
-       removes repeated modular-root startup for 32M..64M-term quadratic jobs.
-       Existing 32 MiB WASM memory and all non-statistics code are unchanged.
-OPT32: for odd a,b,c (every F(t) odd), the proven 1P WASM can
-process certain long, non-reflection-symmetric ranges directly.
-The fixed-divisor and reflection shortcuts keep their original precedence.
-Remote rendering, c-search prefilter, and embedded WASM are unchanged.
+Release: v1.5.1 (1P) — performance optimization and recommendation deduplication.
+Highlights: accelerated quadratic prime statistics, improved prime filtering,
+and responsive low-zoom rendering. Selected-point recommendations exclude
+integer-reindexed equivalents of existing fixed formulas; saved formulas
+remain available. The eight-Worker limit and embedded WASM are unchanged.
 
 MIT License
 
@@ -41,9 +31,9 @@ SOFTWARE.
 -->
 <html lang="en">
 <head>
-<meta name="application-version" content="1.5.0">
+<meta name="application-version" content="1.5.1">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ulam Spiral · v1.5.0 (1P)</title>
+<title>Ulam Spiral · v1.5.1 (1P) — Optimized</title>
 <style>
 :root{color-scheme:dark;--bg:#070b13;--text:#e8eef8;--muted:#9eabc0;--prime:#f5f7fb;--cyan:#18d7f2;--warn:#ffb454}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text)}
@@ -587,7 +577,7 @@ function selectionSummary(allowExact=true){
   // Do not misreport that deferred state as “Fixed 0 + recommended 0”.
   if(pointAnalysisPending)return `${head} · ${tr('analysisPending')}`;
   if(!pointAnalysisDoneKey&&formulas.length===0)return `${head} · ${tr('analysisDeferred')}`;
-  const dyn=formulas.filter(f=>f.kind==='dynamic').length;
+  const dyn=formulas.filter(f=>f.kind==='dynamic'||(f.kind==='extra'&&['tri','sacks','klauber'].includes(latticeMode))).length;
   if(currentLang==='ko')return `${head} · ${tr('fixed')} ${formulas.length-dyn}개 + ${showAllDirections?tr('candidates'):tr('recommended')} ${dyn}개`;
   return `${head} · ${tr('fixed')} ${formulas.length-dyn} + ${showAllDirections?tr('candidates'):tr('recommended')} ${dyn}`;
 }
@@ -2477,6 +2467,59 @@ function dedupePointCandidatesByNaturalSequence(prepared){
  const isChosen=f=>chosen.get(pointNaturalSequenceKey(f))?.f===f;
  return{...prepared,fixed:fixed.filter(isChosen),pool:pool.filter(isChosen)};
 }
+// A recommendation of the form Q(n)=F(k*n+h), with integer k>=2 and h,
+// is a sparse subsequence of a fixed F.  Do not hide one if it has prime-
+// producing prefix terms at n>=1 with k*n+h<1, outside the fixed natural
+// index domain.  Use BigInt for coefficient identities up to 1P.
+function isFixedFormulaAffineSubsequence(f,q){
+ if(!f||!q||![f.a,f.b,f.c,q.a,q.b,q.c].every(Number.isSafeInteger)||f.a<=0||q.a<=0)return false;
+ const A=BigInt(f.a),B=BigInt(f.b),C=BigInt(f.c);
+ const QA=BigInt(q.a),QB=BigInt(q.b),QC=BigInt(q.c);
+ if(QA%A!==0n)return false;
+ const ratio=QA/A,k=BigInt(Math.round(Math.sqrt(Number(ratio))));
+ if(k<2n||k*k!==ratio)return false;
+ // Allow an integer-index reversal only when it can be reflected back to
+ // positive progression via F(-t-B/A)=F(t) with integral B/A.
+ for(const sign of [1n,-1n]){
+  const step=sign*k,den=2n*A*step,num=QB-B*step;
+  if(num%den!==0n)continue;
+  const h=num/den;
+  if(A*h*h+B*h+C!==QC)continue;
+  let positiveStep=step,positiveH=h;
+  if(step<0n){
+   if(B%A!==0n)continue;
+   positiveStep=-step;positiveH=-h-B/A;
+  }
+  // If early Q(n) terms map to nonpositive F indices, they must all be <2
+  // (thus cannot be primes) before we suppress the recommendation.
+  const firstValid=positiveStep+positiveH>=1n?1n:(1n-positiveH+positiveStep-1n)/positiveStep;
+  if(firstValid>1n){
+   const end=firstValid-1n;
+   const evalQ=n=>QA*n*n+QB*n+QC;
+   if(evalQ(1n)>=2n||evalQ(end)>=2n)continue;
+  }
+  return true;
+ }
+ return false;
+}
+// Exclude fixed duplicates from the *recommended* group only.  Exact
+// integer shifts/reflections (k=1) use the established shift-family key.
+// Sparse affine subsequences (k>=2) are checked against the fixed formulas.
+// No numerical prime statistics are merged, reused or approximated here;
+// pinned/saved formulas and the fixed geometric group remain intact.
+function excludeFixedEquivalentRecommendations(prepared){
+ const fixed=prepared.fixed||[],pool=prepared.pool||[];
+ const fixedPolys=fixed.filter(f=>f.kind==='fixed'&&f.a>0&&[f.a,f.b,f.c].every(Number.isSafeInteger));
+ if(!fixedPolys.length)return prepared;
+ const fixedFamilies=new Set(fixedPolys.map(f=>integerShiftStatsKey(f.a,f.b,f.c)));
+ const keep=f=>{
+  if(f.kind==='fixed'||f.pinned||f.kind==='vogel-arm'||f.kind==='vogel-pair')return true;
+  if(f.a<=0||![f.a,f.b,f.c].every(Number.isSafeInteger))return true;
+  if(fixedFamilies.has(integerShiftStatsKey(f.a,f.b,f.c)))return false;
+  return !fixedPolys.some(v=>isFixedFormulaAffineSubsequence(v,f));
+ };
+ return {...prepared,fixed:fixed.filter(keep),pool:pool.filter(keep)};
+}
 function pointFormulaWithStats(f,fs){
   if(f&&(f.kind==='vogel-arm'||f.kind==='vogel-pair'))return {...f};
   if(!fs||!fs.termCount||!fs.oddCount)return null;
@@ -2533,7 +2576,7 @@ function analyzePointAsync(x,y){
   const fp6PointJobTimes=[];
   let fp6CacheHits=0,fp6SharedJobs=0;
   stopSavedStatsBackfill();cancelPointAnalysis(false);
-  const token=pointAnalyzeToken,prepared=dedupePointCandidatesByNaturalSequence(preparePointCandidates(x,y)),all=prepared.fixed.concat(prepared.pool),stats=new Map(),lineStats=new Map(),projectedStats=new Map(),jobs=[],jobByStatsKey=new Map();
+  const token=pointAnalyzeToken,prepared=excludeFixedEquivalentRecommendations(dedupePointCandidatesByNaturalSequence(preparePointCandidates(x,y))),all=prepared.fixed.concat(prepared.pool),stats=new Map(),lineStats=new Map(),projectedStats=new Map(),jobs=[],jobByStatsKey=new Map();
   pointAnalysisPending=true;formulas=[];renderFormulaPanel();sched();
   function enqueue(f,kind,a,b,c,paramRange=null){
     const id=polyKey(f);
@@ -4216,6 +4259,8 @@ function renderHex(){
  ctx.fillStyle='#070b13';ctx.fillRect(0,0,W,H);
  if(!ready){renderHexMinimap();return}
  const rect=hexViewRect(1),primePath=new Path2D(),selectedPath=new Path2D();
+ // B3_HEX_BITMAP_FASTPATH: cache bits encode primality, parity and MAX_N.
+ const __b3CacheOnly=scale<=1.5&&hexRingBounds(rect).lo>=2;
  const tile=scale>=8,point=Math.max(1,Math.min(5,scale*.67)),showGrid=scale>=15;
  const gridPath=showGrid?new Path2D():null;
  // SINGLE PASS over visible coordinates: old renderer scanned the entire
@@ -4230,10 +4275,14 @@ function renderHex(){
   const qHi=Math.min(rect.xmax,Math.floor((W+margin-xRow)/xUnit));
   for(let q=qLo;q<=qHi;q++){
    const h=hexRadius(q,r);if(h>HEX_R)continue;
-   const n=hexNumberWithRadius(q,r,h);if(n<1||n>MAX_N)continue;
+   // On a fully-remote view, a true cache bit means a proven prime <= MAX_N.
+   // Composite/unknown cells are unpainted just as in the original renderer.
+   let n;
+   if(!__b3CacheOnly){n=hexNumberWithRadius(q,r,h);if(n<1||n>MAX_N)continue}
    const px=xRow+xUnit*q;
    if(gridPath)hexDrawPoly(gridPath,px,py,scale*.96);
-   if(n<2||(n!==2&&(n%2===0||!hexKnownAtRadius(q,r,h))))continue;
+   if(__b3CacheOnly){if(!hexKnownAtRadius(q,r,h))continue}
+   else if(n<2||(n!==2&&(n%2===0||!hexKnownAtRadius(q,r,h))))continue;
    if(tile)hexDrawPoly(primePath,px,py,scale*.93);
    else primePath.rect(px-point/2,py-point/2,point,point);
   }
@@ -6858,7 +6907,7 @@ cv.addEventListener('keydown',e=>{
 });
 
 function jump(){const n=Number(jumpInput.value.replace(/[,\s]/g,''));if(!Number.isInteger(n)||n<1||n>MAX_N){selEl.innerHTML=`<span style="color:#ff8f8f">${tr('enterRange',MAX_N)}</span>`;return}const c=latticeCoord(n);camX=c.x;camY=c.y;scale=Math.max(scale,5.5);clamp();if(ready){if(isExtraMode())extraSelectNumber(n,c);else selectPoint(c.x,c.y,0)}else{selected={x:c.x,y:c.y,n};sched(0)}}document.getElementById('jumpBtn').onclick=jump;jumpInput.addEventListener('keydown',e=>{if(e.key==='Enter')jump()});
-function updateRangeUI(){miniZoomIndex=Math.min(miniZoomIndex,MINI_LEVELS.filter(n=>n<=MAX_N).length-1);document.title='Ulam Spiral · v1.5.0 (1P)';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
+function updateRangeUI(){miniZoomIndex=Math.min(miniZoomIndex,MINI_LEVELS.filter(n=>n<=MAX_N).length-1);document.title='Ulam Spiral · v1.5.1 (1P) — Optimized';jumpInput.placeholder=`1 ~ ${MAX_N}`;miniBgKey='';miniFormulaKey='';updateMiniZoomControls()}
 function hideFallbackActions(){fallbackActions.style.display='none';fallbackActions.innerHTML=''}
 function showFallbackActions(failedTarget){
   fallbackActions.innerHTML='';
@@ -7649,5 +7698,6 @@ async function setRange(target){
 }
 
 initSearchABPresets();loadSaved();updateUIText();renderSavedPanel();updateModeTabs();resize();const initialRange=preferredInitialRange();try{const mode=localStorage.getItem('ULAM_LATTICE_MODE');if(['square','hex','tri','sacks','klauber'].includes(mode)||(mode==='vogel'&&ENABLE_VOGEL_MODE))latticeMode=mode}catch(_){}updateShapeUI();refreshSearchABForLattice();console.info('[local prime cache] world range',rangeName(initialRange));setRange(initialRange);
+
 })();
 </script></body></html>
